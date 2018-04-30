@@ -1,0 +1,59 @@
+##########################
+##### Sourcing files #####
+##########################
+
+function secure_source
+{
+    file="$1"
+    if [[ -f "${file}" ]]; then
+        source "${file}"
+    else
+        printf "%s\\n" "${bold}${f[1]}error:${reset} \"${file}\" is missing"
+    fi
+}
+
+function detect_os
+{
+    case "$(uname -s)" in
+        "Darwin")
+            distro="MacOS"
+        ;;
+        "Linux") 
+            if type -p lsb_release >/dev/null; then
+                distro="$(lsb_release -si)"
+            elif [[ -f "/etc/lsb-release" ]]; then
+                distro_file="$(< /etc/lsb-release)"
+                distro="$(awk '/DISTRIB_ID/ {print $1}' <<< "${distro_file}")"
+                distro="${distro/DISTRIB_ID=/}"
+            elif [[ -f "/etc/os-release" ]]; then
+                distro_file="$(< /etc/os-release)"
+                distro="$(awk 'NR==1 {print}' <<< "${distro_file}")"
+                distro="${distro/NAME=/}"
+                distro="${distro//\"/}"
+            fi
+        ;;
+        "")
+            printf "%s\\n" "Error: Cannot detect os"
+        ;;
+    esac
+}
+
+detect_os
+module_dir="${HOME}/.dotfiles/bashrc/modules"
+modules=(
+    "$(
+        if [[ ${distro} == "MacOS" ]]; then
+            printf "%s" "/usr/local/share/bash-completion/bash_completion"
+        else
+            printf "%s" "/usr/share/bash-completion/bash_completion"
+        fi
+    )"
+    "${module_dir}/colors"
+    "${module_dir}/prompt"
+    "${module_dir}/env_var"
+    "${module_dir}/aliases"
+)
+
+for i in "${modules[@]}"; do
+    secure_source "${i}"
+done

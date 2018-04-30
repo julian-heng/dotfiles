@@ -1,0 +1,13 @@
+set number
+set hidden
+set history=100
+set smartindent
+set autoindent
+set hlsearch
+set showmatch
+set tabstop=4
+set shiftwidth=4
+set expandtab
+syntax on
+colorscheme ron
+

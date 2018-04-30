@@ -1,0 +1,31 @@
+# opens iTerm2
+alt - return : \
+    ${HOME}/.dotfiles/skhd/scripts/open_iterm2.sh
+
+# show cpu and mem stats
+fn + lctrl - 1 : \
+    ${HOME}/.dotfiles/skhd/scripts/show_cpu.sh
+fn + lctrl - 2 : \
+    ${HOME}/.dotfiles/skhd/scripts/show_mem.sh
+
+# show battery info
+fn + lctrl - 3 : \
+    ${HOME}/.dotfiles/skhd/scripts/show_bat.sh
+
+# show disk usage
+fn + lctrl - 4 : \
+    ${HOME}/.dotfiles/skhd/scripts/show_disk.sh "/dev/disk1s1"
+
+# show current song info
+fn + lctrl - 5 : \
+    ${HOME}/.dotfiles/skhd/scripts/show_song.sh
+
+# show stats summary
+fn + lctrl - 0 : \
+    ${HOME}/.dotfiles/skhd/scripts/show_summary.sh
+
+fn + shift - 0 : \
+    ${HOME}/.dotfiles/skhd/scripts/show_summary.sh simple
+
+fn + lctrl + shift - 0 : \
+    ${HOME}/.dotfiles/skhd/scripts/show_summary.sh all

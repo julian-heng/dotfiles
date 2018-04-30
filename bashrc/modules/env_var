@@ -1,0 +1,29 @@
+#########################
+##### Env Variables #####
+#########################
+
+RANGER_LOAD_DEFAULT_RC="FALSE"
+HISTCONTROL="ignoreboth"
+
+export RANGER_LOAD_DEFAULT_RC
+export HISTCONTROL
+
+#####################
+##### Man Pages #####
+#####################
+
+LESS_TERMCAP_mb="${fb[1]}"      # enter blinking mode - red
+LESS_TERMCAP_md="${fb[5]}"      # enter double-bright mode - bold, magenta
+LESS_TERMCAP_me=${bold}         # turn off all appearance modes (mb, md, so, us)
+LESS_TERMCAP_se=${bold}         # leave standout mode    
+LESS_TERMCAP_so="${fb[3]}"      # enter standout mode - yellow
+LESS_TERMCAP_ue=${bold}         # leave underline mode
+LESS_TERMCAP_us="${fb[6]}"      # enter underline mode - cyan
+
+export LESS_TERMCAP_mb
+export LESS_TERMCAP_md
+export LESS_TERMCAP_me
+export LESS_TERMCAP_se
+export LESS_TERMCAP_so
+export LESS_TERMCAP_ue
+export LESS_TERMCAP_us

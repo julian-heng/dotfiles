@@ -1,0 +1,58 @@
+#############################
+##### Aliases/Functions #####
+#############################
+
+alias dl="aria2c --dir=${HOME}/Downloads/"
+alias gp="git pull"
+alias gcl="git clone"
+alias gstat="git status"
+alias py2="python2"
+alias py3="python3"
+alias ls="ls -G"
+alias ll="ls -Gl"
+alias la="ls -Ga"
+alias lal="ls -Gal"
+alias 7zcomp="
+    7z a -t7z \
+         -m0=lzma2 \
+         -mx=9 \
+         -aoa \
+         -mfb=64 \
+         -md=32m \
+         -ms=on \
+         -mhe"
+
+alias yt2mp3="
+    youtube-dl  --output ${HOME}/Downloads/ \
+                -x \
+                --audio-format \
+                --audio-quality 0 \
+                -o '%(playlist_index)s %(title)s.%(ext)s' \
+                -v"
+
+case "${distro}" in
+    "MacOS")
+        alias update="brew -v update && brew -v upgrade"
+        alias cinst="brew cask install"
+        alias cuninst="brew cask uninstall"
+        alias cup="brew cask upgrade"
+        alias csearch="brew cask search"
+        alias cleanup="brew cleanup && brew cask cleanup"
+    ;;
+    "Ubuntu"*|"Debian"*)
+        alias update="sudo apt update && sudo apt upgrade"
+    ;;
+    "Antergos"*|"Arch"*)
+        alias update="sudo yaourt -Syu"
+    ;;
+    "Fedora"|"CentOS"*)
+        if type -p dnf >/dev/null; then
+            alias update="sudo dnf update"
+        else
+            alias update="sudo yum update"
+        fi
+    ;;
+    "")
+        printf "%s\\n" "Error: Cannot detect distro, 'update' alias not set"
+    ;;
+esac
