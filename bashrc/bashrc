@@ -41,18 +41,17 @@ function detect_os
 detect_os
 module_dir="${HOME}/.dotfiles/bashrc/modules"
 modules=(
-    "$(
-        if [[ ${distro} == "MacOS" ]]; then
-            printf "%s" "/usr/local/share/bash-completion/bash_completion"
-        else
-            printf "%s" "/usr/share/bash-completion/bash_completion"
-        fi
-    )"
     "${module_dir}/colors"
     "${module_dir}/prompt"
     "${module_dir}/env_var"
     "${module_dir}/aliases"
 )
+
+if [[ "${distro}" == "MacOS" ]]; then
+    modules+=("/usr/local/share/bash-completion/bash_completion")
+else
+    modules+=("/usr/share/bash-completion/bash_completion")
+fi
 
 for i in "${modules[@]}"; do
     secure_source "${i}"
