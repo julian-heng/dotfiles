@@ -174,9 +174,9 @@ function install_dirs
         else
             if [[ "$@" != *"dry"* ]]; then
                 printf "%s\\n" "Install: Running \"ln -s ${script_dir}/${dir} ${config_dir}\""
-                ln -s "${script_dir}/${dir}" "${config_dir}"
+                ln -s "${dir}" "${config_dir}"
             else
-                printf "%s\\n" "[Dry] Install: Running \"ln -s ${script_dir}/${dir} ${config_dir}\""
+                printf "%s\\n" "[Dry] Install: Running \"ln -s ${dir} ${config_dir}\""
             fi
         fi
     done
