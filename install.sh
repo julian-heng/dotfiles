@@ -84,29 +84,46 @@ function install_files
         read -r _file link <<< "${entry}"
         if [[ -L "${link}" ]]; then
             if [[ "$@" == *"overwrite"* ]]; then
-                printf "%s\\n" "Warning: \"${link}\" is already symlinked, overwriting"
-                printf "%s\\n" "Install: Running \"rm ${link}\""
-                rm "${link}"
+                if [[ "$@" != *"dry"* ]]; then
+                    printf "%s\\n" "Warning: \"${link}\" is already symlinked, overwriting"
+                    printf "%s\\n" "Install: Running \"rm ${link}\""
+                    rm "${link}"
 
-                printf "%s\\n\\n" "Install: Running \"ln -s ${_file} ${link}\""
-                [[ "$@" != *"dry"* ]] && ln -s "${_file}" "${link}"
+                    printf "%s\\n\\n" "Install: Running \"ln -s ${_file} ${link}\""
+                    ln -s "${_file}" "${link}"
+                else
+                    printf "%s\\n" "[Dry] Warning: \"${link}\" is already symlinked, overwriting"
+                    printf "%s\\n" "[Dry] Install: Running \"rm ${link}\""
+                    printf "%s\\n\\n" "[Dry] Install: Running \"ln -s ${_file} ${link}\""
+                fi
+
             else
                 printf "%s\\n" "Warning: \"${link}\" is already symlinked"
             fi
         elif [[ -e "${link}" ]]; then
             if [[ "$@" == *"overwrite"* ]]; then
-                printf "%s\\n" "Warning: \"${link}\" already exist, overwriting"
-                printf "%s\\n" "Install: Running \"rm ${link}\""
-                rm "${link}"
+                if [[ "$@" != *"dry"* ]]; then
+                    printf "%s\\n" "Warning: \"${link}\" already exist, overwriting"
+                    printf "%s\\n" "Install: Running \"rm ${link}\""
+                    rm "${link}"
 
-                printf "%s\\n\\n" "Install: Running \"ln -s ${_file} ${link}\""
-                [[ "$@" != *"dry"* ]] && ln -s "${_file}" "${link}"
+                    printf "%s\\n\\n" "Install: Running \"ln -s ${_file} ${link}\""
+                    ln -s "${_file}" "${link}"
+                else
+                    printf "%s\\n" "[Dry] Warning: \"${link}\" already exist, overwriting"
+                    printf "%s\\n" "[Dry] Install: Running \"rm ${link}\""
+                    printf "%s\\n\\n" "[Dry] Install: Running \"ln -s ${_file} ${link}\""
+                fi
             else
                 printf "%s\\n" "Warning: \"${link}\" already exist"
             fi
         else
-            printf "%s\\n" "Install: Running \"ln -s ${_file} ${link}\""
-            [[ "$@" != *"dry"* ]] && ln -s "${_file}" "${link}"
+            if [[ "$@" != *"dry"* ]]; then
+                printf "%s\\n" "Install: Running \"ln -s ${_file} ${link}\""
+                ln -s "${_file}" "${link}"
+            else
+                printf "%s\\n" "[Dry] Install: Running \"ln -s ${_file} ${link}\""
+            fi
         fi
     done
     printf "\\n"
@@ -120,31 +137,47 @@ function install_dirs
         read -r dir link <<< "${entry}"
         if [[ -L "${link}" ]]; then
             if [[ "$@" == *"overwrite"* ]]; then
-                printf "%s\\n" "Install: \"${link}\" is already symlinked, overwriting"
-                printf "%s\\n" "Install: Running \"rm ${link}\""
-                [[ "$@" != *"dry"* ]] && rm "${link}"
+                if [[ "$@" != *"dry"* ]]; then
+                    printf "%s\\n" "Warning: \"${link}\" is already symlinked, overwriting"
+                    printf "%s\\n" "Install: Running \"rm ${link}\""
+                    rm "${link}"
 
-                printf "%s\\n\\n" "Install: Running \"ln -s ${dir} ${config_dir}\""
-                [[ "$@" != *"dry"* ]] && ln -s "${dir}" "${config_dir}"
+                    printf "%s\\n\\n" "Install: Running \"ln -s ${dir} ${config_dir}\""
+                    ln -s "${dir}" "${config_dir}"
+                else
+                    printf "%s\\n" "[Dry] Warning: \"${link}\" is already symlinked, overwriting"
+                    printf "%s\\n" "[Dry] Install: Running \"rm ${link}\""
+                    printf "%s\\n\\n" "[Dry] Install: Running \"ln -s ${dir} ${config_dir}\""
+                fi
             else
                 printf "%s\\n" "Warning: \"${config_dir}\" is already symlinked"
             fi
-            
+
         elif [[ -d "${link}" ]]; then
             if [[ "$@" == *"overwrite"* ]]; then
-                printf "%s\\n" "Install: \"${link}\" already exist, overwriting"
-                printf "%s\\n" "Install: Running \"rm -rf ${link}\""
-                [[ "$@" != *"dry"* ]] && rm -rf "${link}"
+                if [[ "$@" != *"dry"* ]]; then
+                    printf "%s\\n" "Warning: \"${link}\" already exist, overwriting"
+                    printf "%s\\n" "Install: Running \"rm -rf ${link}\""
+                    rm -rf "${link}"
 
-                printf "%s\\n\\n" "Install: Running \"ln -s ${dir} ${config_dir}\""
-                [[ "$@" != *"dry"* ]] && ln -s "${dir}" "${config_dir}"
+                    printf "%s\\n\\n" "Install: Running \"ln -s ${dir} ${config_dir}\""
+                    ln -s "${dir}" "${config_dir}"
+                else
+                    printf "%s\\n" "[Dry] Warning: \"${link}\" already exist, overwriting"
+                    printf "%s\\n" "[Dry] Install: Running \"rm -rf ${link}\""
+                    printf "%s\\n\\n" "[Dry] Install: Running \"ln -s ${dir} ${config_dir}\""
+                fi
             else
                 printf "%s\\n" "Warning: \"${dir}\" already exist"
             fi
 
         else
-            printf "%s\\n" "Install: Running \"ln -s ${script_dir}/${dir} ${config_dir}\""
-            [[ "$@" != *"dry"* ]] && ln -s "${script_dir}/${dir}" "${config_dir}"
+            if [[ "$@" != *"dry"* ]]; then
+                printf "%s\\n" "Install: Running \"ln -s ${script_dir}/${dir} ${config_dir}\""
+                ln -s "${script_dir}/${dir}" "${config_dir}"
+            else
+                printf "%s\\n" "[Dry] Install: Running \"ln -s ${script_dir}/${dir} ${config_dir}\""
+            fi
         fi
     done
     printf "\\n"
@@ -157,8 +190,12 @@ function uninstall
         entry="${entry//,/ }"
         read -r dir link <<< "${entry}"
         if [[ -L "${link}" ]]; then
-            printf "%s\\n" "Uninstall: Running \"rm ${link}\""
-            [[ "$@" != *"dry"* ]] && rm "${link}"
+            if [[ "$@" != *"dry"* ]]; then
+                printf "%s\\n" "Uninstall: Running \"rm ${link}\""
+                rm "${link}"
+            else
+                printf "%s\\n" "[Dry] Uninstall: Running \"rm ${link}\""
+            fi
         elif [[ -d "${link}" ]]; then
             printf "%s\\n" "Warning: Cannot uninstall \"${link}\", not from dotfiles"
         else
@@ -170,8 +207,12 @@ function uninstall
         entry="${entry//,/ }"
         read -r _file link <<< "${entry}"
         if [[ -L "${link}" ]]; then
-            printf "%s\\n" "Uninstall: Running \"rm ${link}\""
-            [[ "$@" != *"dry"* ]] && rm "${link}"
+            if [[ "$@" != *"dry"* ]]; then
+                printf "%s\\n" "Uninstall: Running \"rm ${link}\""
+                rm "${link}"
+            else
+                printf "%s\\n" "[Dry] Uninstall: Running \"rm ${link}\""
+            fi
         elif [[ -e "${link}" ]]; then
             printf "%s\\n" "Warning: Cannot uninstall \"${link}\", not from dotfiles"
         else
