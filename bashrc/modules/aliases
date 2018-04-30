@@ -8,10 +8,6 @@ alias gcl="git clone"
 alias gstat="git status"
 alias py2="python2"
 alias py3="python3"
-alias ls="ls -G"
-alias ll="ls -Gl"
-alias la="ls -Ga"
-alias lal="ls -Gal"
 alias 7zcomp="
     7z a -t7z \
          -m0=lzma2 \
@@ -30,6 +26,17 @@ alias yt2mp3="
                 -o '%(playlist_index)s %(title)s.%(ext)s' \
                 -v"
 
+if [[ "${distro}" == "MacOS" ]]; then
+    color_flag="-G"
+else
+    color_flag="--color"
+fi
+
+alias ls="ls ${color_flag}"
+alias ll="ls ${color_flag} -l"
+alias la="ls ${color_flag} -a"
+alias lal="ls ${color_flag} -al"
+
 case "${distro}" in
     "MacOS")
         alias update="brew -v update && brew -v upgrade"
@@ -38,6 +45,7 @@ case "${distro}" in
         alias cup="brew cask upgrade"
         alias csearch="brew cask search"
         alias cleanup="brew cleanup && brew cask cleanup"
+
     ;;
     "Ubuntu"*|"Debian"*)
         alias update="sudo apt update && sudo apt upgrade"
