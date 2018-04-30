@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 
-spacify() {
+function spacify
+{
     string="$1"
     string="${string//:/ }"
     string="${string:1}"
     printf "%s" "${string}"
 }
 
-get_df_output() {
+function get_df_output
+{
     mapfile -t df_out < <(df -P -k)
 
     for i in "${df_out[@]}"; do
@@ -33,8 +35,8 @@ get_df_output() {
     [[ ! "${search}" ]] && search="/dev/disk1s1"
 }
 
-get_disk() {
-
+function get_disk
+{
     get_df_output "$@"
     mapfile -t diskutil_out < <(diskutil info "${search}")
 
@@ -85,11 +87,10 @@ get_disk() {
     disk_mount="$(spacify "${disk_mount}")"
 
     disk_part=" | ${disk_part}"
-
 }
 
-main() {
-
+function main
+{
     source "${0%/*}/notify.sh"
     
     get_disk "$@"
@@ -99,7 +100,6 @@ main() {
     message="${disk_device}${disk_part}"
 
     display_notification "${title:-}" "${subtitle:-}" "${message:-}"
-
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then

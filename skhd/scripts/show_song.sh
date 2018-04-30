@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 
-determine_state() {
+function determine_state
+{
     case "$1" in
         0|"paused")  paused="$2" ;;
         1|"playing") playing="$2" ;;
     esac
 }
 
-check_app_state() {
-
+function check_app_state
+{
     if [[ "$1" ]]; then
         apps=("$1")
     else
@@ -32,11 +33,10 @@ check_app_state() {
         fi
 
     done
-
 }
 
-get_song_info() {
-
+function get_song_info
+{
     if [[ "${app}" == "cmus" ]]; then
 
         IFS=":" \
@@ -65,11 +65,10 @@ EOF
 )
 
     fi
-
 }
 
-main() {
-
+function main
+{
     source "${0%/*}/notify.sh"
     check_app_state "$@"
 
@@ -98,7 +97,6 @@ main() {
     fi
 
     display_notification "${title:-}" "${subtitle:-}" "${message:-}"
-
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then

@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 
-trim_digits() {
+function trim_digits
+{
     case "${1##*.}" in
         "00")   printf "%s" "${1/.*}" ;;
         *)      printf "%s" "$1" ;;
     esac
 }
 
-get_mem_info() {
-
+function get_mem_info
+{
     mapfile -t mem_cache < <(vm_stat)
     mem_cache+=("$(sysctl vm.swapusage)")
 
@@ -38,11 +39,10 @@ get_mem_info() {
 
     swap_total="$(trim_digits "${swap_total/M*}")"
     swap_used="$(trim_digits "${swap_used/M*}")"
-
 }
 
-main() {
-
+function main
+{
     source "${0%/*}/notify.sh"
     get_mem_info
 
@@ -51,7 +51,6 @@ main() {
     message="Swap: ${swap_used}MiB | ${swap_total}MiB"
 
     display_notification "${title:-}" "${subtitle:-}" "${message:-}"
-
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then

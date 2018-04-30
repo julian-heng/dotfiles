@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
-main() {
-
-    convert_mem() {
+function main
+{
+    function convert_mem
+    {
         awk -v a="$1" 'BEGIN { b = a / 1024; printf "%0.2f", b }'
     }
 
@@ -54,7 +55,6 @@ main() {
     esac
 
     display_notification "${title:-}" "${subtitle:-}" "${message:-}"
-
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then

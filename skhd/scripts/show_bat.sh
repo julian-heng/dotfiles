@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-get_bat_info() {
-
+function get_bat_info
+{
     mapfile -t bat_cache < <(pmset -g batt)
     bat_cache+=("$(system_profiler SPPowerDataType)")
 
@@ -35,11 +35,10 @@ get_bat_info() {
 
     bat_temp="$(istats battery temp --value-only)"
     bat_temp="${bat_temp// }"
-
 }
 
-main() {
-
+function main
+{
     source "${0%/*}/notify.sh"
     get_bat_info
 
@@ -48,7 +47,6 @@ main() {
     message="Source: ${bat_state}"
     
     display_notification "${title:-}" "${subtitle:-}" "${message:-}"
-
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
