@@ -111,7 +111,7 @@ function install
         elif [[ -d "${_link}" || -e "${_link}" ]]; then
             if [[ "$overwrite" == "true" ]]; then
                 prin "Warning: \"${_link}\" already exist, overwriting"
-                print_run "Install: Running" "rm ${_link}"
+                print_run "Install: Running" "rm -rf ${_link}"
                 print_run "Install: Running" "ln -s ${_file} ${_link}"
             else
                 prin "Warning: \"${_link}\" already exist"
