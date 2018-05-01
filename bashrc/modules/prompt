@@ -11,13 +11,11 @@ function prompter
 {
     function _git_status
     {
-        if [[ -d ".git" ]]; then
-            if git rev-parse --git-dir > /dev/null 2>&1; then
-                branch="$(git branch)"
-                branch="${branch//["*", ]/}"
-                [[ "${branch}" == "" ]] && exit
-                printf "%s" "-[${c2}${branch}${reset}]"
-            fi
+        if [[ -d ".git" ]] || git rev-parse --git-dir > /dev/null 2>&1; then
+            branch="$(git branch)"
+            branch="${branch//["*", ]/}"
+            [[ "${branch}" == "" ]] && exit
+            printf "%s" "-[${c2}${branch}${reset}]"
         fi
     }
 
