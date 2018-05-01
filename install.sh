@@ -152,12 +152,13 @@ function get_args
 {
     while [[ $1 ]]; do
         case "$1" in
-            "-x")               set -x ;;
-            "-u"|"--uninstall") uninstall="true" ;;
-            "-d"|"--dry")       dry="true" ;;
-            "-o"|"--overwrite") overwrite="true" ;;
-            "-p"|"--profile")   profile="$2" ;;
-            "-i"|"--install")   install="true" ;;
+            "-x")                   set -x ;;
+            "-f"|"--force-install") force="true" ;;
+            "-u"|"--uninstall")     uninstall="true" ;;
+            "-d"|"--dry")           dry="true" ;;
+            "-o"|"--overwrite")     overwrite="true" ;;
+            "-p"|"--profile")       profile="$2" ;;
+            "-i"|"--install")       install="true" ;;
         esac
         shift
     done
@@ -165,8 +166,8 @@ function get_args
 
 function main
 {
-    check_version
     get_args "$@"
+    [[ "${force}" != "true" ]] && check_version
     get_os
     prepare_dir "$0"
     get_profile
