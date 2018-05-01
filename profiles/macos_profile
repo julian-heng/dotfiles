@@ -1,0 +1,17 @@
+## macos_profile
+## This is a profile for installing dotfiles for a specific platform
+
+dirs=(
+    "${script_dir}/htop,      ${config_dir}/htop"
+    "${script_dir}/mpv,       ${config_dir}/mpv"
+    "${script_dir}/neofetch,  ${config_dir}/neofetch"
+    "${script_dir}/ranger,    ${config_dir}/ranger"
+)
+
+files=(
+    "${script_dir}/bashrc/bash_profile,     ${HOME}/.bash_profile"
+    "${script_dir}/bashrc/bashrc,           ${HOME}/.bashrc"
+    "${script_dir}/vimrc/vimrc,             ${HOME}/.vimrc"
+    "${script_dir}/skhd/skhdrc,             ${HOME}/.skhdrc"
+    "${script_dir}/bashrc/inputrc_macos,    ${HOME}/.inputrc"
+)
