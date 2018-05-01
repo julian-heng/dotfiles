@@ -42,6 +42,23 @@ function print_header
     print_line "${string}"
 }
 
+function print_run
+{
+    line="${1}"
+    _command="${2}"
+    prin "${line} \"${_command}\""
+    [[ "${dry}" != "true" ]] && eval "${_command}"
+}
+
+function prin
+{
+    if [[ "$dry" == "true" ]]; then
+        printf "%s\\n" "[Dry] $@"
+    else
+        printf "%s\\n" "$@"
+    fi
+}
+
 function prepare_dir
 {
     if [[ -d "${0%/*}" ]]; then
@@ -54,130 +71,53 @@ function prepare_dir
     fi
 
     config_dir="${HOME}/.config"
+}
 
-    dirs=(
-        "${script_dir}/htop,      ${config_dir}/htop"
-        "${script_dir}/mpv,       ${config_dir}/mpv"
-        "${script_dir}/neofetch,  ${config_dir}/neofetch"
-        "${script_dir}/ranger,    ${config_dir}/ranger"
-    )
+function get_profile
+{
+    if [[ ! "${profile}" ]]; then
+        case "${distro}" in
+            "MacOS")    profile="${script_dir}/profiles/macos_profile"   ;;
+            *)          profile="${script_dir}/profiles/linux_profile"   ;;
+        esac
+    fi
 
-    files=(
-        "${script_dir}/bashrc/bash_profile, ${HOME}/.bash_profile"
-        "${script_dir}/bashrc/bashrc,       ${HOME}/.bashrc"
-        "${script_dir}/vimrc/vimrc,         ${HOME}/.vimrc"
-    )
-
-    if [[ "${distro}" == "MacOS" ]]; then
-        files+=("${script_dir}/skhd/skhdrc,             ${HOME}/.skhdrc")
-        files+=("${script_dir}/bashrc/inputrc_macos,    ${HOME}/.inputrc")
+    if [[ ! "${profile}" ]]; then
+        prin "Error: No profile selected"
+        exit 1
     else
-        files+=("${script_dir}/bashrc/inputrc_linux,    ${HOME}/.inputrc")
+        if [[ -f "${profile}" ]]; then
+            source "${profile}"
+        else
+            prin "Error: Invalid profile"
+        fi
     fi
 }
 
-function install_files
+function install
 {
     print_header "Installing dotfile files"
-    for entry in "${files[@]}" ; do
+    for entry in "${dirs[@]}" "${files[@]}" ; do
         entry="${entry//,/ }"
-        read -r _file link <<< "${entry}"
-        if [[ -L "${link}" ]]; then
-            if [[ "$@" == *"overwrite"* ]]; then
-                if [[ "$@" != *"dry"* ]]; then
-                    printf "%s\\n" "Warning: \"${link}\" is already symlinked, overwriting"
-                    printf "%s\\n" "Install: Running \"rm ${link}\""
-                    rm "${link}"
-
-                    printf "%s\\n\\n" "Install: Running \"ln -s ${_file} ${link}\""
-                    ln -s "${_file}" "${link}"
-                else
-                    printf "%s\\n" "[Dry] Warning: \"${link}\" is already symlinked, overwriting"
-                    printf "%s\\n" "[Dry] Install: Running \"rm ${link}\""
-                    printf "%s\\n\\n" "[Dry] Install: Running \"ln -s ${_file} ${link}\""
-                fi
-
+        read -r _file _link <<< "${entry}"
+        if [[ -L "${_link}" ]]; then
+            if [[ "$overwrite" == "true" ]]; then
+                prin "Warning: \"${_link}\" is already symlinked, overwriting"
+                print_run "Install: Running" "rm ${_link}"
+                print_run "Install: Running" "ln -s ${_file} ${_link}"
             else
-                printf "%s\\n" "Warning: \"${link}\" is already symlinked"
+                prin "Warning: \"${_link}\" is already symlinked"
             fi
-        elif [[ -e "${link}" ]]; then
-            if [[ "$@" == *"overwrite"* ]]; then
-                if [[ "$@" != *"dry"* ]]; then
-                    printf "%s\\n" "Warning: \"${link}\" already exist, overwriting"
-                    printf "%s\\n" "Install: Running \"rm ${link}\""
-                    rm "${link}"
-
-                    printf "%s\\n\\n" "Install: Running \"ln -s ${_file} ${link}\""
-                    ln -s "${_file}" "${link}"
-                else
-                    printf "%s\\n" "[Dry] Warning: \"${link}\" already exist, overwriting"
-                    printf "%s\\n" "[Dry] Install: Running \"rm ${link}\""
-                    printf "%s\\n\\n" "[Dry] Install: Running \"ln -s ${_file} ${link}\""
-                fi
+        elif [[ -d "${_link}" || -e "${_link}" ]]; then
+            if [[ "$overwrite" == "true" ]]; then
+                prin "Warning: \"${_link}\" already exist, overwriting"
+                print_run "Install: Running" "rm ${_link}"
+                print_run "Install: Running" "ln -s ${_file} ${_link}"
             else
-                printf "%s\\n" "Warning: \"${link}\" already exist"
+                prin "Warning: \"${_link}\" already exist"
             fi
         else
-            if [[ "$@" != *"dry"* ]]; then
-                printf "%s\\n" "Install: Running \"ln -s ${_file} ${link}\""
-                ln -s "${_file}" "${link}"
-            else
-                printf "%s\\n" "[Dry] Install: Running \"ln -s ${_file} ${link}\""
-            fi
-        fi
-    done
-    printf "\\n"
-}
-
-function install_dirs
-{
-    print_header "Installing dotfile directories"
-    for entry in "${dirs[@]}"; do
-        entry="${entry//,/ }"
-        read -r dir link <<< "${entry}"
-        if [[ -L "${link}" ]]; then
-            if [[ "$@" == *"overwrite"* ]]; then
-                if [[ "$@" != *"dry"* ]]; then
-                    printf "%s\\n" "Warning: \"${link}\" is already symlinked, overwriting"
-                    printf "%s\\n" "Install: Running \"rm ${link}\""
-                    rm "${link}"
-
-                    printf "%s\\n\\n" "Install: Running \"ln -s ${dir} ${config_dir}\""
-                    ln -s "${dir}" "${config_dir}"
-                else
-                    printf "%s\\n" "[Dry] Warning: \"${link}\" is already symlinked, overwriting"
-                    printf "%s\\n" "[Dry] Install: Running \"rm ${link}\""
-                    printf "%s\\n\\n" "[Dry] Install: Running \"ln -s ${dir} ${config_dir}\""
-                fi
-            else
-                printf "%s\\n" "Warning: \"${config_dir}\" is already symlinked"
-            fi
-
-        elif [[ -d "${link}" ]]; then
-            if [[ "$@" == *"overwrite"* ]]; then
-                if [[ "$@" != *"dry"* ]]; then
-                    printf "%s\\n" "Warning: \"${link}\" already exist, overwriting"
-                    printf "%s\\n" "Install: Running \"rm -rf ${link}\""
-                    rm -rf "${link}"
-
-                    printf "%s\\n\\n" "Install: Running \"ln -s ${dir} ${config_dir}\""
-                    ln -s "${dir}" "${config_dir}"
-                else
-                    printf "%s\\n" "[Dry] Warning: \"${link}\" already exist, overwriting"
-                    printf "%s\\n" "[Dry] Install: Running \"rm -rf ${link}\""
-                    printf "%s\\n\\n" "[Dry] Install: Running \"ln -s ${dir} ${config_dir}\""
-                fi
-            else
-                printf "%s\\n" "Warning: \"${dir}\" already exist"
-            fi
-
-        else
-            if [[ "$@" != *"dry"* ]]; then
-                printf "%s\\n" "Install: Running \"ln -s ${dir} ${config_dir}\""
-                ln -s "${dir}" "${config_dir}"
-            else
-                printf "%s\\n" "[Dry] Install: Running \"ln -s ${dir} ${config_dir}\""
-            fi
+            print_run "Install: Running" "ln -s ${_file} ${_link}"
         fi
     done
     printf "\\n"
@@ -186,55 +126,55 @@ function install_dirs
 function uninstall
 {
     print_header "Uninstalling dotfiles"
-    for entry in "${dirs[@]}"; do
-        entry="${entry//,/ }"
-        read -r dir link <<< "${entry}"
-        if [[ -L "${link}" ]]; then
-            if [[ "$@" != *"dry"* ]]; then
-                printf "%s\\n" "Uninstall: Running \"rm ${link}\""
-                rm "${link}"
-            else
-                printf "%s\\n" "[Dry] Uninstall: Running \"rm ${link}\""
-            fi
-        elif [[ -d "${link}" ]]; then
-            printf "%s\\n" "Warning: Cannot uninstall \"${link}\", not from dotfiles"
+    for _link in "${dirs[@]}" "${files[@]}"; do
+        _link="${_link##*,}"
+        _link="${_link// /}"
+        if [[ -L "${_link}" ]]; then
+            print_run "Uninstall: Running" "rm ${_link}"
+        elif [[ -d "${_link}" || -e "${_link}" ]]; then
+            prin "Warning: Cannot uninstall \"${_link}\", not from dotfiles"
         else
-            printf "%s\\n" "Warning: Cannot find \"${link}\""
-        fi
-    done
-
-    for entry in "${files[@]}" ; do
-        entry="${entry//,/ }"
-        read -r _file link <<< "${entry}"
-        if [[ -L "${link}" ]]; then
-            if [[ "$@" != *"dry"* ]]; then
-                printf "%s\\n" "Uninstall: Running \"rm ${link}\""
-                rm "${link}"
-            else
-                printf "%s\\n" "[Dry] Uninstall: Running \"rm ${link}\""
-            fi
-        elif [[ -e "${link}" ]]; then
-            printf "%s\\n" "Warning: Cannot uninstall \"${link}\", not from dotfiles"
-        else
-            printf "%s\\n" "Warning: Cannot find \"${link}\""
+            prin "Warning: Cannot find \"${_link}\""
         fi
     done
     printf "\\n"
 }
 
-function main
+function check_version
 {
     if ((${BASH_VERSINFO[0]} < 4 || ${BASH_VERSINFO[1]} < 4)); then
         printf "%s\\n" "Error: Bash 4.4+ required"
         exit 1
     fi
+}
+
+function get_args
+{
+    while [[ $1 ]]; do
+        case "$1" in
+            "-x")               set -x ;;
+            "-u"|"--uninstall") uninstall="true" ;;
+            "-d"|"--dry")       dry="true" ;;
+            "-o"|"--overwrite") overwrite="true" ;;
+            "-p"|"--profile")   profile="$2" ;;
+            "-i"|"--install")   install="true" ;;
+        esac
+        shift
+    done
+}
+
+function main
+{
+    check_version
+    get_args "$@"
     get_os
-    prepare_dir "$@"
-    if [[ "$@" == *"uninstall"* ]]; then
-        uninstall "$@"
+    prepare_dir "$0"
+    get_profile
+
+    if [[ "${uninstall}" == "true" ]]; then
+        uninstall
     else
-        install_files "$@"
-        install_dirs "$@"
+        install
     fi
 }
 
