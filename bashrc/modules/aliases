@@ -45,7 +45,6 @@ case "${distro}" in
         alias cup="brew cask upgrade"
         alias csearch="brew cask search"
         alias cleanup="brew cleanup && brew cask cleanup"
-
     ;;
     "Ubuntu"*|"Debian"*)
         alias update="sudo apt update && sudo apt upgrade"
@@ -59,6 +58,9 @@ case "${distro}" in
         else
             alias update="sudo yum update"
         fi
+    ;;
+    "VoidLinux")
+        alias update="sudo xbps-install -Su"
     ;;
     "")
         printf "%s\\n" "Error: Cannot detect distro, 'update' alias not set"
