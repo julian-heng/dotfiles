@@ -36,15 +36,15 @@ function print_header
 
 function print_run
 {
-    line="${1}"
-    _command="${2}"
+    line="$1"
+    _command="$2"
     prin "${line} \"${_command}\""
     [[ "${dry}" != "true" ]] && eval "${_command}"
 }
 
 function prin
 {
-    if [[ "$dry" == "true" ]]; then
+    if [[ "${dry}" == "true" ]]; then
         printf "%s\\n" "[Dry] $*"
     else
         printf "%s\\n" "$*"
@@ -93,7 +93,7 @@ function install
         entry="${entry//,/ }"
         read -r _file _link <<< "${entry}"
         if [[ -L "${_link}" ]]; then
-            if [[ "$overwrite" == "true" ]]; then
+            if [[ "${overwrite}" == "true" ]]; then
                 prin "Warning: \"${_link}\" is already symlinked, overwriting"
                 print_run "Install: Running" "rm ${_link}"
                 print_run "Install: Running" "ln -s ${_file} ${_link}"
@@ -101,7 +101,7 @@ function install
                 prin "Warning: \"${_link}\" is already symlinked"
             fi
         elif [[ -d "${_link}" || -e "${_link}" ]]; then
-            if [[ "$overwrite" == "true" ]]; then
+            if [[ "${overwrite}" == "true" ]]; then
                 prin "Warning: \"${_link}\" already exist, overwriting"
                 print_run "Install: Running" "rm -rf ${_link}"
                 print_run "Install: Running" "ln -s ${_file} ${_link}"
