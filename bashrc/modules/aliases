@@ -44,6 +44,7 @@ case "${distro}" in
         alias cuninst="brew cask uninstall"
         alias cup="brew cask upgrade"
         alias csearch="brew cask search"
+        alias cout="brew cask outdated"
         alias cleanup="brew cleanup && brew cask cleanup"
     ;;
     "Ubuntu"*|"Debian"*)
