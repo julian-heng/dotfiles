@@ -38,21 +38,26 @@ function detect_os
     esac
 }
 
-detect_os
-module_dir="${HOME}/.dotfiles/bashrc/modules"
-modules=(
-    "${module_dir}/colors"
-    "${module_dir}/prompt"
-    "${module_dir}/env_var"
-    "${module_dir}/aliases"
-)
+function main
+{
+    detect_os
+    module_dir="${HOME}/.dotfiles/bashrc/modules"
+    modules=(
+        "${module_dir}/colors"
+        "${module_dir}/prompt"
+        "${module_dir}/env_var"
+        "${module_dir}/aliases"
+    )
 
-if [[ "${distro}" == "MacOS" ]]; then
-    modules+=("/usr/local/share/bash-completion/bash_completion")
-else
-    modules+=("/usr/share/bash-completion/bash_completion")
-fi
+    if [[ "${distro}" == "MacOS" ]]; then
+        modules+=("/usr/local/share/bash-completion/bash_completion")
+    else
+        modules+=("/usr/share/bash-completion/bash_completion")
+    fi
 
-for i in "${modules[@]}"; do
-    secure_source "${i}"
+    for i in "${modules[@]}"; do
+        secure_source "${i}"
 done
+}
+
+main
