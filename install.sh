@@ -28,18 +28,10 @@ function get_os
 
 function print_header
 {
-    function print_line
-    {
-        for ((i=0;i<"${#1}";i++)); do
-            printf "%s" "="
-        done
-        printf "\\n"
-    }
-
     string="$1"
-    print_line "${string}"
+    eval printf "%0.s=" "{0..${#string}}" && printf "\\n"
     printf "%s\\n" "${string}"
-    print_line "${string}"
+    eval printf "%0.s=" "{0..${#string}}" && printf "\\n"
 }
 
 function print_run
