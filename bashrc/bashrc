@@ -8,7 +8,7 @@ function secure_source
     if [[ -f "${file}" ]]; then
         source "${file}"
     else
-        printf "%s\\n" "${bold}${f[1]}error:${reset} \"${file}\" is missing"
+        printf "%s\\n" "${fb[1]}Error:${reset} \"${file}\" is missing"
     fi
 }
 
