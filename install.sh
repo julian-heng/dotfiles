@@ -55,9 +55,9 @@ function prepare_dir
 {
     if [[ -d "${0%/*}" ]]; then
         cwd="${PWD}"
-        cd "${0%/*}"
+        cd "${0%/*}" || exit
         script_dir="${PWD}"
-        cd "${cwd}"
+        cd "${cwd}" || exit
     else
         script_dir="${PWD}"
     fi
@@ -142,7 +142,7 @@ function check_version
 
 function get_args
 {
-    while [[ $1 ]]; do
+    while [[ "$1" ]]; do
         case "$1" in
             "-x")                   set -x ;;
             "-f"|"--force-install") force="true" ;;
