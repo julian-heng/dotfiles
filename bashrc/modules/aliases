@@ -64,6 +64,6 @@ case "${distro}" in
         alias update="sudo xbps-install -Su"
     ;;
     "")
-        printf "%s\\n" "Error: Cannot detect distro, 'update' alias not set"
+        printf "%s\\n" "${fb[1]}Error:${reset} Cannot detect distro, 'update' alias not set"
     ;;
 esac
