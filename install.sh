@@ -6,6 +6,7 @@ function get_os
         "Darwin")
             distro="MacOS"
         ;;
+
         "Linux") 
             if type -p lsb_release >/dev/null; then
                 distro="$(lsb_release -si)"
@@ -20,6 +21,7 @@ function get_os
                 distro="${distro//\"/}"
             fi
         ;;
+
         "")
             printf "%s\\n" "Error: Cannot detect os"
         ;;
@@ -51,18 +53,26 @@ function prin
     fi
 }
 
-function prepare_dir
+function get_full_path
 {
-    if [[ -d "${0%/*}" ]]; then
-        cwd="${PWD}"
-        cd "${0%/*}" || exit
-        script_dir="${PWD}"
-        cd "${cwd}" || exit
+    cwd="${PWD}"
+    if [[ -f "$1" ]]; then
+        filename="${1##*/}"
+        cd "${1%/*}" || exit
+        full_path="${PWD}/${filename}"
     else
-        script_dir="${PWD}"
+        cd "$1" || exit
+        full_path="${PWD}"
     fi
 
-    config_dir="${HOME}/.config"
+    cd "${cwd}" || exit
+    printf "%s" "${full_path%/}"
+}
+
+function prepare_dir
+{
+    script_dir="$(get_full_path "${0%/*}")"
+    config_dir="${XDG_CONFIG_HOME:-${HOME}/.config}"
 }
 
 function get_profile
@@ -149,8 +159,15 @@ function get_args
             "-u"|"--uninstall")     uninstall="true" ;;
             "-d"|"--dry")           dry="true" ;;
             "-o"|"--overwrite")     overwrite="true" ;;
-            "-p"|"--profile")       profile="$2" ;;
             "-i"|"--install")       install="true" ;;
+            "-p"|"--profile")
+                if [[ "${profile}" ]]; then
+                    prin "Warning: \"${profile}\" is already selected"
+                else
+                    profile="$(get_full_path "$2")"
+                fi
+            ;;
+
         esac
         shift
     done
