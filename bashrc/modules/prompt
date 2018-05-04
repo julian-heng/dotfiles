@@ -4,7 +4,7 @@
 
 num1="2"
 num2="4"
-__PS1_CHANGE_COLOR_ENABLE=false
+__PS1_CHANGE_COLOR_ENABLE="false"
 __PS1_CHANGE_COLOR_MODE="random"
 
 function prompter
@@ -55,7 +55,7 @@ function prompter
 
     unset line PS1
  
-    if $__PS1_CHANGE_COLOR_ENABLE; then
+    if [[ "$__PS1_CHANGE_COLOR_ENABLE" == "true" ]]; then
         case "$__PS1_CHANGE_COLOR_MODE" in
             "increment")
                 num1="$(increment num1 0 7)"
