@@ -55,7 +55,7 @@ function prepare_dir
 {
     if [[ -d "${0%/*}" ]]; then
         cwd="${PWD}"
-        cd ${0%/*}
+        cd "${0%/*}"
         script_dir="${PWD}"
         cd "${cwd}"
     else
