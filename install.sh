@@ -45,9 +45,9 @@ function print_run
 function prin
 {
     if [[ "$dry" == "true" ]]; then
-        printf "%s\\n" "[Dry] $@"
+        printf "%s\\n" "[Dry] $*"
     else
-        printf "%s\\n" "$@"
+        printf "%s\\n" "$*"
     fi
 }
 
