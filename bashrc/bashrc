@@ -57,7 +57,7 @@ function main
 
     for i in "${modules[@]}"; do
         secure_source "${i}"
-done
+    done
 }
 
 main
