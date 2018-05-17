@@ -156,10 +156,10 @@ function get_args
         case "$1" in
             "-x")                   set -x ;;
             "-f"|"--force-install") force="true" ;;
-            "-u"|"--uninstall")     uninstall="true" ;;
+            "-u"|"--uninstall")     uninstall="true"; install="false" ;;
             "-d"|"--dry")           dry="true" ;;
             "-o"|"--overwrite")     overwrite="true" ;;
-            "-i"|"--install")       install="true" ;;
+            "-i"|"--install")       install="true"; uninstall="false" ;;
             "-p"|"--profile")
                 if [[ "${profile}" ]]; then
                     prin "Warning: \"${profile}\" is already selected"
