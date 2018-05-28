@@ -13,4 +13,5 @@ files=(
     "${script_dir}/bashrc/bash_profile,     ${HOME}/.bash_profile"
     "${script_dir}/bashrc/bashrc,           ${HOME}/.bashrc"
     "${script_dir}/bashrc/inputrc_linux,    ${HOME}/.inputrc"
+    "${script_dir}/tmux/tmux.conf,          ${HOME}/.tmux.conf"
 )
