@@ -1,0 +1,12 @@
+[submodule "vimrc/bundle/vim-pathogen"]
+	path = vimrc/bundle/vim-pathogen
+	url = https://github.com/tpope/vim-pathogen.git
+[submodule "vimrc/bundle/lightline.vim"]
+	path = vimrc/bundle/lightline.vim
+	url = https://github.com/itchyny/lightline.vim
+[submodule "vimrc/bundle/nerdtree"]
+	path = vimrc/bundle/nerdtree
+	url = https://github.com/scrooloose/nerdtree.git
+[submodule "vimrc/bundle/nerdtree-git-plugin"]
+	path = vimrc/bundle/nerdtree-git-plugin
+	url = https://github.com/Xuyuanp/nerdtree-git-plugin.git
