@@ -19,6 +19,15 @@ function prompter
         fi
     }
 
+    function expand
+    {
+        str="$1"
+        while read -r i; do
+            out+=("${i}")
+        done <<< "${str}"
+        printf "%s" "${out[@]}"
+    }
+
     function dir
     {
         unset _PWD
@@ -29,10 +38,18 @@ function prompter
         read -r -a parts <<< "${dir}"
 
         for part in "${parts[@]::${#parts[@]}-1}"; do
-            _PWD="${_PWD}/${part:0:1}"
+            count="0"
+            for in_part in $(expand "${part}"); do
+                if ((count == 0)); then
+                    _PWD+="/${in_part:0:1}"
+                    ((count++))
+                else
+                    _PWD+="${in_part:0:1}"
+                fi
+            done
         done
 
-        _PWD="${_PWD}/${parts[-1]}"
+        _PWD+="/${parts[-1]}"
         _PWD="${_PWD#/}"
 
         ((${#_PWD} > 20)) && _PWD="${parts[-1]}"
@@ -75,7 +92,7 @@ function prompter
     line+=("\\$ ")
 
     for i in "${line[@]}"; do
-        PS1="${PS1}${i}"
+        PS1+="${i}"
     done
 
     export PS1
