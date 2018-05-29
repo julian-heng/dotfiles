@@ -2,6 +2,14 @@
 ##### Aliases/Functions #####
 #############################
 
+function vscp
+{
+    server="$1"
+    file_path="$2"
+    remote="scp://$1/$2"
+    vim "${remote}"
+}
+
 alias dl="aria2c --dir=${HOME}/Downloads/"
 alias gp="git pull"
 alias gcl="git clone"
