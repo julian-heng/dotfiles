@@ -2,6 +2,8 @@ runtime bundle/vim-pathogen/autoload/pathogen.vim
 execute pathogen#infect()
 filetype plugin indent on
 
+set nocompatible
+set backspace=2
 set number
 set hidden
 set history=100
