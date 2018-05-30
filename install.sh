@@ -96,9 +96,27 @@ function get_profile
     fi
 }
 
+function check_git_modules
+{
+    git_module_dir=(
+        "${script_dir}/vimrc/bundle/"*
+    )
+
+    while read -r module_dir && [[ "${check}" != "false" ]]; do
+        ! { grep --quiet . < <(find "${module_dir}" -mindepth 1 -print -quit); } \
+            && check="false"
+    done < <(printf "%s\\n" "${git_module_dir[@]}")
+
+    if [[ "${check}" == "false" ]]; then
+        prin "Warning: Git submodules are not initialised. Initialising..."
+        print_run "Install: Running" "git submodule update --init --recursive"
+    fi
+}
+
 function install
 {
     print_header "Installing dotfile files"
+    check_git_modules
     for entry in "${dirs[@]}" "${files[@]}" ; do
         entry="${entry//,/ }"
         read -r _file _link <<< "${entry}"
