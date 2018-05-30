@@ -4,9 +4,10 @@
 
 function vscp
 {
-    server="$1"
-    file_path="$2"
-    remote="scp://$1/$2"
+    read -r server \
+            file \
+            <<< "${1//:/ }"
+    remote="scp://${server}/${file}"
     vim "${remote}"
 }
 
