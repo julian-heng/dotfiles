@@ -98,14 +98,10 @@ function get_profile
 
 function check_git_modules
 {
-    git_module_dir=(
-        "${script_dir}/vimrc/bundle/"*
-    )
-
     while read -r module_dir && [[ "${check}" != "false" ]]; do
         ! { grep --quiet . < <(find "${module_dir}" -mindepth 1 -print -quit); } \
             && check="false"
-    done < <(printf "%s\\n" "${git_module_dir[@]}")
+    done < <(awk -v sd="${script_dir}" '/path =/ {print sd"/"$3}' "${script_dir}/.gitmodules")
 
     if [[ "${check}" == "false" ]]; then
         prin "Warning: Git submodules are not initialised. Initialising..."
