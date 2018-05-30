@@ -38,15 +38,22 @@ function detect_os
     esac
 }
 
+function get_module_dir
+{
+    if type -p readlink >/dev/null; then
+        module_dir="$(readlink "${BASH_SOURCE[0]}")"
+        module_dir="${module_dir%/*}/modules"
+    else
+        module_dir="${HOME}/.dotfiles/bashrc/modules"
+    fi
+}
+
 function main
 {
     detect_os
-    module_dir="${HOME}/.dotfiles/bashrc/modules"
+    get_module_dir
     modules=(
-        "${module_dir}/colors"
-        "${module_dir}/prompt"
-        "${module_dir}/env_var"
-        "${module_dir}/aliases"
+        "${module_dir}/"*
     )
 
     if [[ "${distro}" == "MacOS" ]]; then
