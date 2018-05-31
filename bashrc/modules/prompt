@@ -41,7 +41,11 @@ function prompter
             count="0"
             for in_part in $(expand "${part}"); do
                 if ((count == 0)); then
-                    _PWD+="/${in_part:0:1}"
+                    if [[ "${in_part:0:1}" == "." ]]; then
+                        _PWD+="/${in_part:0:2}"
+                    else
+                        _PWD+="/${in_part:0:1}"
+                    fi
                     ((count++))
                 else
                     _PWD+="${in_part:0:1}"
