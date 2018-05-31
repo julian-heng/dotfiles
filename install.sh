@@ -11,12 +11,10 @@ function get_os
             if type -p lsb_release >/dev/null; then
                 distro="$(lsb_release -si)"
             elif [[ -f "/etc/lsb-release" ]]; then
-                distro_file="$(< /etc/lsb-release)"
-                distro="$(awk '/DISTRIB_ID/ {print $1}' <<< "${distro_file}")"
+                distro="$(awk '/DISTRIB_ID/ {print $1}' /etc/lsb-release)"
                 distro="${distro/DISTRIB_ID=/}"
             elif [[ -f "/etc/os-release" ]]; then
-                distro_file="$(< /etc/os-release)"
-                distro="$(awk 'NR==1 {print}' <<< "${distro_file}")"
+                distro="$(awk 'NR==1 {print}' /etc/os-release)"
                 distro="${distro/NAME=/}"
                 distro="${distro//\"/}"
             fi
