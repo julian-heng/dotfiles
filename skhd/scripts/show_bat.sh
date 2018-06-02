@@ -32,9 +32,6 @@ function get_bat_info
     [[ "${bat_time}" == "0:00 remaining" \
     && "${bat_state}" == "AC" ]] \
         && bat_time="Fully charged"
-
-    bat_temp="$(istats battery temp --value-only)"
-    bat_temp="${bat_temp// }"
 }
 
 function main
@@ -43,7 +40,7 @@ function main
     get_bat_info
 
     title="Battery (${bat_percent})"
-    subtitle="${bat_time} | ${bat_temp}°C | ${bat_condition} | ${bat_cycles} cycles"
+    subtitle="${bat_time} | ${bat_condition} | ${bat_cycles} cycles"
     message="Source: ${bat_state}"
     
     display_notification "${title:-}" "${subtitle:-}" "${message:-}"
