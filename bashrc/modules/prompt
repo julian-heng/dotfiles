@@ -2,11 +2,6 @@
 ##### Prompt #####
 ##################
 
-num1="2"
-num2="4"
-__PS1_CHANGE_COLOR_ENABLE="false"
-__PS1_CHANGE_COLOR_MODE="random"
-
 function prompter
 {
     function _git_prompt
@@ -114,36 +109,10 @@ function prompter
         printf "%s" "${_PWD:-"/"}"
     }
 
-    function increment
-    {
-        num="$1"
-        lower="$2"
-        upper="$3"
-
-        if ((num++ > upper)); then
-            num="${lower}"
-        fi
-
-        printf "%s" "${num}"
-    }
-
     unset prompt_line PS1
  
-    if [[ "$__PS1_CHANGE_COLOR_ENABLE" == "true" ]]; then
-        case "$__PS1_CHANGE_COLOR_MODE" in
-            "increment")
-                num1="$(increment num1 0 7)"
-                num2="$(increment num2 0 7)"
-            ;;
-            "random")
-                num1="$((RANDOM % 8))"
-                num2="$((RANDOM % 8))"
-            ;;
-        esac
-    fi
-
-    c1="${fb[$num1]}"
-    c2="${fb[$num2]}"
+    c1="${fb[2]}"
+    c2="${fb[4]}"
 
     prompt_line+=("${c1}\\u${reset}@${c1}\\h${reset}: (${c2}$(dir)${reset})$(_git_prompt)\\n")
     prompt_line+=("\\$ ")
