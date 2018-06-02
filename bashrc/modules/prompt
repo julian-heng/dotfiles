@@ -9,14 +9,67 @@ __PS1_CHANGE_COLOR_MODE="random"
 
 function prompter
 {
-    function _git_status
+    function _git_prompt
     {
+        function __get_git_branch
+        {
+            branch="$(awk '/\*/{print}' < <(git branch))"
+            branch="${branch//[[:space:]]}"
+            branch="${branch//\*/}"
+            branch="${branch//\(HEAD/}"
+            branch="${branch//detached/}"
+            branch="${branch//at/}"
+            branch="${branch//\)/}"
+
+            printf "%s" "${branch}"
+        }
+
+        function __get_git_status
+        {
+            # Git status symbols referenced from
+            #   - https://github.com/magicmonty/bash-git-prompt/blob/master/gitstatus.sh
+            #   - https://git-scm.com/docs/git-status
+
+            unset num_{staged,changed,conflicts,untracked}
+            mapfile -t _git_status_out < <(git status --porcelain)
+            for i in "${_git_status_out[@]}"; do
+                case "${i:0:2}" in
+                    "??")                       ((num_untracked++)) ;;
+                    "U"?|?"U"|"DD"|"AA"|"U")    ((num_conflicts++)) ;;
+                    ?"M"|?"D")                  ((num_changed++)) ;;
+                    ?" "|"  ") ;;
+                    *)                          ((num_staged++)) ;;
+                esac
+            done
+
+            ((num_conflicts == 0 && \
+              num_changed == 0 && \
+              num_staged == 0 && \
+              num_untracked == 0 )) && \
+                return 1
+
+            ((num_conflicts > 0)) && \
+                _git_status+="${fb[1]}✖${num_conflicts}${reset}"
+            ((num_changed > 0)) && \
+                _git_status+="${fb[4]}✚${num_changed}${reset}"
+            ((num_staged > 0)) && \
+                _git_status+="${fb[6]}●${num_staged}${reset}"
+            ((num_untracked > 0)) && \
+                _git_status+="${bold}…${num_untracked}${reset}"
+
+            printf "%s" "${_git_status}"
+        }
+
         if [[ -d ".git" ]] || git rev-parse --git-dir > /dev/null 2>&1; then
-            branch="$(git branch)"
-            branch="${branch//["*", ]/}"
-            [[ "${branch}" == "" ]] && exit
-            printf "%s" "-[${c2}${branch}${reset}]"
+            branch="$(__get_git_branch)"
+            if ! status="$(__get_git_status)"; then
+                git_prompt="-[${c2}${branch}${reset}]"
+            else
+                git_prompt="-[${c2}${branch}${reset}|${status}]"
+            fi
         fi
+
+        printf "%s" "${git_prompt}"
     }
 
     function expand
@@ -74,7 +127,7 @@ function prompter
         printf "%s" "${num}"
     }
 
-    unset line PS1
+    unset prompt_line PS1
  
     if [[ "$__PS1_CHANGE_COLOR_ENABLE" == "true" ]]; then
         case "$__PS1_CHANGE_COLOR_MODE" in
@@ -92,10 +145,10 @@ function prompter
     c1="${fb[$num1]}"
     c2="${fb[$num2]}"
 
-    line+=("${c1}\\u${reset}@${c1}\\h${reset}: (${c2}$(dir)${reset})$(_git_status)\\n")
-    line+=("\\$ ")
+    prompt_line+=("${c1}\\u${reset}@${c1}\\h${reset}: (${c2}$(dir)${reset})$(_git_prompt)\\n")
+    prompt_line+=("\\$ ")
 
-    for i in "${line[@]}"; do
+    for i in "${prompt_line[@]}"; do
         PS1+="${i}"
     done
 
