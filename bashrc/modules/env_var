@@ -1,6 +1,7 @@
 #########################
 ##### Env Variables #####
 #########################
+# shellcheck disable=2148,2154
 
 RANGER_LOAD_DEFAULT_RC="FALSE"
 HISTCONTROL="ignoreboth"

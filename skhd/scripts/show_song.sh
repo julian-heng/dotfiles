@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=1090,2194
 
 function determine_state
 {

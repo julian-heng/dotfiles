@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=1004,1090
 
 function get_bat_info
 {

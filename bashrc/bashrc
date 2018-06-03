@@ -1,6 +1,7 @@
 ##########################
 ##### Sourcing files #####
 ##########################
+# shellcheck disable=1090,2148,2154
 
 function secure_source
 {

@@ -1,6 +1,7 @@
 ########################
 ##### Bash Profile #####
 ########################
+# shellcheck disable=1090,1091,2148
 
 if [[ -f "${HOME}"/.bashrc ]]; then
     source "${HOME}/.bashrc"

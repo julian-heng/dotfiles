@@ -1,6 +1,7 @@
 ##################
 ##### Prompt #####
 ##################
+# shellcheck disable=2148,2154
 
 function prompter
 {
