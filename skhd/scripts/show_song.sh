@@ -82,7 +82,7 @@ function main
         else
             app="${paused}"
         fi
-        
+
         get_song_info
 
         title="Now Playing on ${app}"
