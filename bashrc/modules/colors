@@ -5,8 +5,8 @@
 for i in {0..7}; do
     #f+=("$(printf "%b" "\e[3${i}m")")
     #b+=("$(printf "%b" "\e[4${i}m")")
-    fb+=("$(printf "%b" "\e[01;3${i}m")")
-    bb+=("$(printf "%b" "\e[01;4${i}m")")
+    fb+=("$(printf "%b" "\\e[01;3${i}m")")
+    bb+=("$(printf "%b" "\\e[01;4${i}m")")
 done
 bold=$'\e[1m'
 reset=$'\e[0m'
