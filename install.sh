@@ -55,12 +55,13 @@ function prin
 function get_full_path
 {
     cwd="${PWD}"
-    if [[ -f "$1" ]]; then
+    target="$1"
+    if [[ -f "${target}" ]]; then
         filename="${1##*/}"
-        cd "${1%/*}" || exit
+        cd "${target%/*}" || exit
         full_path="${PWD}/${filename}"
-    else
-        cd "$1" || exit
+    elif [[ -d "${target}" ]]; then
+        cd "${target}" || exit
         full_path="${PWD}"
     fi
 
