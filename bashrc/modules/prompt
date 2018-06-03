@@ -32,7 +32,7 @@ function prompter
                     "??")                       ((num_untracked++)) ;;
                     "U"?|?"U"|"DD"|"AA"|"U")    ((num_conflicts++)) ;;
                     ?"M"|?"D")                  ((num_changed++)) ;;
-                    ?" "|"  ") ;;
+                    "  "|?" ") ;;
                     *)                          ((num_staged++)) ;;
                 esac
             done
