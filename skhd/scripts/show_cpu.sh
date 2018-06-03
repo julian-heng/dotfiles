@@ -48,7 +48,7 @@ function get_uptime
     boot="$(sysctl -n kern.boottime)"
     boot="${boot/'{ sec = '}"
     boot="${boot/,*}"
-    now="$(printf "%(%s)T")"
+    printf -v now "%(%s)T" -1
     seconds="$((now - boot))"
 
     days="$((seconds / 60 / 60 / 24))"
