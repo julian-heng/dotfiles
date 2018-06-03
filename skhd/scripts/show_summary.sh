@@ -15,8 +15,8 @@ function main
     source "${script_dir}/show_mem.sh"
     source "${script_dir}/notify.sh"
 
-    printf -v current_time "%(%H:%M)T"
-    printf -v current_date "%(%a %d %h)T"
+    printf -v current_time "%(%H:%M)T" -1
+    printf -v current_date "%(%a %d %h)T" -1
 
     case "$1" in
         "all")
