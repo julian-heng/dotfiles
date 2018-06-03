@@ -69,12 +69,6 @@ function get_full_path
     printf "%s" "${full_path%/}"
 }
 
-function prepare_dir
-{
-    script_dir="$(get_full_path "${0%/*}")"
-    config_dir="${XDG_CONFIG_HOME:-${HOME}/.config}"
-}
-
 function get_profile
 {
     if [[ ! "${profile}" ]]; then
@@ -192,7 +186,9 @@ function main
     get_args "$@"
     [[ "${force}" != "true" ]] && check_version
     get_os
-    prepare_dir "$0"
+
+    script_dir="$(get_full_path "${0%/*}")"
+    config_dir="${XDG_CONFIG_HOME:-${HOME}/.config}"
     get_profile
 
     if [[ "${uninstall}" == "true" ]]; then
