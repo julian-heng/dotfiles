@@ -156,7 +156,7 @@ function uninstall
 
 function check_version
 {
-    if ((${BASH_VERSINFO[0]} < 4 || ${BASH_VERSINFO[1]} < 4)); then
+    if ((BASH_VERSINFO[0] < 4 || BASH_VERSINFO[1] < 4)); then
         printf "%s\\n" "Error: Bash 4.4+ required"
         exit 1
     fi
