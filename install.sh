@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=1090,2034,2154
 
 function get_os
 {
