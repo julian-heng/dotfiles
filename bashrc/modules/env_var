@@ -15,7 +15,7 @@ export HISTCONTROL
 LESS_TERMCAP_mb="${fb[1]}"          # enter blinking mode - red
 LESS_TERMCAP_md="${fb[5]}"          # enter double-bright mode - bold, magenta
 LESS_TERMCAP_me="${reset}"          # turn off all appearance modes (mb, md, so, us)
-LESS_TERMCAP_se="${reset}"          # leave standout mode    
+LESS_TERMCAP_se="${reset}"          # leave standout mode
 LESS_TERMCAP_so="${fb[3]}"          # enter standout mode - yellow
 LESS_TERMCAP_ue="${reset}"          # leave underline mode
 LESS_TERMCAP_us="${fb[6]}"          # enter underline mode - cyan
