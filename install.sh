@@ -193,7 +193,7 @@ function main
 
     if [[ "${uninstall}" == "true" ]]; then
         uninstall
-    elif [[ "${install}" == "true" ]]; then
+    elif [[ ! "${install}" || "${install}" == "true" ]]; then
         install
     fi
 }
