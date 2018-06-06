@@ -3,6 +3,7 @@
 
 function get_os
 {
+    local distro
     case "$(uname -s)" in
         "Darwin")
             distro="MacOS"
@@ -25,11 +26,12 @@ function get_os
             printf "%s\\n" "Error: Cannot detect os"
         ;;
     esac
+    printf "%s" "${distro}"
 }
 
 function print_header
 {
-    string="$1"
+    local string="$1"
     eval printf "%0.s=" "{0..${#string}}" && printf "\\n"
     printf "%s\\n" "${string}"
     eval printf "%0.s=" "{0..${#string}}" && printf "\\n"
@@ -37,8 +39,8 @@ function print_header
 
 function print_run
 {
-    line="$1"
-    _command="$2"
+    local line="$1"
+    local _command="$2"
     prin "${line} \"${_command}\""
     [[ "${dry}" != "true" ]] && eval "${_command}"
 }
@@ -54,8 +56,12 @@ function prin
 
 function get_full_path
 {
+    local cwd
+    local target="$1"
+    local filename
+    local full_path
+
     cwd="${PWD}"
-    target="$1"
     if [[ -f "${target}" ]]; then
         filename="${1##*/}"
         cd "${target%/*}" || exit
@@ -105,9 +111,14 @@ function check_git_modules
 
 function install
 {
+    local install_list=("$@")
+    local entry
+    local _file
+    local _link
+
     print_header "Installing dotfile files"
     check_git_modules
-    for entry in "${dirs[@]}" "${files[@]}" ; do
+    for entry in "${install_list[@]}"; do
         entry="${entry//,/ }"
         read -r _file _link <<< "${entry}"
         if [[ -L "${_link}" ]]; then
@@ -135,8 +146,11 @@ function install
 
 function uninstall
 {
+    local uninstall_list=("$@")
+    local _link
+
     print_header "Uninstalling dotfiles"
-    for _link in "${dirs[@]}" "${files[@]}"; do
+    for _link in "${uninstall_list[@]}"; do
         _link="${_link##*,}"
         _link="${_link// /}"
         if [[ -L "${_link}" ]]; then
@@ -185,16 +199,16 @@ function main
 {
     get_args "$@"
     [[ "${force}" != "true" ]] && check_version
-    get_os
 
+    distro="$(get_os)"
     script_dir="$(get_full_path "${0%/*}")"
     config_dir="${XDG_CONFIG_HOME:-${HOME}/.config}"
     get_profile
 
     if [[ "${uninstall}" == "true" ]]; then
-        uninstall
+        uninstall "${dirs[@]}" "${files[@]}"
     elif [[ ! "${install}" || "${install}" == "true" ]]; then
-        install
+        install "${dirs[@]}" "${files[@]}"
     fi
 }
 
