@@ -82,7 +82,6 @@ function get_uptime
 
 function main
 {
-    printf "%s\\n" "${BASH_SOURCE[0]}" "${0##*/}"
     ! { source "${BASH_SOURCE[0]//${0##*/}/}notify.sh" \
         && source "${BASH_SOURCE[0]//${0##*/}/}format.sh"; } \
             && exit 1
