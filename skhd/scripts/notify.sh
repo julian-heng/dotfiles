@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 
-function display_notification
+function notify
 {
+    local title="$1"
+    local subtitle="$2"
+    local content="$3"
+
     /usr/bin/env osascript << EOF
-        display notification "$3" with title "$1" subtitle "$2"
+        display notification "${content}" with title "${title}" subtitle "${subtitle}"
 EOF
 }

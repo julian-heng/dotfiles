@@ -11,8 +11,13 @@ function trim_digits
 
 function get_mem_info
 {
-    mapfile -t mem_cache < <(vm_stat)
-    mem_cache+=("$(sysctl vm.swapusage)")
+    local mem_wired
+    local mem_compressed
+    local mem_total
+    local mem_used
+    local mem_percent
+    local swap_total
+    local swap_used
 
     read -r mem_wired \
             mem_compressed \
@@ -25,7 +30,7 @@ function get_mem_info
                     END {
                         printf "%s %s %s %s", \
                         a, b, c, d
-                    }' < <(printf "%s\\n" "${mem_cache[@]}"))
+                    }' <(vm_stat; sysctl vm.swapusage))
 
     mem_total="$(($(sysctl -n hw.memsize) / 1024 ** 2))"
     mem_used="$(((${mem_wired//.} + ${mem_compressed//.}) * 4 / 1024))"
@@ -40,18 +45,46 @@ function get_mem_info
 
     swap_total="$(trim_digits "${swap_total/M*}")"
     swap_used="$(trim_digits "${swap_used/M*}")"
+
+    printf "%s;%s;%s;%s;%s" \
+        "${mem_percent}" \
+        "${mem_used}" \
+        "${mem_total}" \
+        "${swap_used}" \
+        "${swap_total}"
 }
 
 function main
 {
-    source "${0%/*}/notify.sh"
-    get_mem_info
+    ! { source "${BASH_SOURCE[0]//${0##*/}/}notify.sh" \
+        && source "${BASH_SOURCE[0]//${0##*/}/}format.sh"; } \
+            && exit 1
 
-    title="Memory (${mem_percent}%)"
-    subtitle="${mem_used}MiB | ${mem_total}MiB"
-    message="Swap: ${swap_used}MiB | ${swap_total}MiB"
+    IFS=";"\
+    read -r mem_percent \
+            mem_used \
+            mem_total \
+            swap_used \
+            swap_total \
+            < <(get_mem_info)
 
-    display_notification "${title:-}" "${subtitle:-}" "${message:-}"
+    title_parts=(
+        "Memory" "(" "${mem_percent}" "%" ")"
+    )
+
+    subtitle_parts=(
+        "${mem_used}" "MiB" "|" "${mem_total}" "MiB"
+    )
+
+    message_parts=(
+        "Swap: " "${swap_used}" "MiB" "|" "${swap_total}" "MiB"
+    )
+
+    title="$(format "${title_parts[@]}")"
+    subtitle="$(format "${subtitle_parts[@]}")"
+    message="$(format "${message_parts[@]}")"
+
+    notify "${title:-}" "${subtitle:-}" "${message:-}"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then

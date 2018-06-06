@@ -1,53 +1,71 @@
 #!/usr/bin/env bash
 # shellcheck disable=1090,2194
 
-function determine_state
+function count_array_char
 {
-    case "$1" in
-        0|"paused")  paused="$2" ;;
-        1|"playing") playing="$2" ;;
-    esac
+    local in_array=("$@")
+    for i in "${in_array[@]}"; do
+        ((count+="${#i}"))
+    done
+    printf "%s" "${count}"
 }
 
 function check_app_state
 {
+    local -a apps
+    local app
+    local app_state
+    local match="false"
+
     if [[ "$1" ]]; then
-        apps=("$1")
+        apps=("$@")
     else
         apps=("Spotify" "iTunes" "cmus")
     fi
 
-    for app in "${apps[@]}"; do
-
-        if [[ "${app}" == "cmus" ]]; then
-            if pgrep -x "cmus" > /dev/null; then
-                app_state="true"
-                app_playing="$(awk '/status/ { print $2 }' < <(cmus-remote -Q))"
-                determine_state "${app_playing}" "${app}"
+    while read -r in_app && [[ "${match}" != "true" ]]; do
+       if [[ "${in_app}" == "cmus" ]]; then
+           if pgrep -x "cmus" > /dev/null; then
+               app="cmus"
+               app_state="$(awk '/status/ { print $2 }' < <(cmus-remote -Q))"
+               match="true"
             fi
-        else
-            ! app_state="$(osascript -e "application \"${app}\" is running")" && exit
-            if [[ "${app_state}" == "true" && -z "${track}" ]]; then
-                app_playing="$(osascript -e "tell application \"${app}\" to player state as string")"
-                determine_state "${app_playing}" "${app}"
-            fi
+        elif [[ "$(osascript -e "application \"${in_app}\" is running")" == "true" ]]; then
+            app="${in_app}"
+            app_state="$(osascript -e "tell application \"${in_app}\" to player state as string")"
+            match="true"
         fi
+    done < <(printf "%s\\n" "${apps[@]}")
 
-    done
+    if [[ "${match}" != "true" ]]; then
+        if ((${#apps[@]} != 1)); then
+            app="none"
+            app_state="none"
+        else
+            app="${apps[0]}"
+            app_state="stopped"
+        fi
+    fi
+
+    printf "%s;%s" \
+        "${app}" \
+        "${app_state}"
 }
 
 function get_song_info
 {
-    if [[ "${app}" == "cmus" ]]; then
+    local app="$1"
+    local track
+    local artist
+    local album
 
+    if [[ "${app}" == "cmus" ]]; then
         IFS=":" \
         read -r track \
                 artist \
                 album \
                 < <(cmus-remote -C "format_print %{title}:%{artist}:%{album}")
-
     else
-
         track_cmd="name of current track as string"
         artist_cmd="artist of current track as string"
         album_cmd="album of current track as string"
@@ -64,40 +82,66 @@ function get_song_info
                         end tell
 EOF
 )
-
     fi
+
+    printf "%s;%s;%s" \
+        "${track}" \
+        "${artist}" \
+        "${album}"
 }
 
 function main
 {
-    source "${0%/*}/notify.sh"
-    check_app_state "$@"
+    ! { source "${BASH_SOURCE[0]//${0##*/}/}notify.sh" \
+        && source "${BASH_SOURCE[0]//${0##*/}/}format.sh"; } \
+            && exit 1
 
-    if [[ -z "${playing}" && -z "${paused}" ]]; then
-        title="Now Playing"
-        subtitle=""
-        message="No music playing"
-    else
-        if [[ "${playing}" ]]; then
-            app="${playing}"
-        else
-            app="${paused}"
-        fi
+    IFS=";" \
+    read -r app \
+            state \
+            < <(check_app_state "$@")
 
-        get_song_info
+    case "${state}" in
+        "playing"|"paused")
+            IFS=";" \
+            read -r track \
+                    artist \
+                    album \
+                    < <(get_song_info "${app}")
 
-        title="Now Playing on ${app}"
-        subtitle="${artist} - ${track}"
-        message="${album}"
+            if [[ "${state}" == "paused" ]]; then
+                title_parts=("Now Playing on " "${app}" "(" "${state}" ")")
+            else
+                title_parts=("Now Playing on " "${app}")
+            fi
+            subtitle_parts=("${artist}" " - " "${track}")
+            message_parts=("${album}")
 
-        case "1" in
-            "$((${#subtitle} >= 50))")      subtitle="${track}"; message="${artist} - ${album}" ;&
-            "$((${#message} >= 50))")       message="${artist}" ;;
-        esac
+            case "1" in
+                "$(("$(count_array_char "${subtitle_parts[@]}")" >= 50))")
+                    subtitle_parts=("${track}")
+                    message_parts=("${artist}" " - " "${album}")
+                ;&
+                "$(("$(count_array_char "${message_parts[@]}")" >= 50))")
+                    message_parts=("${artist}")
+                ;;
+            esac
+        ;;
+        *)
+            case "${state}" in
+                "none")     title_parts=("Now Playing") ;;
+                "stopped")  title_parts=("Now Playing on " "${app}") ;;
+            esac
+            subtitle_parts=()
+            message_parts=("No music playing")
+        ;;
+    esac
 
-    fi
+    title="$(format "${title_parts[@]}")"
+    subtitle="$(format "${subtitle_parts[@]}")"
+    message="$(format "${message_parts[@]}")"
 
-    display_notification "${title:-}" "${subtitle:-}" "${message:-}"
+    notify "${title:-}" "${subtitle:-}" "${message:-}"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then

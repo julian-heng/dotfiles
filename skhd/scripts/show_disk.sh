@@ -3,43 +3,70 @@
 
 function spacify
 {
-    string="$1"
+    local string="$1"
     string="${string//:/ }"
     string="${string:1}"
     printf "%s" "${string}"
 }
 
-function get_df_output
+function get_search
 {
-    mapfile -t df_out < <(df -P -k)
+    local search="$1"
+    local -a disk_cache
+    mapfile -t disk_cache <<< "${@:2}"
 
-    for i in "${df_out[@]}"; do
-        [[ "${i}" != *"TimeMachine"* ]] && disk_cache+=("${i}")
-    done
+    local count=0
+    local match="false"
+    local default_disk
 
-    if [[ "${1}" ]]; then
-        search="${1}"
-        for i in "${disk_cache[@]}"; do
-            if [[ "${i}" == *"${search}"* ]]; then
-                search="${i%% *}"
-                match="True"
-                break
+    if [[ "${search}" ]]; then
+        while [[ "${match}" != "true" ]] && ((count < ${#disk_cache[@]})); do
+            if [[ "${disk_cache[${count}]}" == *"${search}"* ]]; then
+                match="true"
+                search="${disk_cache[${count}]%% *}"
+            else
+                ((count++))
             fi
         done
-        [[ -z "${match}" ]] && exit 1
     else
-        default_disk="${df_out[1]}"
+        default_disk="${disk_cache[1]}"
         default_disk="${default_disk%% *}"
         search="${default_disk}"
     fi
 
-    [[ ! "${search}" ]] && search="/dev/disk1s1"
+    if [[ "${match}" == "true" ]]; then
+        printf "%s" "${search}"
+    else
+        return 1
+    fi
+}
+
+function get_df_output
+{
+    local df_line
+    local -a disk_cache
+
+    while read -r df_line; do
+        [[ "${df_line}" != *"TimeMachine"* ]] && disk_cache+=("${df_line}")
+    done < <(df -P -k)
+    printf "%s\\n" "${disk_cache[@]}"
 }
 
 function get_disk
 {
-    get_df_output "$@"
-    mapfile -t diskutil_out < <(diskutil info "${search}")
+    local -a disk_cache
+    local search
+
+    local disk_device
+    local disk_capacity
+    local disk_used
+    local disk_percent
+    local disk_name
+    local disk_part
+    local disk_mount
+
+    disk_cache=("$(get_df_output "$@")")
+    { ! search="$(get_search "$@" "${disk_cache[@]}")"; } && return 1
 
     read -r disk_device \
             disk_capacity \
@@ -55,7 +82,7 @@ function get_disk
                     END {
                         printf "%s %0.2f %0.2f %0.2f", \
                         a, b, c, d
-                    }' < <(printf "%s\\n" "${disk_cache[@]}"))
+                    }' <<< "${disk_cache[@]}")
 
     read -r disk_name \
             disk_part \
@@ -81,26 +108,62 @@ function get_disk
                     }
                     END {
                         printf "%s %s %s", a, b, c
-                    }' < <(printf "%s\\n" "${diskutil_out[@]}"))
+                    }' <(diskutil info "${search}"))
 
     disk_name="$(spacify "${disk_name}")"
     disk_part="$(spacify "${disk_part}")"
     disk_mount="$(spacify "${disk_mount}")"
 
-    disk_part=" | ${disk_part}"
+    printf "%s;%s;%s;%s;%s;%s;%s" \
+        "${disk_device}" \
+        "${disk_capacity}" \
+        "${disk_used}" \
+        "${disk_percent}" \
+        "${disk_name}" \
+        "${disk_part}" \
+        "${disk_mount}"
 }
 
 function main
 {
-    source "${0%/*}/notify.sh"
-    
-    get_disk "$@"
+    ! { source "${BASH_SOURCE[0]//${0##*/}/}notify.sh" \
+        && source "${BASH_SOURCE[0]//${0##*/}/}format.sh"; } \
+            && exit 1
 
-    title="${disk_name:-Disk} (${disk_mount})"
-    subtitle="${disk_used}GiB | ${disk_capacity}GiB (${disk_percent}%)"
-    message="${disk_device}${disk_part}"
+    IFS=";" \
+    read -r disk_device \
+            disk_capacity \
+            disk_used \
+            disk_percent \
+            disk_name \
+            disk_part \
+            disk_mount \
+            < <(get_disk "$@")
 
-    display_notification "${title:-}" "${subtitle:-}" "${message:-}"
+    [[ "${disk_device}" == "" \
+    || "${disk_capacity}" == "0.00" \
+    || "${disk_used}" == "0.00" \
+    || "${disk_percent}" == "0.00" \
+    ]] && exit 1
+
+    title_parts=(
+        "${disk_name:-Disk}" "(" "${disk_mount}" ")"
+    )
+
+    subtitle_parts=(
+        "${disk_used}" "GiB" "|" "${disk_capacity}" "GiB"
+        "(" "${disk_percent}" "%" ")"
+    )
+
+    message_parts=(
+        "${disk_device}" "|" "${disk_part}"
+    )
+
+    title="$(format "${title_parts[@]}")"
+    subtitle="$(format "${subtitle_parts[@]}")"
+    message="$(format "${message_parts[@]}")"
+
+    notify "${title:-}" "${subtitle:-}" "${message:-}"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then

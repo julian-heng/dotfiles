@@ -11,6 +11,7 @@ function strip
 
 function get_cpu
 {
+    local cpu
     cpu="$(sysctl -n machdep.cpu.brand_string)"
     cpu="${cpu/@/(${cores}) @}"
     printf "%s" "${cpu}"
@@ -18,6 +19,7 @@ function get_cpu
 
 function get_load
 {
+    local load
     load="$(sysctl -n vm.loadavg)"
     load="${load/' }'}"
     load="${load/'{ '}"
@@ -26,6 +28,7 @@ function get_load
 
 function get_cpu_usage
 {
+    local cpu_usage
     cpu_usage="$(awk 'BEGIN {sum=0} {sum+=$3}; END {print sum}' < <(ps aux))"
     cpu_usage="$((${cpu_usage/\.*} / ${cores:-1}))%"
     printf "%s" "${cpu_usage}"
@@ -33,12 +36,14 @@ function get_cpu_usage
 
 function get_temp
 {
+    local temp
     temp="$(osx-cpu-temp)"
     printf "%s" "${temp}"
 }
 
 function get_fan_speed
 {
+    local fan
     fan="$(awk 'NR==2{print; exit}' < <(istats fan --value-only))"
     fan="${fan// } RPM"
     printf "%s" "${fan:-0 RPM}"
@@ -46,6 +51,15 @@ function get_fan_speed
 
 function get_uptime
 {
+    local boot
+    local now
+    local seconds
+    local days
+    local hours
+    local mins
+    local secs
+    local uptime
+
     boot="$(sysctl -n kern.boottime)"
     boot="${boot/'{ sec = '}"
     boot="${boot/,*}"
@@ -68,7 +82,11 @@ function get_uptime
 
 function main
 {
-    source "${0%/*}/notify.sh"
+    printf "%s\\n" "${BASH_SOURCE[0]}" "${0##*/}"
+    ! { source "${BASH_SOURCE[0]//${0##*/}/}notify.sh" \
+        && source "${BASH_SOURCE[0]//${0##*/}/}format.sh"; } \
+            && exit 1
+
     cores="$(sysctl -n hw.logicalcpu_max)"
 
     cpu="$(get_cpu)"
@@ -78,16 +96,31 @@ function main
     fan="$(get_fan_speed)"
     uptime="$(get_uptime)"
 
-    title="${cpu}"
-    subtitle="Load avg: ${load} | ${cpu_usage} | ${temp} | ${fan}"
-    message="Uptime: ${uptime}"
+    title_parts=(
+        "${cpu}"
+    )
+
+    subtitle_parts=(
+        "Load avg: " "${load}" "|"
+        "${cpu_usage}" "|"
+        "${temp}" "|"
+        "${fan}"
+    )
+
+    message_parts=(
+        "Uptime:" "${uptime}"
+    )
+
+    title="$(format "${title_parts[@]}")"
+    subtitle="$(format "${subtitle_parts[@]}")"
+    message="$(format "${message_parts[@]}")"
 
     case "1" in
         "$((${#subtitle} >= 50))")    subtitle="${subtitle/ avg/}" ;&
         "$((${#subtitle} >= 50))")    subtitle="${subtitle/Load: /}" ;;
     esac
 
-    display_notification "${title:-}" "${subtitle:-}" "${message:-}"
+    notify "${title:-}" "${subtitle:-}" "${message:-}"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then

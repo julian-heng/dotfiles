@@ -3,8 +3,11 @@
 
 function get_bat_info
 {
-    mapfile -t bat_cache < <(pmset -g batt)
-    bat_cache+=("$(system_profiler SPPowerDataType)")
+    local bat_state
+    local bat_percent
+    local bat_time
+    local bat_cycles
+    local bat_condition
 
     read -r bat_state \
             bat_percent \
@@ -19,10 +22,9 @@ function get_bat_info
                     END { 
                         printf "%s %s %s %s %s", \
                         a, b, c, d, e 
-                    }' < <(printf "%s\\n" "${bat_cache[@]}"))
+                    }' <(pmset -g batt; system_profiler SPPowerDataType))
 
     bat_percent="${bat_percent//;}"
-
     bat_state="${bat_state//\'/}"
 
     case "${bat_time}" in
@@ -30,21 +32,49 @@ function get_bat_info
         *) bat_time="${bat_time} remaining" ;;
     esac
 
-    [[ "${bat_time}" == "0:00 remaining" \
+    [[ "${bat_time}" == "0:00"* \
     && "${bat_state}" == "AC" ]] \
         && bat_time="Fully charged"
+
+    printf "%s;%s;%s;%s;%s" \
+        "${bat_state}" \
+        "${bat_percent}" \
+        "${bat_time}" \
+        "${bat_cycles}" \
+        "${bat_condition}"
 }
 
 function main
 {
-    source "${0%/*}/notify.sh"
-    get_bat_info
+    ! { source "${BASH_SOURCE[0]//${0##*/}/}notify.sh" \
+        && source "${BASH_SOURCE[0]//${0##*/}/}format.sh"; } \
+            && exit 1
 
-    title="Battery (${bat_percent})"
-    subtitle="${bat_time} | ${bat_condition} | ${bat_cycles} cycles"
-    message="Source: ${bat_state}"
-    
-    display_notification "${title:-}" "${subtitle:-}" "${message:-}"
+    IFS=";" \
+    read -r bat_state \
+            bat_percent \
+            bat_time \
+            bat_cycles \
+            bat_condition \
+            < <(get_bat_info)
+
+    title_parts=(
+        "Battery" "(" "${bat_percent}" ")"
+    )
+
+    subtitle_parts=(
+        "${bat_time}" "|" "${bat_condition}" "|" "${bat_cycles}" " cycles"
+    )
+
+    message_parts=(
+        "Source: " "${bat_state}"
+    )
+
+    title="$(format "${title_parts[@]}")"
+    subtitle="$(format "${subtitle_parts[@]}")"
+    message="$(format "${message_parts[@]}")"
+
+    notify "${title:-}" "${subtitle:-}" "${message:-}"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
