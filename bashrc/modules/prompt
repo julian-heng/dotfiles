@@ -59,9 +59,9 @@ function prompter
         if [[ -d ".git" ]] || git rev-parse --git-dir > /dev/null 2>&1; then
             branch="$(__get_git_branch)"
             if ! status="$(__get_git_status)"; then
-                git_prompt="-[${c2}${branch}${reset}]"
+                git_prompt="-[${c2}${branch:-NA}${reset}]"
             else
-                git_prompt="-[${c2}${branch}${reset}|${status}]"
+                git_prompt="-[${c2}${branch:-NA}${reset}|${status}]"
             fi
         fi
 
