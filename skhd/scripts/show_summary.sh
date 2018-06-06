@@ -33,14 +33,14 @@ function get_args
 
 function main
 {
-    script_dir="${0%/*}"
+    script_dir="${BASH_SOURCE[0]//${0##*/}/}"
 
-    ! { source "${script_dir}/show_bat.sh" \
-        && source "${script_dir}/show_cpu.sh" \
-        && source "${script_dir}/show_disk.sh" \
-        && source "${script_dir}/show_mem.sh" \
-        && source "${script_dir}/notify.sh" \
-        && source "${script_dir}/format.sh"; } \
+    ! { source "${script_dir}show_bat.sh" \
+        && source "${script_dir}show_cpu.sh" \
+        && source "${script_dir}show_disk.sh" \
+        && source "${script_dir}show_mem.sh" \
+        && source "${script_dir}notify.sh" \
+        && source "${script_dir}format.sh"; } \
             && exit 1
 
     get_args "$@"
