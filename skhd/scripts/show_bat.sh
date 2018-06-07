@@ -24,17 +24,16 @@ function get_bat_info
                         a, b, c, d, e 
                     }' <(pmset -g batt; system_profiler SPPowerDataType))
 
-    bat_percent="${bat_percent//;}"
+    bat_percent="${bat_percent//;/}"
     bat_state="${bat_state//\'/}"
 
-    case "${bat_time}" in
-        "(no"|"charge;") bat_time="Unknown" ;;
-        *) bat_time="${bat_time} remaining" ;;
-    esac
-
-    [[ "${bat_time}" == "0:00"* \
-    && "${bat_state}" == "AC" ]] \
-        && bat_time="Fully charged"
+    if [[ "${bat_time}" =~ ^(\(no|charge;)$ ]]; then
+        bat_time="Unknown"
+    elif [[ "${bat_time}" == "0:00"* && "${bat_state}" == "AC" ]]; then
+        bat_time="Fully Charged"
+    else
+        bat_time+=" remaining"
+    fi
 
     printf "%s;%s;%s;%s;%s" \
         "${bat_state}" \
