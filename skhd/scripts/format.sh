@@ -15,9 +15,11 @@ function format
                     [[ "$2" ]] && line+="$2"
                     shift
                 done
+                line+=")"
+                shift
             ;;
             *)
-                line+="$1"
+                line+=" $1"
             ;;
         esac
         shift

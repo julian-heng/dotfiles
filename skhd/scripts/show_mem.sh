@@ -77,7 +77,7 @@ function main
     )
 
     message_parts=(
-        "Swap: " "${swap_used}" "MiB" "|" "${swap_total}" "MiB"
+        "Swap:" "${swap_used}" "MiB" "|" "${swap_total}" "MiB"
     )
 
     title="$(format "${title_parts[@]}")"

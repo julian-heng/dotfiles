@@ -62,11 +62,11 @@ function main
     )
 
     subtitle_parts=(
-        "${bat_time}" "|" "${bat_condition}" "|" "${bat_cycles}" " cycles"
+        "${bat_time}" "|" "${bat_condition}" "|" "${bat_cycles}" "cycles"
     )
 
     message_parts=(
-        "Source: " "${bat_state}"
+        "Source:" "${bat_state}"
     )
 
     title="$(format "${title_parts[@]}")"

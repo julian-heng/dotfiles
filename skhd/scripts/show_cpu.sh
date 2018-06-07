@@ -100,7 +100,7 @@ function main
     )
 
     subtitle_parts=(
-        "Load avg: " "${load}" "|"
+        "Load avg:" "${load}" "|"
         "${cpu_usage}" "|"
         "${temp}" "|"
         "${fan}"

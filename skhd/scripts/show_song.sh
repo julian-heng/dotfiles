@@ -110,17 +110,17 @@ function main
                     < <(get_song_info "${app}")
 
             if [[ "${state}" == "paused" ]]; then
-                title_parts=("Now Playing on " "${app}" "(" "${state}" ")")
+                title_parts=("Now Playing on" "${app}" "(" "${state}" ")")
             else
-                title_parts=("Now Playing on " "${app}")
+                title_parts=("Now Playing on" "${app}")
             fi
-            subtitle_parts=("${artist}" " - " "${track}")
+            subtitle_parts=("${artist}" "-" "${track}")
             message_parts=("${album}")
 
             case "1" in
                 "$(("$(count_array_char "${subtitle_parts[@]}")" >= 50))")
                     subtitle_parts=("${track}")
-                    message_parts=("${artist}" " - " "${album}")
+                    message_parts=("${artist}" "-" "${album}")
                 ;&
                 "$(("$(count_array_char "${message_parts[@]}")" >= 50))")
                     message_parts=("${artist}")
@@ -130,7 +130,7 @@ function main
         *)
             case "${state}" in
                 "none")     title_parts=("Now Playing") ;;
-                "stopped")  title_parts=("Now Playing on " "${app}") ;;
+                "stopped")  title_parts=("Now Playing on" "${app}") ;;
             esac
             subtitle_parts=()
             message_parts=("No music playing")

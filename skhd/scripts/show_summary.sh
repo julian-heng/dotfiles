@@ -90,14 +90,14 @@ function main
                     )
 
                     subtitle_parts=(
-                        "CPU: " "${cpu_usage}"
+                        "CPU:" "${cpu_usage}"
                         "(" "${temp}" ")" "|"
-                        "Mem: " "${mem_used}" "GiB" " / " "${mem_total}" "GiB"
+                        "Mem:" "${mem_used}" "GiB" "/" "${mem_total}" "GiB"
                     )
 
                     message_parts=(
-                        "Bat: " "${bat_percent}" "|"
-                        "Disk: " "${disk_used}" "GiB" " / " "${disk_capacity}" "GiB"
+                        "Bat:" "${bat_percent}" "|"
+                        "Disk:" "${disk_used}" "GiB" "/" "${disk_capacity}" "GiB"
                         "(" "${disk_percent}" "%" ")"
                     )
                 ;;
@@ -107,13 +107,13 @@ function main
                     )
 
                     subtitle_parts=(
-                        "CPU: " "${cpu_usage}" "|"
-                        "Mem: " "${mem_percent}" "%" "|"
-                        "Disk: " "${disk_percent}" "%"
+                        "CPU:" "${cpu_usage}" "|"
+                        "Mem:" "${mem_percent}" "%" "|"
+                        "Disk:" "${disk_percent}" "%"
                     )
 
                     message_parts=(
-                        "Battery: " "${bat_percent}"
+                        "Battery:" "${bat_percent}"
                     )
                 ;;
             esac
