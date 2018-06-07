@@ -5,7 +5,7 @@
 
 function secure_source
 {
-    file="$1"
+    local file="$1"
     if [[ -f "${file}" ]]; then
         source "${file}"
     else
@@ -15,6 +15,7 @@ function secure_source
 
 function detect_os
 {
+    local distro
     case "$(uname -s)" in
         "Darwin")
             distro="MacOS"
@@ -35,22 +36,26 @@ function detect_os
             printf "%s\\n" "Error: Cannot detect os"
         ;;
     esac
+    printf "%s" "${distro}"
 }
 
 function get_module_dir
 {
+    local module_dir
     if type -p readlink >/dev/null; then
         module_dir="$(readlink "${BASH_SOURCE[0]}")"
         module_dir="${module_dir%/*}/modules"
     else
         module_dir="${HOME}/.dotfiles/bashrc/modules"
     fi
+    printf "%s" "${module_dir}"
 }
 
 function main
 {
-    detect_os
-    get_module_dir
+    distro="$(detect_os)"
+    module_dir="$(get_module_dir)"
+
     modules=(
         "${module_dir}/"*
     )

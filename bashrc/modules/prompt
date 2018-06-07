@@ -9,6 +9,7 @@ function prompter
     {
         function __get_git_branch
         {
+            local branch
             branch="$(awk '/\*/{print}' < <(git branch))"
             branch="${branch//[[:space:]]}"
             branch="${branch//\*/}"
@@ -16,7 +17,6 @@ function prompter
             branch="${branch//detached/}"
             branch="${branch//at/}"
             branch="${branch//\)/}"
-
             printf "%s" "${branch}"
         }
 
@@ -26,9 +26,17 @@ function prompter
             #   - https://github.com/magicmonty/bash-git-prompt/blob/master/gitstatus.sh
             #   - https://git-scm.com/docs/git-status
 
-            unset num_{staged,changed,conflicts,untracked}
-            mapfile -t _git_status_out < <(git status --porcelain)
-            for i in "${_git_status_out[@]}"; do
+            local num_staged
+            local num_changed
+            local num_conflicts
+            local num_untracked
+
+            unset num_stages
+            unset num_changed
+            unset num_conflicts
+            unset num_untracked
+
+            while IFS=$'\n' read -r i; do
                 case "${i:0:2}" in
                     "??")                       ((num_untracked++)) ;;
                     "U"?|?"U"|"DD"|"AA"|"U")    ((num_conflicts++)) ;;
@@ -36,7 +44,7 @@ function prompter
                     "  "|?" ") ;;
                     *)                          ((num_staged++)) ;;
                 esac
-            done
+            done < <(git status --porcelain)
 
             ((num_conflicts == 0 && \
               num_changed == 0 && \
