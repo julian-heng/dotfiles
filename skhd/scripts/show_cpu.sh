@@ -14,6 +14,8 @@ function get_cpu
     local cpu
     cpu="$(sysctl -n machdep.cpu.brand_string)"
     cpu="${cpu/@/(${cores}) @}"
+    cpu="${cpu//\(R\)/}"
+    cpu="${cpu//\(TM\)/}"
     printf "%s" "${cpu}"
 }
 
