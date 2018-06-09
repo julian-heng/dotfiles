@@ -15,7 +15,7 @@ function get_search
     local -a disk_cache
     mapfile -t disk_cache <<< "${@:2}"
 
-    local count=0
+    local count="0"
     local match="false"
     local default_disk
 
