@@ -31,8 +31,14 @@ function get_load
 function get_cpu_usage
 {
     local cpu_usage
-    cpu_usage="$(awk 'BEGIN {sum=0} {sum+=$3}; END {print sum}' < <(ps aux))"
-    cpu_usage="$((${cpu_usage/\.*} / ${cores:-1}))%"
+    cpu_usage="$(awk \
+                    -v cores="${cores:-1}" \
+                    -v sum="0" '\
+                    {sum += $3}
+                    END {
+                        cpu_usage= sum / cores
+                        printf "%0.2f%s", cpu_usage, "%"
+                    }' <(ps aux))"
     printf "%s" "${cpu_usage}"
 }
 
