@@ -47,8 +47,9 @@ function get_fan_speed
 {
     local fan
     fan="$(awk 'NR==2{print; exit}' < <(istats fan --value-only))"
+    fan="${fan:-0}"
     fan="${fan// } RPM"
-    printf "%s" "${fan:-0 RPM}"
+    printf "%s" "${fan}"
 }
 
 function get_uptime
