@@ -12,6 +12,33 @@ function vscp
     vim "${remote}"
 }
 
+function upgit
+{
+    local cwd
+    local item
+    local git_dir
+
+    local -a git_dirs
+
+    if [[ "$1" ]]; then
+        cwd="$1"
+    else
+        cwd="${PWD}"
+    fi
+
+    (
+        for item in "${cwd}/"*; do
+            { [[ -d "${item}/.git" ]] || git -C "${item}" rev-parse --git-dir > /dev/null 2>&1; } \
+                && git_dirs+=("${item}")
+        done
+
+        for git_dir in "${git_dirs[@]}"; do
+            printf "%s" "[${git_dir}] "
+            git -C "${git_dir}" pull
+        done
+    )
+}
+
 alias dl="aria2c --dir=${HOME}/Downloads/"
 
 alias gp="git pull"
