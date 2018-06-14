@@ -5,6 +5,10 @@
 
 function vscp
 {
+    local server
+    local file
+    local remote
+
     read -r server \
             file \
             <<< "${1//:/ }"
