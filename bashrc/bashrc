@@ -32,6 +32,9 @@ function detect_os
                 distro="${distro//\"/}"
             fi
         ;;
+        "FreeBSD")
+            distro="FreeBSD"
+        ;;
         "")
             printf "%s\\n" "Error: Cannot detect os"
         ;;
@@ -60,11 +63,14 @@ function main
         "${module_dir}/"*
     )
 
-    if [[ "${distro}" == "MacOS" ]]; then
-        modules+=("/usr/local/share/bash-completion/bash_completion")
-    else
-        modules+=("/usr/share/bash-completion/bash_completion")
-    fi
+    case "${distro}" in
+        "MacOS"|"FreeBSD")
+            modules+=("/usr/local/share/bash-completion/bash_completion")
+        ;;
+        *)
+            modules+=("/usr/share/bash-completion/bash_completion")
+        ;;
+    esac
 
     for i in "${modules[@]}"; do
         secure_source "${i}"
