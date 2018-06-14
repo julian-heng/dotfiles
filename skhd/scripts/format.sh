@@ -14,8 +14,15 @@ function format
                 line+=")"
                 shift
             ;;
+            "%")
+                line+="$1"
+            ;;
             *)
-                line+=" $1"
+                if [[ "${line}" == "" ]]; then
+                    line+="$1"
+                else
+                    line+=" $1"
+                fi
             ;;
         esac
         shift

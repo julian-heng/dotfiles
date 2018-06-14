@@ -66,7 +66,7 @@ function get_disk
     local disk_mount
 
     disk_cache=("$(get_df_output "$@")")
-    { ! search="$(get_search "$@" "${disk_cache[@]}")"; } && return 1
+    ! search="$(get_search "$@" "${disk_cache[@]}")" && return 1
 
     read -r disk_device \
             disk_capacity \
@@ -89,19 +89,16 @@ function get_disk
             disk_mount \
             < <(awk '
                     /Volume Name/ {
-                        a = ""
                         for(i = 3; i <= NF; i++) {
                             a = a":"$i
                         }
                     }
                     /File System Personality:/ {
-                        b = ""
                         for(i = 4; i <= NF; i++) {
                             b = b":"$i
                         }
                     }
                     /Mount Point:/ {
-                        c = ""
                         for(i = 3; i <= NF; i++) {
                             c = c":"$i
                         }

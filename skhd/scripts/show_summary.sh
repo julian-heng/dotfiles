@@ -77,6 +77,7 @@ function main
                     disk_mount \
                     < <(get_everything "${disk:-disk1s1}")
 
+                cpu_usage=$(trim_digits "${cpu_usage}")
                 mem_used="$(trim_digits "$(convert_mem "${mem_used}")")"
                 mem_total="$(trim_digits "$(convert_mem "${mem_total}")")"
 
@@ -90,7 +91,7 @@ function main
                     )
 
                     subtitle_parts=(
-                        "CPU:" "${cpu_usage}"
+                        "CPU:" "${cpu_usage}" "%"
                         "(" "${temp}" ")" "|"
                         "Mem:" "${mem_used}" "GiB" "/" "${mem_total}" "GiB"
                     )
@@ -107,7 +108,7 @@ function main
                     )
 
                     subtitle_parts=(
-                        "CPU:" "${cpu_usage}" "|"
+                        "CPU:" "${cpu_usage}" "%" "|"
                         "Mem:" "${mem_percent}" "%" "|"
                         "Disk:" "${disk_percent}" "%"
                     )
