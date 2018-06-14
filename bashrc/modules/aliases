@@ -13,10 +13,12 @@ function vscp
 }
 
 alias dl="aria2c --dir=${HOME}/Downloads/"
+
 alias gp="git pull"
 alias gcl="git clone"
-alias gstat="git status"
+alias gstat="git status --branch --short"
 alias gdiff="git diff"
+
 alias py2="python2"
 alias py3="python3"
 alias 7zcomp="
