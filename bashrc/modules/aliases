@@ -37,11 +37,14 @@ alias yt2mp3="
                 -o '%(playlist_index)s %(title)s.%(ext)s' \
                 -v"
 
-if [[ "${distro}" == "MacOS" ]]; then
-    color_flag="-G"
-else
-    color_flag="--color"
-fi
+case "${distro}" in
+    "MacOS"|"FreeBSD")
+        color_flag="-G"
+    ;;
+    *)
+        color_flag="--color"
+    ;;
+esac
 
 alias ls="ls ${color_flag}"
 alias ll="ls ${color_flag} -l"
@@ -73,6 +76,9 @@ case "${distro}" in
     ;;
     "VoidLinux")
         alias update="sudo xbps-install -Su"
+    ;;
+    "FreeBSD")
+        alias update="sudo pkg update && sudo pkg upgrade"
     ;;
     "")
         printf "%s\\n" "${fb[1]}Error:${reset} Cannot detect distro, 'update' alias not set"
