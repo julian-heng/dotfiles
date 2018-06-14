@@ -22,26 +22,36 @@ function prompter
         unset num_conflicts
         unset num_untracked
 
+        # Git status symbols and algorithm referenced from
+        #   - https://github.com/magicmonty/bash-git-prompt/blob/master/gitstatus.sh
+        #   - https://git-scm.com/docs/git-status
+
         if [[ -d ".git" ]] || git rev-parse --git-dir > /dev/null 2>&1; then
             while IFS=$'\n' read -r i; do
-                case "${i:0:2}" in
-                    "##")
-                        _git_branch="${i%%\.*}"
-                        _git_branch="${_git_branch//#/}"
-                        _git_branch="${_git_branch//[[:space:]]}"
-                        _git_branch="${_git_branch:-NA}"
-                    ;;
-                    "??")       ((num_untracked++)); break ;;
-                    "U"?|\
-                    ?"U"|\
-                    "DD"|\
-                    "AA")       ((num_conflicts++)); break ;;
-                    ?"M"|?"D")  ((num_changed++)) ;;
-                    ?" ") ;;
-                    "U")        ((num_conflicts++)) ;;
-                    " ") ;;
-                    *)          ((num_staged++)) ;;
-                esac
+                status="${i:0:2}"
+                while [[ -n "${status}" ]]; do
+                    case "${status}" in
+                        "##")
+                            if [[ "${i}" == *"No commits"* ]]; then
+                                _git_branch="NA"
+                            else
+                                _git_branch="${i%%\.*}"
+                                _git_branch="${_git_branch//#/}"
+                                _git_branch="${_git_branch//[[:space:]]}"
+                            fi
+                            break
+                        ;;
+                        "??")       ((num_untracked++)); break ;;
+                        "U"?|?"U"|\
+                        "DD"|"AA")  ((num_conflicts++)); break ;;
+                        ?"M"|?"D")  ((num_changed++)) ;;
+                        ?" ") ;;
+                        "U")        ((num_conflicts++)) ;;
+                        " ") ;;
+                        *)          ((num_staged++)) ;;
+                    esac
+                    status="${status:0:(${#status}-1)}"
+                done
             done < <(git status --porcelain --branch)
 
             ((num_conflicts == 0 && \
