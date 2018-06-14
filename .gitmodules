@@ -10,3 +10,6 @@
 [submodule "vimrc/bundle/nerdtree-git-plugin"]
 	path = vimrc/bundle/nerdtree-git-plugin
 	url = https://github.com/Xuyuanp/nerdtree-git-plugin.git
+[submodule "vimrc/bundle/vim-devicons"]
+	path = vimrc/bundle/vim-devicons
+	url = https://github.com/ryanoasis/vim-devicons.git
