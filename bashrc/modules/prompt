@@ -7,50 +7,48 @@ function prompter
 {
     function _git_prompt
     {
-        function __get_git_branch
-        {
-            local branch
-            branch="$(awk '/\*/{print}' < <(git branch))"
-            branch="${branch//[[:space:]]}"
-            branch="${branch//\*/}"
-            branch="${branch//\(HEAD/}"
-            branch="${branch//detached/}"
-            branch="${branch//at/}"
-            branch="${branch//\)/}"
-            printf "%s" "${branch}"
-        }
+        local git_prompt
+        local _git_branch
+        local _git_status
+        local _git_status_clear
+        local num_staged
+        local num_changed
+        local num_conflicts
+        local num_untracked
 
-        function __get_git_status
-        {
-            # Git status symbols referenced from
-            #   - https://github.com/magicmonty/bash-git-prompt/blob/master/gitstatus.sh
-            #   - https://git-scm.com/docs/git-status
+        unset _git_status
+        unset num_stages
+        unset num_changed
+        unset num_conflicts
+        unset num_untracked
 
-            local num_staged
-            local num_changed
-            local num_conflicts
-            local num_untracked
-
-            unset num_stages
-            unset num_changed
-            unset num_conflicts
-            unset num_untracked
-
+        if [[ -d ".git" ]] || git rev-parse --git-dir > /dev/null 2>&1; then
             while IFS=$'\n' read -r i; do
                 case "${i:0:2}" in
-                    "??")                       ((num_untracked++)) ;;
-                    "U"?|?"U"|"DD"|"AA"|"U")    ((num_conflicts++)) ;;
-                    ?"M"|?"D")                  ((num_changed++)) ;;
-                    "  "|?" ") ;;
-                    *)                          ((num_staged++)) ;;
+                    "##")
+                        _git_branch="${i%%\.*}"
+                        _git_branch="${_git_branch//#/}"
+                        _git_branch="${_git_branch//[[:space:]]}"
+                        _git_branch="${_git_branch:-NA}"
+                    ;;
+                    "??")       ((num_untracked++)); break ;;
+                    "U"?|\
+                    ?"U"|\
+                    "DD"|\
+                    "AA")       ((num_conflicts++)); break ;;
+                    ?"M"|?"D")  ((num_changed++)) ;;
+                    ?" ") ;;
+                    "U")        ((num_conflicts++)) ;;
+                    " ") ;;
+                    *)          ((num_staged++)) ;;
                 esac
-            done < <(git status --porcelain)
+            done < <(git status --porcelain --branch)
 
             ((num_conflicts == 0 && \
-              num_changed == 0 && \
-              num_staged == 0 && \
-              num_untracked == 0 )) && \
-                return 1
+            num_changed == 0 && \
+            num_staged == 0 && \
+            num_untracked == 0 )) && \
+                _git_status_clear="true"
 
             ((num_conflicts > 0)) && \
                 _git_status+="${fb[1]}✖${num_conflicts}${reset}"
@@ -61,15 +59,10 @@ function prompter
             ((num_untracked > 0)) && \
                 _git_status+="${bold}…${num_untracked}${reset}"
 
-            printf "%s" "${_git_status}"
-        }
-
-        if [[ -d ".git" ]] || git rev-parse --git-dir > /dev/null 2>&1; then
-            branch="$(__get_git_branch)"
-            if ! status="$(__get_git_status)"; then
-                git_prompt="-[${c2}${branch:-NA}${reset}]"
+            if [[ "${_git_status_clear}" == "true" ]]; then
+                git_prompt="-[${c2}${_git_branch}${reset}]"
             else
-                git_prompt="-[${c2}${branch:-NA}${reset}|${status}]"
+                git_prompt="-[${c2}${_git_branch}${reset}|${_git_status}]"
             fi
         fi
 
@@ -78,21 +71,24 @@ function prompter
 
     function expand
     {
-        str="$1"
-        while read -r i; do
-            out+=("${i}")
-        done <<< "${str}"
+        local str="$1"
+        mapfile -t out <<< "${str}"
         printf "%s" "${out[@]}"
     }
 
     function dir
     {
+        local _PWD
+        local _dir
+
+        local -a parts
+
         unset _PWD
-        dir="${PWD}"
-        dir="${dir//${HOME}/"~"}"
+        _dir="${PWD}"
+        _dir="${_dir//${HOME}/"~"}"
 
         IFS="/"\
-        read -r -a parts <<< "${dir}"
+        read -r -a parts <<< "${_dir}"
 
         for part in "${parts[@]::${#parts[@]}-1}"; do
             count="0"
@@ -111,7 +107,7 @@ function prompter
         done
 
         _PWD+="/${parts[-1]}"
-        _PWD="${_PWD#/}"
+        [[ "${_PWD:1:1}" == "~" ]] && _PWD="${_PWD#/}"
 
         ((${#_PWD} > 20)) && _PWD="${parts[-1]}"
 
