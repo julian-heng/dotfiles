@@ -9,6 +9,14 @@ function strip
     esac
 }
 
+function trim_digits
+{
+    case "${1##*.}" in
+        "00")   printf "%s" "${1/.*}" ;;
+        *)      printf "%s" "$1" ;;
+    esac
+}
+
 function get_cpu
 {
     local cpu
@@ -37,8 +45,9 @@ function get_cpu_usage
                     {sum += $3}
                     END {
                         cpu_usage= sum / cores
-                        printf "%0.2f%s", cpu_usage, "%"
+                        printf "%0.2f", cpu_usage
                     }' <(ps aux))"
+    cpu_stage="$(trim_digits "${cpu_usage}")"
     printf "%s" "${cpu_usage}"
 }
 
@@ -110,7 +119,7 @@ function main
 
     subtitle_parts=(
         "Load avg:" "${load}" "|"
-        "${cpu_usage}" "|"
+        "${cpu_usage}" "%" "|"
         "${temp}" "|"
         "${fan}"
     )
