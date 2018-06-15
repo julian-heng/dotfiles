@@ -33,12 +33,17 @@ function prompter
                     case "${status}" in
                         "##")
                             if [[ "${i}" == *"No commits"* ]]; then
-                                _git_branch="NA"
+                                : "NA"
+                            elif [[ "${i}" == *"no branch"* ]]; then
+                                : "${i%%\(*}"
+                                : "${_//#}"
+                                : "${_//[[:space:]]}"
                             else
-                                _git_branch="${i%%\.*}"
-                                _git_branch="${_git_branch//#/}"
-                                _git_branch="${_git_branch//[[:space:]]}"
+                                : "${i%%\.*}"
+                                : "${_//#}"
+                                : "${_//[[:space:]]}"
                             fi
+                            _git_branch="${_}"
                             break
                         ;;
                         "??")       ((num_untracked++)); break ;;
