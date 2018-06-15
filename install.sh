@@ -207,9 +207,9 @@ function main
     get_profile
 
     case "${action:-install}" in
-        "install") install "${dirs[@]}" "${files[@]}" ;;
-        "uninstall") uninstall "${dirs[@]}" "${files[@]}" ;;
-        "check_git") check_git_modules ;;
+        "install")      install "${dirs[@]}" "${files[@]}" ;;
+        "uninstall")    uninstall "${dirs[@]}" "${files[@]}" ;;
+        "check_git")    check_git_modules ;;
     esac
 }
 
