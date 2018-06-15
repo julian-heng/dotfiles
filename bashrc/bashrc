@@ -60,7 +60,10 @@ function main
     module_dir="$(get_module_dir)"
 
     modules=(
-        "${module_dir}/"*
+        "${module_dir}/colors"
+        "${module_dir}/aliases"
+        "${module_dir}/env_var"
+        "${module_dir}/prompt"
     )
 
     case "${distro}" in
