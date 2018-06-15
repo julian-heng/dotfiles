@@ -80,8 +80,8 @@ function get_profile
 {
     if [[ ! "${profile}" ]]; then
         case "${distro}" in
-            "MacOS")    : "${script_dir}/profiles/macos_profile"   ;;
-            *)          : "${script_dir}/profiles/linux_profile"   ;;
+            "MacOS")    : "${script_dir}/profiles/macos_profile" ;;
+            *)          : "${script_dir}/profiles/linux_profile" ;;
         esac
         profile="${_}"
     fi
