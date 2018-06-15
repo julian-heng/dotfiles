@@ -6,19 +6,19 @@ function get_os
     local distro
     case "$(uname -s)" in
         "Darwin")
-            distro="MacOS"
+            : "MacOS"
         ;;
 
         "Linux") 
             if type -p lsb_release >/dev/null; then
-                distro="$(lsb_release -si)"
+                : "$(lsb_release -si)"
             elif [[ -f "/etc/lsb-release" ]]; then
-                distro="$(awk '/DISTRIB_ID/ {print $1}' /etc/lsb-release)"
-                distro="${distro/DISTRIB_ID=/}"
+                : "$(awk '/DISTRIB_ID/ {print $1}' /etc/lsb-release)"
+                : "${_/DISTRIB_ID=/}"
             elif [[ -f "/etc/os-release" ]]; then
-                distro="$(awk 'NR==1 {print}' /etc/os-release)"
-                distro="${distro/NAME=/}"
-                distro="${distro//\"/}"
+                : "$(awk 'NR==1 {print}' /etc/os-release)"
+                : "${_/NAME=/}"
+                : "${_//\"/}"
             fi
         ;;
 
@@ -26,6 +26,7 @@ function get_os
             printf "%s\\n" "Error: Cannot detect os"
         ;;
     esac
+    distro="${_}"
     printf "%s" "${distro}"
 }
 
@@ -79,9 +80,10 @@ function get_profile
 {
     if [[ ! "${profile}" ]]; then
         case "${distro}" in
-            "MacOS")    profile="${script_dir}/profiles/macos_profile"   ;;
-            *)          profile="${script_dir}/profiles/linux_profile"   ;;
+            "MacOS")    : "${script_dir}/profiles/macos_profile"   ;;
+            *)          : "${script_dir}/profiles/linux_profile"   ;;
         esac
+        profile="${_}"
     fi
 
     if [[ ! "${profile}" ]]; then
