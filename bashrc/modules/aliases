@@ -26,7 +26,7 @@ function upgit
     local -a git_dirs
 
     if [[ "$1" ]]; then
-        cwd="$1"
+        cwd="${1%/}"
     else
         cwd="${PWD}"
     fi
