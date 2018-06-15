@@ -3,29 +3,26 @@
 function format
 {
     local line
+    local count
     while [[ "$1" ]]; do
         case "$1" in
             "(")
-                line+=" ("
-                while [[ "$2" != ")" && "$1" ]]; do
-                    [[ "$2" ]] && line+="$2"
-                    shift
-                done
-                line+=")"
-                shift
-            ;;
-            "%")
-                line+="$1"
+                while read -r i && [[ "${i}" != ")" ]]; do
+                    ((count++))
+                done < <(printf "%s\\n" "$@")
+                : "${*:1:$((count + 1))}"
+                : " ${_// }"
             ;;
             *)
-                if [[ "${line}" == "" ]]; then
-                    line+="$1"
-                else
-                    line+=" $1"
-                fi
+                [[ "$1" == "%" || ! "${line}" ]] && : "$1" || \
+                    : " $1"
             ;;
         esac
-        shift
+        line+="${_}"
+        ((count++))
+        while ((count > 0)); do
+            ((count--)) && shift
+        done
     done
     printf "%s" "${line}"
 }

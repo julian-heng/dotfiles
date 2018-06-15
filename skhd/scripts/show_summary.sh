@@ -3,20 +3,18 @@
 
 function convert_mem
 {
-    local convert
-    convert="$(awk -v a="$1" 'BEGIN { b = a / 1024; printf "%0.2f", b }')"
-    printf "%s" "${convert}"
+    : "$(awk -v a="$1" 'BEGIN { b = a / 1024; printf "%0.2f", b }')"
+    printf "%s" "${_}"
 }
 
 function get_everything
 {
-    local everything
-    everything="$(get_cpu_usage)"
-    everything+=";$(get_temp)"
-    everything+=";$(get_bat_info)"
-    everything+=";$(get_mem_info)"
-    everything+=";$(get_disk "$@")"
-    printf "%s" "${everything}"
+    : "$(get_cpu_usage)"
+    : "${_};$(get_temp)"
+    : "${_};$(get_bat_info)"
+    : "${_};$(get_mem_info)"
+    : "${_};$(get_disk "$@")"
+    printf "%s" "${_}"
 }
 
 function get_args

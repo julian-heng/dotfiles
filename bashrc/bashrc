@@ -18,39 +18,41 @@ function detect_os
     local distro
     case "$(uname -s)" in
         "Darwin")
-            distro="MacOS"
+            : "MacOS"
         ;;
         "Linux") 
             if type -p lsb_release >/dev/null; then
-                distro="$(lsb_release -si)"
+                : "$(lsb_release -si)"
             elif [[ -f "/etc/lsb-release" ]]; then
-                distro="$(awk '/DISTRIB_ID/ {print $1}' /etc/lsb-release)"
-                distro="${distro/DISTRIB_ID=/}"
+                : "$(awk '/DISTRIB_ID/ {print $1}' /etc/lsb-release)"
+                : "${_/DISTRIB_ID=/}"
             elif [[ -f "/etc/os-release" ]]; then
-                distro="$(awk 'NR==1 {print}' /etc/os-release)"
-                distro="${distro/NAME=/}"
-                distro="${distro//\"/}"
+                : "$(awk 'NR==1 {print}' /etc/os-release)"
+                : "${_/NAME=/}"
+                : "${_//\"/}"
             fi
         ;;
         "FreeBSD")
-            distro="FreeBSD"
+            : "FreeBSD"
         ;;
         "")
             printf "%s\\n" "Error: Cannot detect os"
         ;;
     esac
+    distro="${_}"
     printf "%s" "${distro}"
 }
 
 function get_module_dir
 {
     local module_dir
-    if type -p readlink >/dev/null; then
-        module_dir="$(readlink "${BASH_SOURCE[0]}")"
-        module_dir="${module_dir%/*}/modules"
+    if type -p readlink > /dev/null; then
+        : "$(readlink "${BASH_SOURCE[0]}")"
+        : "${_%/*}/modules"
     else
-        module_dir="${HOME}/.dotfiles/bashrc/modules"
+        : "${HOME}/.dotfiles/bashrc/modules"
     fi
+    module_dir="${_}"
     printf "%s" "${module_dir}"
 }
 

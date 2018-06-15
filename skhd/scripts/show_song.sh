@@ -1,13 +1,10 @@
 #!/usr/bin/env bash
 # shellcheck disable=1090,2194
 
-function count_array_char
+function count_char
 {
-    local in_array=("$@")
-    for i in "${in_array[@]}"; do
-        ((count+="${#i}"))
-    done
-    printf "%s" "${count}"
+    : "${*}"
+    printf "%s" "${#_}"
 }
 
 function check_app_state
@@ -118,11 +115,11 @@ function main
             message_parts=("${album}")
 
             case "1" in
-                "$(("$(count_array_char "${subtitle_parts[@]}")" >= 50))")
+                "$(("$(count_char "${subtitle_parts[@]}")" >= 50))")
                     subtitle_parts=("${track}")
                     message_parts=("${artist}" "-" "${album}")
                 ;&
-                "$(("$(count_array_char "${message_parts[@]}")" >= 50))")
+                "$(("$(count_char "${message_parts[@]}")" >= 50))")
                     message_parts=("${artist}")
                 ;;
             esac

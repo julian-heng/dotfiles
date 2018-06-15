@@ -7,18 +7,15 @@ function vscp
 {
     local server
     local file
-    local remote
 
     read -r server \
             file \
             <<< "${1//:/ }"
-    remote="scp://${server}/${file}"
-    vim "${remote}"
+    vim "${scp://${server}/${file}}"
 }
 
 function upgit
 {
-    local cwd
     local item
     local git_dir
     local header
@@ -26,14 +23,14 @@ function upgit
     local -a git_dirs
 
     if [[ "$1" ]]; then
-        cwd="${1%/}"
+        : "${1%/}"
     else
-        cwd="${PWD}"
+        : "${PWD}"
     fi
 
-    for item in "${cwd}/"*; do
-        { [[ -d "${item}/.git" ]] || git -C "${item}" rev-parse --git-dir > /dev/null 2>&1; } \
-            && git_dirs+=("${item}")
+    for item in "${_}/"*; do
+        { [[ -d "${item}/.git" ]] || git -C "${item}" rev-parse --git-dir > /dev/null 2>&1; } && \
+            git_dirs+=("${item}")
     done
 
     for git_dir in "${git_dirs[@]}"; do
@@ -75,12 +72,13 @@ alias yt2mp3="
 
 case "${distro}" in
     "MacOS"|"FreeBSD")
-        color_flag="-G"
+        : "-G"
     ;;
     *)
-        color_flag="--color"
+        : "--color"
     ;;
 esac
+color_flag="${_}"
 
 alias ls="ls ${color_flag}"
 alias ll="ls ${color_flag} -l"

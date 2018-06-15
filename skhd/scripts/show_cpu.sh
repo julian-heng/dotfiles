@@ -19,27 +19,24 @@ function trim_digits
 
 function get_cpu
 {
-    local cpu
-    cpu="$(sysctl -n machdep.cpu.brand_string)"
-    cpu="${cpu/@/(${cores}) @}"
-    cpu="${cpu//\(R\)/}"
-    cpu="${cpu//\(TM\)/}"
-    printf "%s" "${cpu}"
+    : "$(sysctl -n machdep.cpu.brand_string)"
+    : "${_/@/(${cores}) @}"
+    : "${_//\(R\)/}"
+    : "${_//\(TM\)/}"
+    printf "%s" "${_}"
 }
 
 function get_load
 {
-    local load
-    load="$(sysctl -n vm.loadavg)"
-    load="${load/' }'}"
-    load="${load/'{ '}"
-    printf "%s" "${load}"
+    : "$(sysctl -n vm.loadavg)"
+    : "${_/' }'}"
+    : "${_/'{ '}"
+    printf "%s" "${_}"
 }
 
 function get_cpu_usage
 {
-    local cpu_usage
-    cpu_usage="$(awk \
+    : "$(awk \
                     -v cores="${cores:-1}" \
                     -v sum="0" '\
                     {sum += $3}
@@ -47,24 +44,22 @@ function get_cpu_usage
                         cpu_usage= sum / cores
                         printf "%0.2f", cpu_usage
                     }' <(ps aux))"
-    cpu_stage="$(trim_digits "${cpu_usage}")"
-    printf "%s" "${cpu_usage}"
+    : "$(trim_digits "${_}")"
+    printf "%s" "${_}"
 }
 
 function get_temp
 {
-    local temp
-    temp="$(osx-cpu-temp)"
-    printf "%s" "${temp}"
+    : "$(osx-cpu-temp)"
+    printf "%s" "${_}"
 }
 
 function get_fan_speed
 {
-    local fan
-    fan="$(awk 'NR==2{print; exit}' < <(istats fan --value-only))"
-    fan="${fan:-0}"
-    fan="${fan// } RPM"
-    printf "%s" "${fan}"
+    : "$(awk 'NR==2{print; exit}' <(istats fan --value-only))"
+    : "${_:-0}"
+    : "${_// } RPM"
+    printf "%s" "${_}"
 }
 
 function get_uptime
@@ -76,26 +71,27 @@ function get_uptime
     local hours
     local mins
     local secs
-    local uptime
 
-    boot="$(sysctl -n kern.boottime)"
-    boot="${boot/'{ sec = '}"
-    boot="${boot/,*}"
-    printf -v now "%(%s)T" -1
+    : "$(sysctl -n kern.boottime)"
+    : "${_/'{ sec = '}"
+    boot="${_/,*}"
+    printf -v now "%(%s)T" "-1"
     seconds="$((now - boot))"
 
-    days="$((seconds / 60 / 60 / 24))"
-    hours="$((seconds / 60 / 60 % 24))"
-    mins="$((seconds / 60 % 60))"
-    secs="$((seconds % 60 % 60 % 24))"
+    : "$((seconds / 60 / 60 / 24))"
+    days="$(strip "days" "${_}")"
 
-    days="$(strip days ${days})"
-    hours="$(strip hours ${hours})"
-    mins="$(strip mins ${mins})"
-    secs="$(strip secs ${secs})"
-    uptime="${days:-}${hours:-}${mins:-}${secs// }"
+    : "$((seconds / 60 / 60 % 24))"
+    hours="$(strip "hours" "${_}")"
 
-    printf "%s" "${uptime}"
+    : "$((seconds / 60 % 60))"
+    mins="$(strip "mins" "${_}")"
+
+    : "$((seconds % 60 % 60 % 24))"
+    secs="$(strip "seconds" "${_}")"
+
+    : "${days:-}${hours:-}${mins:-}${secs// }"
+    printf "%s" "${_}"
 }
 
 function main

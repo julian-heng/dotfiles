@@ -5,6 +5,28 @@
 
 function prompter
 {
+    function __get_git_branch
+    {
+        case "$1" in
+            *"No commits"*)
+                : NA
+            ;;
+
+            *"no branch"*)
+                : "${i%%\(*}"
+                : "${_//#}"
+                : "${_//[[:space:]]}"
+            ;;
+
+            *)
+                : "${i%%\.*}"
+                : "${_//#}"
+                : "${_//[[:space:]]}"
+            ;;
+        esac
+        printf "%s" "${_}"
+    }
+
     function _git_prompt
     {
         local git_prompt
@@ -26,24 +48,13 @@ function prompter
         #   - https://github.com/magicmonty/bash-git-prompt/blob/master/gitstatus.sh
         #   - https://git-scm.com/docs/git-status
 
-        if [[ -d ".git" ]] || git rev-parse --git-dir > /dev/null 2>&1; then
+        { [[ -d ".git" ]] || git rev-parse --git-dir > /dev/null 2>&1; } && {
             while IFS=$'\n' read -r i; do
                 status="${i:0:2}"
                 while [[ -n "${status}" ]]; do
                     case "${status}" in
                         "##")
-                            if [[ "${i}" == *"No commits"* ]]; then
-                                : "NA"
-                            elif [[ "${i}" == *"no branch"* ]]; then
-                                : "${i%%\(*}"
-                                : "${_//#}"
-                                : "${_//[[:space:]]}"
-                            else
-                                : "${i%%\.*}"
-                                : "${_//#}"
-                                : "${_//[[:space:]]}"
-                            fi
-                            _git_branch="${_}"
+                            _git_branch="$(__get_git_branch "${i}")"
                             break
                         ;;
                         "??")       ((num_untracked++)); break ;;
@@ -66,11 +77,11 @@ function prompter
                 _git_status_clear="true"
 
             ((num_conflicts > 0)) && \
-                _git_status+="${fb[1]}✖${num_conflicts}${reset}"
+                _git_status+="${f[1]}✖${num_conflicts}${reset}"
             ((num_changed > 0)) && \
-                _git_status+="${fb[4]}✚${num_changed}${reset}"
+                _git_status+="${f[4]}✚${num_changed}${reset}"
             ((num_staged > 0)) && \
-                _git_status+="${fb[6]}●${num_staged}${reset}"
+                _git_status+="${f[6]}●${num_staged}${reset}"
             ((num_untracked > 0)) && \
                 _git_status+="${bold}…${num_untracked}${reset}"
 
@@ -79,7 +90,7 @@ function prompter
             else
                 git_prompt="-[${c2}${_git_branch}${reset}|${_git_status}]"
             fi
-        fi
+        }
 
         printf "%s" "${git_prompt}"
     }
@@ -94,30 +105,29 @@ function prompter
     function dir
     {
         local _PWD
-        local _dir
-
         local -a parts
 
         unset _PWD
-        _dir="${PWD}"
-        _dir="${_dir//${HOME}/"~"}"
+        : "${PWD}"
+        : "${_//${HOME}/"~"}"
 
         IFS="/"\
-        read -r -a parts <<< "${_dir}"
+        read -r -a parts <<< "${_}"
 
         for part in "${parts[@]::${#parts[@]}-1}"; do
             count="0"
             for in_part in $(expand "${part}"); do
                 if ((count == 0)); then
                     if [[ "${in_part:0:1}" == "." ]]; then
-                        _PWD+="/${in_part:0:2}"
+                        : "/${in_part:0:2}"
                     else
-                        _PWD+="/${in_part:0:1}"
+                        : "/${in_part:0:1}"
                     fi
                     ((count++))
                 else
-                    _PWD+="${in_part:0:1}"
+                    : "${in_part:0:1}"
                 fi
+                _PWD+="${_}"
             done
         done
 

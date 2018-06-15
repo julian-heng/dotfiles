@@ -3,7 +3,6 @@
 
 function get_os
 {
-    local distro
     case "$(uname -s)" in
         "Darwin")
             : "MacOS"
@@ -26,16 +25,14 @@ function get_os
             printf "%s\\n" "Error: Cannot detect os"
         ;;
     esac
-    distro="${_}"
-    printf "%s" "${distro}"
+    printf "%s" "${_}"
 }
 
 function print_header
 {
-    local string="$1"
-    eval printf "%0.s=" "{0..${#string}}" && printf "\\n"
-    printf "%s\\n" "${string}"
-    eval printf "%0.s=" "{0..${#string}}" && printf "\\n"
+    eval printf "%0.s=" "{0..${#1}}" && printf "\\n"
+    printf "%s\\n" "${#1}"
+    eval printf "%0.s=" "{0..${#1}}" && printf "\\n"
 }
 
 function print_run

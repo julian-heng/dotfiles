@@ -3,10 +3,9 @@
 
 function spacify
 {
-    local string="$1"
-    string="${string//:/ }"
-    string="${string:1}"
-    printf "%s" "${string}"
+    : "${1//:/ }"
+    : "${_:1}"
+    printf "%s" "${_}"
 }
 
 function get_search
@@ -23,19 +22,18 @@ function get_search
         while [[ "${match}" != "true" ]] && ((count < ${#disk_cache[@]})); do
             if [[ "${disk_cache[${count}]}" == *"${search}"* ]]; then
                 match="true"
-                search="${disk_cache[${count}]%% *}"
+                : "${disk_cache[${count}]%% *}"
             else
                 ((count++))
             fi
         done
     else
-        default_disk="${disk_cache[1]}"
-        default_disk="${default_disk%% *}"
-        search="${default_disk}"
+        : "${disk_cache[1]}"
+        : "${_%% *}"
     fi
 
     if [[ "${match}" == "true" ]]; then
-        printf "%s" "${search}"
+        printf "%s" "${_}"
     else
         return 1
     fi
@@ -46,8 +44,8 @@ function get_df_output
     local df_line
     local -a disk_cache
 
-    while read -r df_line; do
-        [[ "${df_line}" != *"TimeMachine"* ]] && disk_cache+=("${df_line}")
+    while read -r df_line && [[ "${df_line}" != *"TimeMachine"* ]]; do
+        disk_cache+=("${df_line}")
     done < <(df -P -k)
     printf "%s\\n" "${disk_cache[@]}"
 }
@@ -66,7 +64,7 @@ function get_disk
     local disk_mount
 
     disk_cache=("$(get_df_output "$@")")
-    ! search="$(get_search "$@" "${disk_cache[@]}")" && return 1
+    ! search="$(get_search "${@:-}" "${disk_cache[@]}")" && return 1
 
     read -r disk_device \
             disk_capacity \
