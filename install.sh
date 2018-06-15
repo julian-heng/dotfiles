@@ -78,13 +78,13 @@ function get_full_path
 
 function get_profile
 {
-    if [[ ! "${profile}" ]]; then
+    [[ ! "${profile}" ]] && {
         case "${distro}" in
             "MacOS")    : "${script_dir}/profiles/macos_profile" ;;
             *)          : "${script_dir}/profiles/linux_profile" ;;
         esac
         profile="${_}"
-    fi
+    }
 
     if [[ ! "${profile}" ]]; then
         prin "Error: No profile selected"
@@ -101,14 +101,14 @@ function get_profile
 function check_git_modules
 {
     while read -r module_dir && [[ "${check}" != "false" ]]; do
-        ! { grep --quiet . < <(find "${module_dir}" -mindepth 1 -print -quit); } \
-            && check="false"
+        ! { grep --quiet . < <(find "${module_dir}" -mindepth 1 -print -quit); } && \
+            check="false"
     done < <(awk -v sd="${script_dir}" '/path =/ {print sd"/"$3}' "${script_dir}/.gitmodules")
 
-    if [[ "${check}" == "false" ]]; then
+    [[ "${check}" == "false" ]] && {
         prin "Warning: Git submodules are not initialised. Initialising..."
         print_run "Install: Running" "git submodule update --init --recursive"
-    fi
+    }
 }
 
 function install
@@ -121,8 +121,8 @@ function install
     print_header "Installing dotfile files"
     check_git_modules
     for entry in "${install_list[@]}"; do
-        entry="${entry//,/ }"
-        read -r _file _link <<< "${entry}"
+        : "${entry//,/ }"
+        read -r _file _link <<< "${_}"
         if [[ -L "${_link}" ]]; then
             if [[ "${overwrite}" == "true" ]]; then
                 prin "Warning: \"${_link}\" is already symlinked, overwriting"
@@ -153,14 +153,14 @@ function uninstall
 
     print_header "Uninstalling dotfiles"
     for _link in "${uninstall_list[@]}"; do
-        _link="${_link##*,}"
-        _link="${_link// /}"
-        if [[ -L "${_link}" ]]; then
-            print_run "Uninstall: Running" "rm ${_link}"
-        elif [[ -d "${_link}" || -e "${_link}" ]]; then
-            prin "Warning: Cannot uninstall \"${_link}\", not from dotfiles"
+        : "${_link##*,}"
+        : "${_// /}"
+        if [[ -L "${_}" ]]; then
+            print_run "Uninstall: Running" "rm ${_}"
+        elif [[ -d "${_}" || -e "${_}" ]]; then
+            prin "Warning: Cannot uninstall \"${_}\", not from dotfiles"
         else
-            prin "Warning: Cannot find \"${_link}\""
+            prin "Warning: Cannot find \"${_}\""
         fi
     done
     printf "\\n"
@@ -168,10 +168,10 @@ function uninstall
 
 function check_version
 {
-    if ((BASH_VERSINFO[0] < 4 || BASH_VERSINFO[1] < 4)); then
+    ((BASH_VERSINFO[0] < 4 || BASH_VERSINFO[1] < 4)) && {
         printf "%s\\n" "Error: Bash 4.4+ required"
         exit 1
-    fi
+    }
 }
 
 function get_args
