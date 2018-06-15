@@ -9,49 +9,43 @@ function trim_digits
     esac
 }
 
-function get_mem_info
+function get_mem_total
 {
-    local mem_wired
-    local mem_compressed
-    local mem_total
-    local mem_used
-    local mem_percent
-    local swap_total
-    local swap_used
+    : $(($(sysctl -n hw.memsize) / 1024 ** 2))
+    printf "%s" "${_}"
+}
 
-    read -r mem_wired \
-            mem_compressed \
-            swap_total \
-            swap_used \
-            < <(awk '
-                    /wired/ { a=$4 }
-                    /occupied/ { b=$5 }
-                    /vm/ { c=$4; d=$7 }
-                    END {
-                        printf "%s %s %s %s", \
-                        a, b, c, d
-                    }' <(vm_stat; sysctl vm.swapusage))
+function get_mem_used
+{
+    : "$(awk '
+        /wired/ {a = substr($4, 1, length($4)-1)}
+        /occupied/ {b = substr($5, 1, length($5)-1)}
+        END {printf "%0.2f", ((a + b) * 4) / 1024}' \
+        < <(printf "%s\\n" "$@"))"
+    printf "%s" "${_}"
+}
 
-    mem_total="$(($(sysctl -n hw.memsize) / 1024 ** 2))"
-    mem_used="$(((${mem_wired//.} + ${mem_compressed//.}) * 4 / 1024))"
-    mem_percent="$(awk \
-                    -v a="${mem_total}" \
-                    -v b="${mem_used}" \
-                        'BEGIN {
-                            percent = b / a * 100
-                            printf "%0.0f", percent
-                        }'
-                    )"
+function get_mem_percent
+{
+    : "$(awk -v a="$1" -v b="$2" \
+            'BEGIN {printf "%0.2f", (a / b) * 100}')"
+    printf "%s" "${_}"
+}
 
-    swap_total="$(trim_digits "${swap_total/M*}")"
-    swap_used="$(trim_digits "${swap_used/M*}")"
+function get_swap_used
+{
+    : "$(awk \
+        '/vm/ { print $4 }' < <(printf "%s\\n" "$@"))"
+    : "$(trim_digits "${_/M*}")"
+    printf "%s" "${_}"
+}
 
-    printf "%s;%s;%s;%s;%s" \
-        "${mem_percent}" \
-        "${mem_used}" \
-        "${mem_total}" \
-        "${swap_used}" \
-        "${swap_total}"
+function get_swap_total
+{
+    : "$(awk \
+        '/vm/ { print $7 }' < <(printf "%s\\n" "$@"))"
+    : "$(trim_digits "${_/M*}")"
+    printf "%s" "${_}"
 }
 
 function main
@@ -60,13 +54,13 @@ function main
         && source "${BASH_SOURCE[0]//${0##*/}/}format.sh"; } \
             && exit 1
 
-    IFS=";"\
-    read -r mem_percent \
-            mem_used \
-            mem_total \
-            swap_used \
-            swap_total \
-            < <(get_mem_info)
+    mapfile -t mem_cache < <(vm_stat; sysctl vm.swapusage)
+
+    mem_total="$(get_mem_total)"
+    mem_used="$(get_mem_used "${mem_cache[@]}")"
+    mem_percent="$(get_mem_percent "${mem_used}" "${mem_total}")"
+    swap_used="$(get_swap_used "${mem_cache[@]}")"
+    swap_total="$(get_swap_total "${mem_cache[@]}")"
 
     title_parts=(
         "Memory" "(" "${mem_percent}" "%" ")"
