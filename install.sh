@@ -176,12 +176,13 @@ function get_args
 {
     while [[ "$1" ]]; do
         case "$1" in
-            "-x")                   set -x ;;
-            "-f"|"--force-install") force="true" ;;
-            "-u"|"--uninstall")     uninstall="true"; install="false" ;;
-            "-d"|"--dry")           dry="true" ;;
-            "-o"|"--overwrite")     overwrite="true" ;;
-            "-i"|"--install")       install="true"; uninstall="false" ;;
+            "-x")                       set -x ;;
+            "-f"|"--force-install")     force="true" ;;
+            "-u"|"--uninstall")         action="uninstall" ;;
+            "-d"|"--dry")               dry="true" ;;
+            "-o"|"--overwrite")         overwrite="true" ;;
+            "-i"|"--install")           action="install" ;;
+            "-g"|"--check-git-modules") action="check_git" ;;
             "-p"|"--profile")
                 if [[ "${profile}" ]]; then
                     prin "Warning: \"${profile}\" is already selected"
@@ -205,11 +206,11 @@ function main
     config_dir="${XDG_CONFIG_HOME:-${HOME}/.config}"
     get_profile
 
-    if [[ "${uninstall}" == "true" ]]; then
-        uninstall "${dirs[@]}" "${files[@]}"
-    elif [[ ! "${install}" || "${install}" == "true" ]]; then
-        install "${dirs[@]}" "${files[@]}"
-    fi
+    case "${action:-install}" in
+        "install") install "${dirs[@]}" "${files[@]}" ;;
+        "uninstall") uninstall "${dirs[@]}" "${files[@]}" ;;
+        "check_git") check_git_modules ;;
+    esac
 }
 
 main "$@"
