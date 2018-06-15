@@ -64,14 +64,17 @@ function get_full_path
 
     cwd="${PWD}"
     if [[ -f "${target}" ]]; then
-        filename="${1##*/}"
-        cd "${target%/*}" || exit
-        full_path="${PWD}/${filename}"
+        : "${target##*/}"
+        [[ "${_}" == "${target}" ]] && : "./${target}"
+        : "${_%/*}"
+        cd "${_}" || exit
+        : "${PWD}/${_}"
     elif [[ -d "${target}" ]]; then
         cd "${target}" || exit
-        full_path="${PWD}"
+        : "${PWD}"
     fi
 
+    full_path="${_}"
     cd "${cwd}" || exit
     printf "%s" "${full_path%/}"
 }
