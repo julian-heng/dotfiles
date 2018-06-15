@@ -21,6 +21,7 @@ function upgit
     local cwd
     local item
     local git_dir
+    local header
 
     local -a git_dirs
 
@@ -30,17 +31,19 @@ function upgit
         cwd="${PWD}"
     fi
 
-    (
-        for item in "${cwd}/"*; do
-            { [[ -d "${item}/.git" ]] || git -C "${item}" rev-parse --git-dir > /dev/null 2>&1; } \
-                && git_dirs+=("${item}")
-        done
+    for item in "${cwd}/"*; do
+        { [[ -d "${item}/.git" ]] || git -C "${item}" rev-parse --git-dir > /dev/null 2>&1; } \
+            && git_dirs+=("${item}")
+    done
 
-        for git_dir in "${git_dirs[@]}"; do
-            printf "%s" "[${git_dir}] "
-            git -C "${git_dir}" pull
-        done
-    )
+    for git_dir in "${git_dirs[@]}"; do
+        header="Updating ${git_dir}"
+        eval printf "%0.s=" "{0..${#header}}" && printf "\\n"
+        printf "%s\\n" "${header}"
+        eval printf "%0.s=" "{0..${#header}}" && printf "\\n"
+        git -C "${git_dir}" pull
+        printf "\\n"
+    done
 }
 
 alias dl="aria2c --dir=${HOME}/Downloads/"
