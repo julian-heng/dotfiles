@@ -20,9 +20,8 @@ function format
         esac
         line+="${_}"
         ((count++))
-        while ((count > 0)); do
-            ((count--)) && shift
-        done
+        shift "${count}"
+        count="0"
     done
     printf "%s" "${line}"
 }
