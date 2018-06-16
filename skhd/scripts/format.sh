@@ -4,7 +4,7 @@ function format
 {
     local line
     local count
-    while [[ "$1" ]]; do
+    while (($# > 0)); do
         case "$1" in
             "(")
                 while read -r i && [[ "${i}" != ")" ]]; do
@@ -14,7 +14,7 @@ function format
                 : " ${_// }"
             ;;
             *)
-                [[ "$1" == "%" || ! "${line}" ]] && : "$1" || \
+                [[ ! "$1" || "$1" == "%" || ! "${line}" ]] && : "$1" || \
                     : " $1"
             ;;
         esac
