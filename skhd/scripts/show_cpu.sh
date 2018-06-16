@@ -21,29 +21,27 @@ function get_cpu
 {
     : "$(sysctl -n machdep.cpu.brand_string)"
     : "${_/@/(${cores}) @}"
-    : "${_//\(R\)/}"
-    : "${_//\(TM\)/}"
+    : "${_/(R)}"
+    : "${_/(TM)}"
     printf "%s" "${_}"
 }
 
 function get_load
 {
     : "$(sysctl -n vm.loadavg)"
-    : "${_/' }'}"
-    : "${_/'{ '}"
+    : "${_/"{ "}"
+    : "${_/" }"}"
     printf "%s" "${_}"
 }
 
 function get_cpu_usage
 {
-    : "$(awk \
-                    -v cores="${cores:-1}" \
-                    -v sum="0" '\
-                    {sum += $3}
-                    END {
-                        cpu_usage= sum / cores
-                        printf "%0.2f", cpu_usage
-                    }' <(ps aux))"
+    : "$(awk -v cores="${cores:-1}" \
+             -v sum="0" '
+                {sum += $3}
+                END {
+                    printf "%0.0f", sum / cores
+                }' <(ps aux))"
     : "$(trim_digits "${_}")"
     printf "%s" "${_}"
 }
@@ -56,7 +54,7 @@ function get_temp
 
 function get_fan_speed
 {
-    : "$(awk 'NR==2{print; exit}' <(istats fan --value-only))"
+    : "$(awk 'NR==2 {print}' <(istats fan --value-only))"
     : "${_:-0}"
     : "${_// } RPM"
     printf "%s" "${_}"
@@ -73,7 +71,7 @@ function get_uptime
     local secs
 
     : "$(sysctl -n kern.boottime)"
-    : "${_/'{ sec = '}"
+    : "${_/"{ sec = "}"
     boot="${_/,*}"
     printf -v now "%(%s)T" "-1"
     seconds="$((now - boot))"
@@ -96,9 +94,9 @@ function get_uptime
 
 function main
 {
-    ! { source "${BASH_SOURCE[0]//${0##*/}/}notify.sh" \
-        && source "${BASH_SOURCE[0]//${0##*/}/}format.sh"; } \
-            && exit 1
+    ! { source "${BASH_SOURCE[0]//${0##*/}}notify.sh" && \
+        source "${BASH_SOURCE[0]//${0##*/}}format.sh"; } && \
+            exit 1
 
     cores="$(sysctl -n hw.logicalcpu_max)"
 
@@ -129,13 +127,12 @@ function main
     message="$(format "${message_parts[@]}")"
 
     case "1" in
-        "$((${#subtitle} >= 50))")    subtitle="${subtitle/ avg/}" ;&
-        "$((${#subtitle} >= 50))")    subtitle="${subtitle/Load: /}" ;;
+        "$((${#subtitle} >= 50))")    subtitle="${subtitle/" avg"}" ;&
+        "$((${#subtitle} >= 50))")    subtitle="${subtitle/"Load: "}" ;;
     esac
 
     notify "${title:-}" "${subtitle:-}" "${message:-}"
 }
 
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    main "$@"
-fi
+[[ "${BASH_SOURCE[0]}" == "${0}" ]] && \
+    main "$@" || :
