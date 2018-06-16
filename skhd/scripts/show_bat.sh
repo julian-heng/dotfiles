@@ -18,7 +18,7 @@ function get_bat_percent
 {
     : "$(awk '/id=/ {print $3}' \
             < <(printf "%s\\n" "$@"))"
-    : ${_//;}
+    : "${_//;}"
     printf "%s" "${_}"
 }
 
