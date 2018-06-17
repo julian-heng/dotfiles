@@ -128,7 +128,7 @@ function main
             title_parts=("Now Playing on" "${app}")
         fi
         subtitle_parts=()
-        message_parts=("${artist}")
+        message_parts=("No music playing")
     fi
 
     title="$(format "${title_parts[@]}")"
