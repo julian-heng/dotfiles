@@ -15,7 +15,7 @@ function get_os
                 : "$(awk '/DISTRIB_ID/ {print $1}' /etc/lsb-release)"
                 : "${_/DISTRIB_ID=/}"
             elif [[ -f "/etc/os-release" ]]; then
-                : "$(awk 'NR==1 {print}' /etc/os-release)"
+                : "$(awk -F "=" '/NAME/ {print $2}' /etc/os-release)"
                 : "${_/NAME=/}"
                 : "${_//\"/}"
             fi
@@ -176,7 +176,7 @@ function check_version
 
 function get_args
 {
-    while [[ "$1" ]]; do
+    while (($# > 0)); do
         case "$1" in
             "-x")                       set -x ;;
             "-f"|"--force-install")     force="true" ;;
@@ -192,7 +192,6 @@ function get_args
                     profile="$(get_full_path "$2")"
                 fi
             ;;
-
         esac
         shift
     done
