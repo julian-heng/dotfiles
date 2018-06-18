@@ -30,9 +30,9 @@ function get_os
 
 function print_header
 {
-    eval printf "%0.s=" "{0..${#1}}" && printf "\\n"
+    eval printf "%0.s=" "{1..${#1}}" && printf "\\n"
     printf "%s\\n" "$1"
-    eval printf "%0.s=" "{0..${#1}}" && printf "\\n"
+    eval printf "%0.s=" "{1..${#1}}" && printf "\\n"
 }
 
 function print_run
