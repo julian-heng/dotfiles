@@ -5,6 +5,16 @@
 
 function prompter
 {
+    function __get_git_behind
+    (
+        [[ "$1" == *"behind "[[:digit:]]* ]] && {
+            : "${1##*behind}"
+            : "${_/]}"
+            : "${_//[[:space:]]}"
+            printf "%s" "${_}"
+        }
+    )
+
     function __get_git_ahead
     (
         [[ "$1" == *"ahead "[[:digit:]]* ]] && {
@@ -56,6 +66,7 @@ function prompter
                     case "${status}" in
                         "##")
                             _git_branch="$(__get_git_branch "${i}")"
+                            _git_behind="$(__get_git_behind "${i}")"
                             _git_ahead="$(__get_git_ahead "${i}")"
                             break
                         ;;
@@ -80,6 +91,8 @@ function prompter
 
             git_prompt="-[${c2}${_git_branch}${reset}"
 
+            [[ "${_git_behind}" ]] && \
+                git_prompt+="${bold}↓${_git_behind}${reset}"
             [[ "${_git_ahead}" ]] && \
                 git_prompt+="${bold}↑${_git_ahead}${reset}"
 
