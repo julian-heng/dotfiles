@@ -2,13 +2,12 @@
 # shellcheck disable=1090,2034,2154
 
 function get_os
-{
-    case "$(uname -s)" in
-        "Darwin")
+(
+    case "${OSTYPE:=$(uname -s)}" in
+        "Darwin"|"darwin"*)
             : "MacOS"
         ;;
-
-        "Linux") 
+        "Linux"|"linux"*)
             if type -p lsb_release >/dev/null; then
                 : "$(lsb_release -si)"
             elif [[ -f "/etc/lsb-release" ]]; then
@@ -20,46 +19,44 @@ function get_os
                 : "${_//\"/}"
             fi
         ;;
-
+        "FreeBSD"|"freebsd"*)
+            : "FreeBSD"
+        ;;
         "")
             printf "%s\\n" "Error: Cannot detect os"
         ;;
     esac
     printf "%s" "${_}"
-}
+)
 
 function print_header
-{
+(
     eval printf "%0.s=" "{1..${#1}}" && printf "\\n"
     printf "%s\\n" "$1"
     eval printf "%0.s=" "{1..${#1}}" && printf "\\n"
-}
+)
 
 function print_run
-{
+(
     local line="$1"
     local _command="$2"
     prin "${line} \"${_command}\""
     [[ "${dry}" != "true" ]] && eval "${_command}"
-}
+)
 
 function prin
-{
+(
     if [[ "${dry}" == "true" ]]; then
         printf "%s\\n" "[Dry] $*"
     else
         printf "%s\\n" "$*"
     fi
-}
+)
 
 function get_full_path
-{
-    local cwd
-    local target="$1"
-    local filename
-    local full_path
+(
+    target="$1"
 
-    cwd="${PWD}"
     if [[ -f "${target}" ]]; then
         : "${target##*/}"
         [[ "${_}" == "${target}" ]] && : "./${target}"
@@ -72,9 +69,8 @@ function get_full_path
     fi
 
     full_path="${_}"
-    cd "${cwd}" || exit
     printf "%s" "${full_path%/}"
-}
+)
 
 function get_profile
 {
@@ -99,7 +95,7 @@ function get_profile
 }
 
 function check_git_modules
-{
+(
     while read -r module_dir && [[ "${check}" != "false" ]]; do
         ! { grep --quiet . < <(find "${module_dir}" -mindepth 1 -print -quit); } && \
             check="false"
@@ -109,19 +105,16 @@ function check_git_modules
         prin "Warning: Git submodules are not initialised. Initialising..."
         print_run "Install: Running" "git submodule update --init --recursive"
     }
-}
+)
 
 function install
-{
-    local install_list=("$@")
-    local entry
-    local _file
-    local _link
+(
+    install_list=("$@")
 
     print_header "Installing dotfile files"
     check_git_modules
     for entry in "${install_list[@]}"; do
-        : "${entry//,/ }"
+        : "${entry//,}"
         read -r _file _link <<< "${_}"
         if [[ -L "${_link}" ]]; then
             if [[ "${overwrite}" == "true" ]]; then
@@ -144,17 +137,16 @@ function install
         fi
     done
     printf "\\n"
-}
+)
 
 function uninstall
-{
-    local uninstall_list=("$@")
-    local _link
+(
+    uninstall_list=("$@")
 
     print_header "Uninstalling dotfiles"
     for _link in "${uninstall_list[@]}"; do
         : "${_link##*,}"
-        : "${_// /}"
+        : "${_// }"
         if [[ -L "${_}" ]]; then
             print_run "Uninstall: Running" "rm ${_}"
         elif [[ -d "${_}" || -e "${_}" ]]; then
@@ -164,7 +156,7 @@ function uninstall
         fi
     done
     printf "\\n"
-}
+)
 
 function check_version
 {
@@ -198,7 +190,7 @@ function get_args
 }
 
 function main
-{
+(
     get_args "$@"
     [[ "${force}" != "true" ]] && check_version
 
@@ -212,6 +204,6 @@ function main
         "uninstall")    uninstall "${dirs[@]}" "${files[@]}" ;;
         "check_git")    check_git_modules ;;
     esac
-}
+)
 
 main "$@"
