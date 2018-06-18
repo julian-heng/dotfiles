@@ -13,5 +13,5 @@ files=(
     "${script_dir}/bashrc/bashrc,           ${HOME}/.bashrc"
     "${script_dir}/bashrc/inputrc_linux,    ${HOME}/.inputrc"
     "${script_dir}/tmux/tmux.conf,          ${HOME}/.tmux.conf"
-    "${script_dir}/compton/no-blur.conf     ${config_dir}/compton.conf"
+    "${script_dir}/compton/no-blur.conf,    ${config_dir}/compton.conf"
 )
