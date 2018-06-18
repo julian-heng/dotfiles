@@ -15,7 +15,7 @@ function secure_source
 
 function detect_os
 (
-    case "${OSTYPE:=$(uname -s)}" in
+    case "${OSTYPE:-$(uname -s)}" in
         "Darwin"|"darwin"*)
             : "MacOS"
         ;;

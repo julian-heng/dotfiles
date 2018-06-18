@@ -3,7 +3,7 @@
 
 function get_os
 (
-    case "${OSTYPE:=$(uname -s)}" in
+    case "${OSTYPE:-$(uname -s)}" in
         "Darwin"|"darwin"*)
             : "MacOS"
         ;;
