@@ -5,15 +5,25 @@
 
 function prompter
 {
+    function __get_git_ahead
+    (
+        [[ "$1" == *"ahead "[[:digit:]]* ]] && {
+            : "${1##*ahead}"
+            : "${_/]}"
+            : "${_//[[:space:]]}"
+            printf "%s" "${_}"
+        }
+    )
+
     function __get_git_branch
-    {
+    (
         case "$1" in
             *"No commits"*)
-                : NA
+                : "NA"
             ;;
 
             *"no branch"*)
-                : "${i%%\(*}"
+                : "${1%%\(*}"
                 : "${_//#}"
                 : "${_//[[:space:]]}"
             ;;
@@ -25,19 +35,10 @@ function prompter
             ;;
         esac
         printf "%s" "${_}"
-    }
+    )
 
     function _git_prompt
-    {
-        local git_prompt
-        local _git_branch
-        local _git_status
-        local _git_status_clear
-        local num_staged
-        local num_changed
-        local num_conflicts
-        local num_untracked
-
+    (
         unset _git_status
         unset num_stages
         unset num_changed
@@ -55,6 +56,7 @@ function prompter
                     case "${status}" in
                         "##")
                             _git_branch="$(__get_git_branch "${i}")"
+                            _git_ahead="$(__get_git_ahead "${i}")"
                             break
                         ;;
                         "??")       ((num_untracked++)); break ;;
@@ -71,10 +73,15 @@ function prompter
             done < <(git status --porcelain --branch)
 
             ((num_conflicts == 0 && \
-            num_changed == 0 && \
-            num_staged == 0 && \
-            num_untracked == 0 )) && \
+              num_changed == 0 && \
+              num_staged == 0 && \
+              num_untracked == 0 )) && \
                 _git_status_clear="true"
+
+            git_prompt="-[${c2}${_git_branch}${reset}"
+
+            [[ "${_git_ahead}" ]] && \
+                git_prompt+="${bold}↑${_git_ahead}${reset}"
 
             ((num_conflicts > 0)) && \
                 _git_status+="${f[1]}✖${num_conflicts}${reset}"
@@ -85,31 +92,26 @@ function prompter
             ((num_untracked > 0)) && \
                 _git_status+="${bold}…${num_untracked}${reset}"
 
-            if [[ "${_git_status_clear}" == "true" ]]; then
-                git_prompt="-[${c2}${_git_branch}${reset}]"
-            else
-                git_prompt="-[${c2}${_git_branch}${reset}|${_git_status}]"
-            fi
+            [[ "${_git_status_clear}" != "true" ]] && \
+                git_prompt+="|${_git_status}"
+
+            git_prompt+="]"
         }
 
         printf "%s" "${git_prompt}"
-    }
+    )
 
     function expand
-    {
-        local str="$1"
-        mapfile -t out <<< "${str}"
+    (
+        mapfile -t out <<< "$1"
         printf "%s" "${out[@]}"
-    }
+    )
 
     function dir
-    {
-        local _PWD
-        local -a parts
-
+    (
         unset _PWD
         : "${PWD}"
-        : "${_//${HOME}/"~"}"
+        : "${_//${HOME}/\~}"
 
         IFS="/"\
         read -r -a parts <<< "${_}"
@@ -137,20 +139,17 @@ function prompter
         ((${#_PWD} > 20)) && _PWD="${parts[-1]}"
 
         printf "%s" "${_PWD:-"/"}"
-    }
+    )
 
-    unset prompt_line PS1
+    unset prompt_line
+    unset PS1
  
     c1="${fb[2]}"
     c2="${fb[4]}"
 
     prompt_line+=("${c1}\\u${reset}@${c1}\\h${reset}: (${c2}$(dir)${reset})$(_git_prompt)\\n")
     prompt_line+=("\\$ ")
-
-    for i in "${prompt_line[@]}"; do
-        PS1+="${i}"
-    done
-
+    IFS="" PS1="${prompt_line[*]}"
     export PS1
 }
 
