@@ -5,6 +5,8 @@
 
 if [[ -f "${HOME}"/.bashrc ]]; then
     source "${HOME}/.bashrc"
+elif [[ -f "/etc/bash.bashrc" ]]; then
+    source /etc/bash.bashrc
 else
     source /etc/bashrc
 fi

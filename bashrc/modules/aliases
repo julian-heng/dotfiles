@@ -4,24 +4,17 @@
 # shellcheck disable=2139,2148,2154
 
 function vscp
-{
-    local server
-    local file
-
+(
+    IFS=":"\
     read -r server \
             file \
-            <<< "${1//:/ }"
-    vim "${scp://${server}/${file}}"
-}
+            <<< "$1"
+    remote="scp://${server}${file}"
+    vim "${remote}"
+)
 
 function upgit
-{
-    local item
-    local git_dir
-    local header
-
-    local -a git_dirs
-
+(
     if [[ "$1" ]]; then
         : "${1%/}"
     else
@@ -41,7 +34,7 @@ function upgit
         git -C "${git_dir}" pull
         printf "\\n"
     done
-}
+)
 
 alias dl="aria2c --dir=${HOME}/Downloads/"
 

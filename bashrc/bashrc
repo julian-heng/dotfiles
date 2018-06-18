@@ -14,47 +14,43 @@ function secure_source
 }
 
 function detect_os
-{
-    local distro
-    case "$(uname -s)" in
-        "Darwin")
+(
+    case "${OSTYPE:=$(uname -s)}" in
+        "Darwin"|"darwin"*)
             : "MacOS"
         ;;
-        "Linux") 
+        "Linux"|"linux"*)
             if type -p lsb_release >/dev/null; then
                 : "$(lsb_release -si)"
             elif [[ -f "/etc/lsb-release" ]]; then
                 : "$(awk '/DISTRIB_ID/ {print $1}' /etc/lsb-release)"
                 : "${_/DISTRIB_ID=/}"
             elif [[ -f "/etc/os-release" ]]; then
-                : "$(awk 'NR==1 {print}' /etc/os-release)"
+                : "$(awk -F "=" '/NAME/ {print %2}' /etc/os-release)"
                 : "${_/NAME=/}"
                 : "${_//\"/}"
             fi
         ;;
-        "FreeBSD")
+        "FreeBSD"|"freebsd"*)
             : "FreeBSD"
         ;;
         "")
             printf "%s\\n" "Error: Cannot detect os"
         ;;
     esac
-    distro="${_}"
-    printf "%s" "${distro}"
-}
+    printf "%s" "${_}"
+)
 
 function get_module_dir
-{
-    local module_dir
+(
     if type -p readlink > /dev/null; then
         : "$(readlink "${BASH_SOURCE[0]}")"
         : "${_%/*}/modules"
     else
         : "${HOME}/.dotfiles/bashrc/modules"
     fi
-    module_dir="${_}"
-    printf "%s" "${module_dir}"
-}
+    printf "%s" "${_}"
+)
 
 function main
 {
