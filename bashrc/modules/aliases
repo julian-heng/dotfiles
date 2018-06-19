@@ -28,9 +28,9 @@ function upgit
 
     for git_dir in "${git_dirs[@]}"; do
         header="Updating ${git_dir}"
-        eval printf "%0.s=" "{0..${#header}}" && printf "\\n"
+        eval printf "%0.s=" "{1..${#header}}" && printf "\\n"
         printf "%s\\n" "${header}"
-        eval printf "%0.s=" "{0..${#header}}" && printf "\\n"
+        eval printf "%0.s=" "{1..${#header}}" && printf "\\n"
         git -C "${git_dir}" pull
         printf "\\n"
     done
