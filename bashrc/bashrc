@@ -65,16 +65,11 @@ function get_full_path
 
 function get_module_dir
 (
-    if [[ -L "${BASH_SOURCE[0]}" ]]; then
-        if type -p readlink > /dev/null; then
-            : "$(readlink "${BASH_SOURCE[0]}")"
-            : "${_%/*}/modules"
-        else
-            : "${HOME}/.dotfiles/bashrc/modules"
-        fi
-    else
-        : "${BASH_SOURCE[0]}"
+    if type -p readlink > /dev/null && [[ "${distro}" != "Windows" ]]; then
+        : "$(readlink "${BASH_SOURCE[0]}")"
         : "${_%/*}/modules"
+    else
+        : "${HOME}/.dotfiles/bashrc/modules"
     fi
     printf "%s" "${_}"
 )
