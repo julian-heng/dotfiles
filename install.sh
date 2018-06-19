@@ -86,6 +86,7 @@ function get_profile
     [[ ! "${profile}" ]] && {
         case "${distro}" in
             "MacOS")    : "${script_dir}/profiles/macos_profile" ;;
+            "Windows")  : "${script_dir}/profiles/windows_profile" ;;
             *)          : "${script_dir}/profiles/linux_profile" ;;
         esac
         profile="${_}"

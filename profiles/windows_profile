@@ -1,0 +1,11 @@
+## generic_profile
+## This is a profile for installing dotfiles for a specific platform
+
+dirs=(
+    "${script_dir}/neofetch,  ${config_dir}/neofetch"
+)
+
+files=(
+    "${script_dir}/bashrc/bash_profile,     ${HOME}/.bash_profile"
+    "${script_dir}/bashrc/bashrc,           ${HOME}/.bashrc"
+)
