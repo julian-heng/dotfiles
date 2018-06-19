@@ -34,6 +34,9 @@ function detect_os
         "FreeBSD"|"freebsd"*)
             : "FreeBSD"
         ;;
+        "MSYS"*|"msys")
+            : "Windows"
+        ;;
         "")
             printf "%s\\n" "Error: Cannot detect os"
         ;;
@@ -41,13 +44,37 @@ function detect_os
     printf "%s" "${_}"
 )
 
+function get_full_path
+(
+    target="$1"
+
+    if [[ -f "${target}" ]]; then
+        : "${target##*/}"
+        [[ "${_}" == "${target}" ]] && : "./${target}"
+        : "${_%/*}"
+        cd "${_}" || exit
+        : "${PWD}/${_}"
+    elif [[ -d "${target}" ]]; then
+        cd "${target}" || exit
+        : "${PWD}"
+    fi
+
+    full_path="${_}"
+    printf "%s" "${full_path%/}"
+)
+
 function get_module_dir
 (
-    if type -p readlink > /dev/null; then
-        : "$(readlink "${BASH_SOURCE[0]}")"
-        : "${_%/*}/modules"
+    : "$(get_full_path "${BASH_SOURCE[0]}")"
+    if [[ -L "${BASH_SOURCE[0]}" ]]; then
+        if type -p readlink > /dev/null; then
+            : "$(readlink "${_}")"
+            : "${_%/*}/modules"
+        else
+            : "${HOME}/.dotfiles/bashrc/modules"
+        fi
     else
-        : "${HOME}/.dotfiles/bashrc/modules"
+        : "${_%/*}/modules"
     fi
     printf "%s" "${_}"
 )

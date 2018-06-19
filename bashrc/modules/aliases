@@ -107,6 +107,9 @@ case "${distro}" in
     "FreeBSD")
         alias update="sudo pkg update && sudo pkg upgrade"
     ;;
+    "Windows")
+        alias update="choco upgrade all"
+    ;;
     "")
         printf "%s\\n" "${fb[1]}Error:${reset} Cannot detect distro, 'update' alias not set"
     ;;

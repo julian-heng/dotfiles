@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck disable=1090,2034,2154
 
-function get_os
+function detect_os
 (
     case "${OSTYPE:-$(uname -s)}" in
         "Darwin"|"darwin"*)
@@ -14,13 +14,16 @@ function get_os
                 : "$(awk '/DISTRIB_ID/ {print $1}' /etc/lsb-release)"
                 : "${_/DISTRIB_ID=/}"
             elif [[ -f "/etc/os-release" ]]; then
-                : "$(awk -F "=" '/NAME/ {print $2}' /etc/os-release)"
+                : "$(awk -F "=" '/NAME/ {print %2}' /etc/os-release)"
                 : "${_/NAME=/}"
                 : "${_//\"/}"
             fi
         ;;
         "FreeBSD"|"freebsd"*)
             : "FreeBSD"
+        ;;
+        "MSYS"*|"msys")
+            : "Windows"
         ;;
         "")
             printf "%s\\n" "Error: Cannot detect os"
