@@ -72,6 +72,12 @@ function get_full_path
     printf "%s" "${full_path%/}"
 )
 
+function count
+(
+    : "$#"
+    printf "%s" "${_}"
+)
+
 function get_profile
 {
     [[ ! "${profile}" ]] && {
@@ -97,8 +103,8 @@ function get_profile
 function check_git_modules
 (
     while read -r module_dir && [[ "${check}" != "false" ]]; do
-        ! { grep --quiet . < <(find "${module_dir}" -mindepth 1 -print -quit); } && \
-            check="false"
+        : "$(count "${module_dir}/"*)"
+        ((${_} == 1)) && check="false"
     done < <(awk -v sd="${script_dir}" '/path =/ {print sd"/"$3}' "${script_dir}/.gitmodules")
 
     [[ "${check}" == "false" ]] && {
