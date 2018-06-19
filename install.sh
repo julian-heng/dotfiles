@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck disable=1090,2034,2154
 
-function detect_os
+function get_os
 (
     case "${OSTYPE:-$(uname -s)}" in
         "Darwin"|"darwin"*)
