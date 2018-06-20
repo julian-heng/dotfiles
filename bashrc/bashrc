@@ -26,7 +26,7 @@ function detect_os
                 : "$(awk '/DISTRIB_ID/ {print $1}' /etc/lsb-release)"
                 : "${_/DISTRIB_ID=/}"
             elif [[ -f "/etc/os-release" ]]; then
-                : "$(awk -F "=" '/NAME/ {print %2}' /etc/os-release)"
+                : "$(awk -F "=" '/NAME/ {print $2}' /etc/os-release)"
                 : "${_/NAME=/}"
                 : "${_//\"/}"
             fi
