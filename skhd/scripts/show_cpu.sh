@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 # shellcheck disable=1090,2194
 
+function check_apps
+(
+    if ! type -p sysctl > /dev/null; then
+        return 1
+    fi
+)
+
 function strip
 {
     case "$2" in
@@ -10,32 +17,33 @@ function strip
 }
 
 function trim_digits
-{
+(
     case "${1##*.}" in
         "00")   printf "%s" "${1/.*}" ;;
         *)      printf "%s" "$1" ;;
     esac
-}
+)
 
 function get_cpu
-{
+(
     : "$(sysctl -n machdep.cpu.brand_string)"
     : "${_/@/(${cores}) @}"
     : "${_/(R)}"
     : "${_/(TM)}"
+    : "${_/ CPU}"
     printf "%s" "${_}"
-}
+)
 
 function get_load
-{
+(
     : "$(sysctl -n vm.loadavg)"
     : "${_/"{ "}"
     : "${_/" }"}"
     printf "%s" "${_}"
-}
+)
 
 function get_cpu_usage
-{
+(
     : "$(awk -v cores="${cores:-1}" \
              -v sum="0" '
                 {sum += $3}
@@ -44,32 +52,25 @@ function get_cpu_usage
                 }' <(ps aux))"
     : "$(trim_digits "${_}")"
     printf "%s" "${_}"
-}
+)
 
 function get_temp
-{
+(
     : "$(osx-cpu-temp)"
     printf "%s" "${_}"
-}
+)
 
 function get_fan_speed
-{
-    : "$(awk 'NR==2 {print}' <(istats fan --value-only))"
+(
+    mapfile -t out < <(istats fan --value-only)
+    : "${out[2]}"
     : "${_:-0}"
     : "${_// } RPM"
     printf "%s" "${_}"
-}
+)
 
 function get_uptime
-{
-    local boot
-    local now
-    local seconds
-    local days
-    local hours
-    local mins
-    local secs
-
+(
     : "$(sysctl -n kern.boottime)"
     : "${_/"{ sec = "}"
     boot="${_/,*}"
@@ -90,10 +91,10 @@ function get_uptime
 
     : "${days:-}${hours:-}${mins:-}${secs// }"
     printf "%s" "${_}"
-}
+)
 
 function main
-{
+(
     ! { source "${BASH_SOURCE[0]//${0##*/}}notify.sh" && \
         source "${BASH_SOURCE[0]//${0##*/}}format.sh"; } && \
             exit 1
@@ -132,7 +133,7 @@ function main
     esac
 
     notify "${title:-}" "${subtitle:-}" "${message:-}"
-}
+)
 
 [[ "${BASH_SOURCE[0]}" == "${0}" ]] && \
-    main "$@" || :
+    { check_apps && main "$@"; } || :

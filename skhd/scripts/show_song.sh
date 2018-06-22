@@ -1,18 +1,22 @@
 #!/usr/bin/env bash
 # shellcheck disable=1090,2194
 
+function check_apps
+(
+    if ! type -p osascript > /dev/null; then
+        return 1
+    fi
+)
+
 function count_char
-{
+(
     : "${*}"
     printf "%s" "${#_}"
-}
+)
 
 function check_app_state
-{
-    local -a apps
-    local app
-    local app_state
-    local match="false"
+(
+    match="false"
 
     if [[ "$1" ]]; then
         apps=("$@")
@@ -47,14 +51,11 @@ function check_app_state
     printf "%s;%s" \
         "${app}" \
         "${app_state}"
-}
+)
 
 function get_song_info
-{
-    local app="$1"
-    local track
-    local artist
-    local album
+(
+    app="$1"
 
     if [[ "${app}" == "cmus" ]]; then
         IFS=":" \
@@ -85,10 +86,10 @@ EOF
         "${track}" \
         "${artist}" \
         "${album}"
-}
+)
 
 function main
-{
+(
     ! { source "${BASH_SOURCE[0]//${0##*/}}notify.sh" && \
         source "${BASH_SOURCE[0]//${0##*/}}format.sh"; } && \
             exit 1
@@ -136,7 +137,7 @@ function main
     message="$(format "${message_parts[@]}")"
 
     notify "${title:-}" "${subtitle:-}" "${message:-}"
-}
+)
 
 [[ "${BASH_SOURCE[0]}" == "${0}" ]] && \
-    main "$@" || :
+    { check_apps && main "$@"; } || :

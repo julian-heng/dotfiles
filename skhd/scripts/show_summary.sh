@@ -2,10 +2,10 @@
 # shellcheck disable=1090,2034,2154
 
 function convert_mem
-{
+(
     : "$(awk -v a="$1" 'BEGIN {printf "%0.2f", a / 1024}')"
     printf "%s" "${_}"
-}
+)
 
 function get_args
 {
@@ -19,7 +19,7 @@ function get_args
 }
 
 function main
-{
+(
     script_dir="${BASH_SOURCE[0]//${0##*/}}"
 
     ! { source "${script_dir}show_bat.sh" && \
@@ -73,12 +73,10 @@ function main
             cpu_usage="$(get_cpu_usage)"
             temp="$(get_temp)"
 
-            : "$(get_mem_used "$(get_mem_cache)")"
-            : "$(convert_mem "${_}")"
+            : "$(convert_mem "$(get_mem_used "$(get_mem_cache)")")"
             mem_used="$(trim_digits "${_}")"
 
-            : "$(get_mem_total)"
-            : "$(convert_mem "${_}")"
+            : "$(convert_mem "$(get_mem_total)")"
             mem_total="$(trim_digits "${_}")"
 
             mem_percent="$(get_mem_percent "${mem_used}" "${mem_total}")"
@@ -95,6 +93,7 @@ function main
                 "CPU:" "${cpu_usage}" "%"
                 "(" "${temp}" ")" "|"
                 "Mem:" "${mem_used}" "GiB" "/" "${mem_total}" "GiB"
+                "(" "${mem_percent}" "%" ")"
             )
 
             message_parts=(
@@ -110,7 +109,7 @@ function main
     message="$(format "${message_parts[@]}")"
 
     notify "${title:-}" "${subtitle:-}" "${message:-}"
-}
+)
 
 [[ "${BASH_SOURCE[0]}" == "${0}" ]] && \
     main "$@"
