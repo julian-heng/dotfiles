@@ -40,8 +40,9 @@ function get_df_output
 (
     while read -r line; do
         [[ "${line}" != *"TimeMachine"* ]] && \
-            printf "%s\\n" "${line}"
+            disk_cache+=("${line}")
     done < <(df)
+    printf "%s\\n" "${disk_cache[@]:${1:-1}}"
 )
 
 function get_diskutil_out
