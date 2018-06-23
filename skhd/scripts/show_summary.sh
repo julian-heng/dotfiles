@@ -73,10 +73,12 @@ function main
             cpu_usage="$(get_cpu_usage)"
             temp="$(get_temp)"
 
-            : "$(convert_mem "$(get_mem_used "$(get_mem_cache)")")"
+            mem_cache="$(get_mem_cache)"
+
+            : "$(convert_mem "$(get_mem_used "${mem_cache}")")"
             mem_used="$(trim_digits "${_}")"
 
-            : "$(convert_mem "$(get_mem_total)")"
+            : "$(convert_mem "$(get_mem_total "${mem_cache}")")"
             mem_total="$(trim_digits "${_}")"
 
             mem_percent="$(get_mem_percent "${mem_used}" "${mem_total}")"

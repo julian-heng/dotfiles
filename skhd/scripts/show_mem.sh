@@ -18,12 +18,13 @@ function trim_digits
 
 function get_mem_cache
 (
-    vm_stat; sysctl vm.swapusage
+    vm_stat; sysctl vm.swapusage hw.memsize
 )
 
 function get_mem_total
 (
-    : $(($(sysctl -n hw.memsize) / 1024 ** 2))
+    : "$(awk \
+        '/hw/ {printf "%0.0f", $2 / (1024 ^ 2)}' < <(printf "%s\\n" "$@"))"
     printf "%s" "${_}"
 )
 
@@ -40,8 +41,9 @@ function get_mem_used
 function get_mem_percent
 (
     if [[ ! "$1" && ! "$2" ]]; then
-        used="$(get_mem_used "$(get_mem_cache)")"
-        total="$(get_mem_total)"
+        cache="$(get_mem_cache)"
+        used="$(get_mem_used "${cache}")"
+        total="$(get_mem_total "${cache}")"
     else
         used="$1"
         total="$2"
@@ -70,20 +72,20 @@ function get_swap_total
 
 function get_mem_info
 (
-    read -r mem_total \
+    read -r mem_percent \
             mem_used \
-            mem_percent \
-            swap_total \
+            mem_total \
             swap_used \
-            < <(awk -v total="${mem_total:=$(sysctl -n hw.memsize)}" '
-                    BEGIN {total = total / (1024 ^ 2)}
+            swap_total \
+            < <(awk '
+                    /hw/ {total = $2 / (1024 ^ 2)}
                     /wired/ {a = substr($4, 1, length($4)-1)}
                     /occupied/ {b = substr($5, 1, length($5)-1)}
                     /vm/ {c = $4; d = $7}
                     END {
                         used = ((a + b) * 4) / 1024
                         printf "%0.0f %0.0f %0.0f %s %s", \
-                            total, used, ((used / total) * 100), c, d
+                            ((used / total) * 100), used, total, c, d
                     }' < <(get_mem_cache))
 
     swap_total="$(trim_digits "${swap_total/M*}")"
