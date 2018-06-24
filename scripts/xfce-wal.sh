@@ -10,8 +10,8 @@ function change_wal
     property="/backdrop/screen0/monitor0/workspace0/last-image"
     : "$(pgrep xfce4-session)"
     IFS="=" \
-    read -rd '' _ dbus_session < \
-        <(grep -z DBUS_SESSION_BUS_ADDRESS "/proc/${_}/environ")
+    read -rd '' _ dbus_session \
+        < <(grep -z DBUS_SESSION_BUS_ADDRESS "/proc/${_}/environ")
     export DBUS_SESSION_BUS_ADDRESS="${dbus_session}"
     xfconf-query --channel xfce4-desktop \
                  --property "${property}" \
