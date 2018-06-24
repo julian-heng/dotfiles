@@ -109,24 +109,27 @@ function main
             bat_condition \
             < <(get_bat_info)
 
-    title_parts=(
-        "Battery" "(" "${bat_percent}" ")"
-    )
+    [[ ! "${bat_percent}" \
+    || ! "${bat_condition}" \
+    || ! "${bat_cycles}" \
+    ]] && no_bat="true"
 
-    subtitle_parts=(
-        "${bat_time}" "|" "${bat_condition}" "|" "${bat_cycles}" "cycles"
-    )
-
-    message_parts=(
-        "Source:" "${bat_state}"
-    )
+    if [[ "${no_bat}" != "true" ]]; then
+        title_parts=("Battery" "(" "${bat_percent}" ")")
+        subtitle_parts=("${bat_time}" "|" "${bat_condition}" "|" "${bat_cycles}" "cycles")
+        message_parts=("Source:" "${bat_state}")
+    else
+        title_parts=("Battery")
+        subtitle_parts=("No battery present")
+        message_parts=("Source:" "${bat_state}")
+    fi
 
     title="$(format "${title_parts[@]}")"
     subtitle="$(format "${subtitle_parts[@]}")"
     message="$(format "${message_parts[@]}")"
 
     notify "${title:-}" "${subtitle:-}" "${message:-}"
-    )
+)
 
 [[ "${BASH_SOURCE[0]}" == "${0}" ]] && \
     { check_apps && main "$@"; } || :
