@@ -5,20 +5,10 @@
 
 function prompter
 {
-    function __get_git_behind
+    function __get_git_branch_status
     (
-        [[ "$1" == *"behind "[[:digit:]]* ]] && {
-            : "${1##*behind}"
-            : "${_/]}"
-            : "${_//[[:space:]]}"
-            printf "%s" "${_}"
-        }
-    )
-
-    function __get_git_ahead
-    (
-        [[ "$1" == *"ahead "[[:digit:]]* ]] && {
-            : "${1##*ahead}"
+        [[ "$1" == *"$2 "[[:digit:]]* ]] && {
+            : "${1##*$2}"
             : "${_/]}"
             : "${_//[[:space:]]}"
             printf "%s" "${_}"
@@ -39,7 +29,7 @@ function prompter
             ;;
 
             *)
-                : "${i%%\.*}"
+                : "${1%%\.*}"
                 : "${_//#}"
                 : "${_//[[:space:]]}"
             ;;
@@ -66,18 +56,38 @@ function prompter
                     case "${status}" in
                         "##")
                             _git_branch="$(__get_git_branch "${i}")"
-                            _git_behind="$(__get_git_behind "${i}")"
-                            _git_ahead="$(__get_git_ahead "${i}")"
+                            _git_behind="$(__get_git_branch_status "${i}" "behind")"
+                            _git_ahead="$(__get_git_branch_status "${i}" "ahead")"
                             break
                         ;;
-                        "??")       ((num_untracked++)); break ;;
-                        "U"?|?"U"|\
-                        "DD"|"AA")  ((num_conflicts++)); break ;;
-                        ?"M"|?"D")  ((num_changed++)) ;;
-                        ?" ") ;;
-                        "U")        ((num_conflicts++)) ;;
-                        " ") ;;
-                        *)          ((num_staged++)) ;;
+
+                        "??")
+                            ((num_untracked++))
+                            break
+                        ;;
+
+                        "U"?|?"U"|"DD"|"AA")
+                            ((num_conflicts++))
+                            break
+                        ;;
+
+                        ?"M"|?"D")
+                            ((num_changed++))
+                        ;;
+
+                        ?" ")
+                        ;;
+
+                        "U")
+                            ((num_conflicts++))
+                        ;;
+
+                        " ")
+                        ;;
+
+                        *)
+                            ((num_staged++))
+                        ;;
                     esac
                     status="${status:0:(${#status}-1)}"
                 done
@@ -93,15 +103,19 @@ function prompter
 
             [[ "${_git_behind}" ]] && \
                 git_prompt+="${bold}↓${_git_behind}${reset}"
+
             [[ "${_git_ahead}" ]] && \
                 git_prompt+="${bold}↑${_git_ahead}${reset}"
 
             ((num_conflicts > 0)) && \
                 _git_status+="${f[1]}✖${num_conflicts}${reset}"
+
             ((num_changed > 0)) && \
                 _git_status+="${f[4]}✚${num_changed}${reset}"
+
             ((num_staged > 0)) && \
                 _git_status+="${f[6]}●${num_staged}${reset}"
+
             ((num_untracked > 0)) && \
                 _git_status+="${bold}…${num_untracked}${reset}"
 
@@ -114,36 +128,28 @@ function prompter
         printf "%s" "${git_prompt}"
     )
 
-    function expand
-    (
-        mapfile -t out <<< "$1"
-        printf "%s" "${out[@]}"
-    )
-
     function dir
     (
         unset _PWD
         : "${PWD}"
         : "${_//${HOME}/\~}"
 
-        IFS="/"\
-        read -r -a parts <<< "${_}"
+        mapfile -d "/" -t parts <<< "${_}"
 
         for part in "${parts[@]::${#parts[@]}-1}"; do
             count="0"
-            for in_part in $(expand "${part}"); do
-                if ((count == 0)); then
-                    if [[ "${in_part:0:1}" == "." ]]; then
-                        : "/${in_part:0:2}"
-                    else
-                        : "/${in_part:0:1}"
-                    fi
+            unset in_PWD
+            unset in_part
+            mapfile -d ' ' -t in_part <<< "${part}"
+            for i in "${in_part[@]}"; do
+                if [[ "${i:0:1}" == "." ]] && ((count == 0)); then
+                    in_PWD+="${i:0:2}"
                     ((count++))
                 else
-                    : "${in_part:0:1}"
+                    in_PWD+="${i:0:1}"
                 fi
-                _PWD+="${_}"
             done
+            _PWD+="/${in_PWD}"
         done
 
         _PWD+="/${parts[-1]}"
