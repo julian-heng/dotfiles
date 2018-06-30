@@ -14,7 +14,7 @@ function get_os
                 : "$(awk '/DISTRIB_ID/ {print $1}' /etc/lsb-release)"
                 : "${_/DISTRIB_ID=/}"
             elif [[ -f "/etc/os-release" ]]; then
-                : "$(awk -F "=" '/NAME/ {print $2}' /etc/os-release)"
+                : "$(awk -F "=" '/NAME/ {print $2; exit}' /etc/os-release)"
                 : "${_/NAME=/}"
                 : "${_//\"/}"
             fi
@@ -61,11 +61,12 @@ function get_full_path
     target="$1"
 
     if [[ -f "${target}" ]]; then
-        : "${target##*/}"
-        [[ "${_}" == "${target}" ]] && : "./${target}"
-        : "${_%/*}"
-        cd "${_}" || exit
-        : "${PWD}/${_}"
+	filename="${target##*/}"
+        [[ "${filename}" == "${target}" ]] && \
+		target="./${target}"
+        target="${target%/*}"
+        cd "${target}" || exit
+        : "${PWD}/${filename}"
     elif [[ -d "${target}" ]]; then
         cd "${target}" || exit
         : "${PWD}"
