@@ -78,6 +78,8 @@ alias ll="ls ${color_flag} -l"
 alias la="ls ${color_flag} -a"
 alias lal="ls ${color_flag} -al"
 
+alias longfetch="neofetch -L; neofetch --off"
+
 case "${distro}" in
     "MacOS")
         alias update="brew -v update && brew -v upgrade"
