@@ -162,9 +162,9 @@ function prompter
     unset prompt_line
     unset PS1
 
-    prompt_line+=("${c1}\\u${reset}@${c1}\\h${reset}: (${c2}$(dir_prompt)${reset})$(_git_prompt)\\n")
+    prompt_line+=("${c1}\\u${reset}@${c1}\\h${reset}: (${c2}$(dir_prompt)${reset})$(_git_prompt)")
     prompt_line+=("\\$ ")
-    IFS="" PS1="${prompt_line[*]}"
+    IFS=$'\n' PS1="${prompt_line[*]}"
     export PS1
 
     unset __get_git_branch_status
