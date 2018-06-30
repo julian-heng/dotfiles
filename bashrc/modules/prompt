@@ -93,19 +93,13 @@ function prompter
                 done
             done < <(git status --porcelain --branch)
 
-            ((num_conflicts == 0 && \
-              num_changed == 0 && \
-              num_staged == 0 && \
-              num_untracked == 0 )) && \
-                _git_status_clear="true"
-
             git_prompt="-[${c2}${_git_branch}${reset}"
 
             [[ "${_git_behind}" ]] && \
-                git_prompt+="${bold}↓${_git_behind}${reset}"
+                git_prompt+="${fb[7]}↓${_git_behind}${reset}"
 
             [[ "${_git_ahead}" ]] && \
-                git_prompt+="${bold}↑${_git_ahead}${reset}"
+                git_prompt+="${fb[7]}↑${_git_ahead}${reset}"
 
             ((num_conflicts > 0)) && \
                 _git_status+="${f[1]}✖${num_conflicts}${reset}"
@@ -119,7 +113,7 @@ function prompter
             ((num_untracked > 0)) && \
                 _git_status+="${bold}…${num_untracked}${reset}"
 
-            [[ "${_git_status_clear}" != "true" ]] && \
+            [[ "${_git_status}" ]] && \
                 git_prompt+="|${_git_status}"
 
             git_prompt+="]"
@@ -128,7 +122,7 @@ function prompter
         printf "%s" "${git_prompt}"
     )
 
-    function dir
+    function dir_prompt
     (
         unset _PWD
         : "${PWD}"
@@ -161,16 +155,22 @@ function prompter
         printf "%s" "${_PWD:-"/"}"
     )
 
+    local c1="${fb[2]}"
+    local c2="${fb[4]}"
+    local -a prompt_line
+
     unset prompt_line
     unset PS1
- 
-    c1="${fb[2]}"
-    c2="${fb[4]}"
 
-    prompt_line+=("${c1}\\u${reset}@${c1}\\h${reset}: (${c2}$(dir)${reset})$(_git_prompt)\\n")
+    prompt_line+=("${c1}\\u${reset}@${c1}\\h${reset}: (${c2}$(dir_prompt)${reset})$(_git_prompt)\\n")
     prompt_line+=("\\$ ")
     IFS="" PS1="${prompt_line[*]}"
     export PS1
+
+    unset __get_git_branch_status
+    unset __get_git_branch
+    unset _git_prompt
+    unset dir_prompt
 }
 
 PROMPT_COMMAND=prompter
