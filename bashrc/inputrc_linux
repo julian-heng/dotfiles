@@ -7,8 +7,8 @@
 "\e[1;3C":   forward-word      # alt + right
 
 # Search through history using partial command
-"\e[1;3A":     history-search-backward
-"\e[1;3B":     history-search-forward
+"\e[A":     history-search-backward
+"\e[B":     history-search-forward
 
 set skip-completed-text on
 set completion-ignore-case on
