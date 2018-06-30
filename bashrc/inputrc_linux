@@ -10,6 +10,10 @@
 "\e[A":     history-search-backward
 "\e[B":     history-search-forward
 
+# Fixing home and end keys for tmux
+"\e[1~":    beginning-of-line
+"\e[4~":    end-of-line
+
 set skip-completed-text on
 set completion-ignore-case on
 
