@@ -119,11 +119,9 @@ function check_git_modules
 
 function install
 (
-    install_list=("$@")
-
     print_header "Installing dotfile files"
     check_git_modules
-    for entry in "${install_list[@]}"; do
+    for entry in "$@"; do
         : "${entry//,}"
         read -r _file _link <<< "${_}"
         if [[ -L "${_link}" ]]; then
@@ -151,10 +149,8 @@ function install
 
 function uninstall
 (
-    uninstall_list=("$@")
-
     print_header "Uninstalling dotfiles"
-    for _link in "${uninstall_list[@]}"; do
+    for _link in "$@"; do
         : "${_link##*,}"
         : "${_// }"
         if [[ -L "${_}" ]]; then
