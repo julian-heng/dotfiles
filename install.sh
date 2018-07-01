@@ -7,6 +7,7 @@ function get_os
         "Darwin"|"darwin"*)
             : "MacOS"
         ;;
+
         "Linux"|"linux"*)
             if type -p lsb_release >/dev/null; then
                 : "$(lsb_release -si)"
@@ -19,12 +20,15 @@ function get_os
                 : "${_//\"/}"
             fi
         ;;
+
         "FreeBSD"|"freebsd"*)
             : "FreeBSD"
         ;;
+
         "MSYS"*|"msys")
             : "Windows"
         ;;
+
         "")
             printf "%s\\n" "Error: Cannot detect os"
         ;;
@@ -61,9 +65,9 @@ function get_full_path
     target="$1"
 
     if [[ -f "${target}" ]]; then
-	filename="${target##*/}"
+        filename="${target##*/}"
         [[ "${filename}" == "${target}" ]] && \
-		target="./${target}"
+            target="./${target}"
         target="${target%/*}"
         cd "${target}" || exit
         : "${PWD}/${filename}"
