@@ -94,7 +94,7 @@ case "${distro}" in
         alias update="sudo apt update && sudo apt upgrade"
     ;;
     "Antergos"*|"Arch"*)
-        alias update="sudo yaourt -Syu"
+        alias update="sudo yay -Syu"
     ;;
     "Fedora"|"CentOS"*)
         if type -p dnf >/dev/null; then
