@@ -3,18 +3,18 @@
 
 ## Settings
 : "${wal_dir:=/usr/share/wal}"
+: "${xfce_property:=/backdrop/screen0/monitor0/workspace0/last-image}"
 
 function change_wal
 (
     img="$1"
-    property="/backdrop/screen0/monitor0/workspace0/last-image"
     : "$(pgrep xfce4-session)"
     IFS="=" \
     read -rd '' _ dbus_session \
         < <(grep -z DBUS_SESSION_BUS_ADDRESS "/proc/${_}/environ")
     export DBUS_SESSION_BUS_ADDRESS="${dbus_session}"
     xfconf-query --channel xfce4-desktop \
-                 --property "${property}" \
+                 --property "${xfce_property}" \
                  --set "${img}"
 )
 
