@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+
+function check_file
+(
+    [[ "$-" != *"x"* ]] && exec > /dev/null 2>&1
+    if [[ -d "$1" || "$(< "$1")" == *"\\0"* ]]; then
+        return 1
+    else
+        return 0
+    fi
+)
+
+function _count_lines
+(
+    mapfile -t line < "$1"
+    printf "%s\\n" "${#line[@]},$1"
+)
+
+function print_padding
+(
+    for i in "$@"; do
+        unset arr
+        IFS=$'\n' read -d "" -r count name <<< "${i//,/$'\n'}"
+        line_length="${#count}"
+        { ((line_length >= max)) || [[ -z "${max}" ]]; } && {
+            max="${#count}"
+            max_count="${count}"
+            max_filename="${name}"
+        }
+        count_arr+=("${count}")
+        name_arr+=("${name}")
+        ((total_count+=count))
+    done
+
+    for ((i=0; i < $#; i++)); do
+        out+=("$(printf "%-${max}s  %s\\n" "${count_arr[$i]}" "${name_arr[$i]}")")
+    done
+
+    printf "%s\\n" "${out[@]}"
+
+    (($# != 1)) && {
+        printf "\\n%s\\n" "Total no. of lines: ${total_count}"
+        printf "%s\\n\\n" "Longest file: ${max_filename} @ ${max_count} lines"
+    }
+)
+
+function main
+(
+    if (($# == 1)) && [[ -f "$1" ]]; then
+        check_file "$1" && \
+            output+=("$(_count_lines "$1")")
+    elif (($# == 1)) && [[ -d "$1" ]]; then
+        for i in "${1%/}"/*; do
+            check_file "$i" && \
+                output+=("$(_count_lines "$i")")
+        done
+    elif (($# > 1)); then
+        for i in "$@"; do
+            check_file "$i" && \
+                output+=("$(_count_lines "$i")")
+        done
+    fi
+
+    [[ "${output[@]}" ]] && \
+        print_padding "${output[@]}"
+)
+
+main "$@"
