@@ -6,8 +6,32 @@
 RANGER_LOAD_DEFAULT_RC="FALSE"
 HISTCONTROL="ignoreboth"
 
+[[ ! "${MAKEFLAGS}" ]] && {
+    case "${OSTYPE:-$(uname -s)}" in
+        "Darwin"|"darwin"*)
+            cores="$(sysctl -n hw.logicalcpu_max)"
+        ;;
+
+        "Linux"|"linux"*|"MSYS"*|"msys")
+            [[ -f "/proc/cpuinfo" ]] && {
+                while read -r i; do
+                    [[ "$i" =~ ^processor ]] && \
+                        ((cores++))
+                done < /proc/cpuinfo
+            }
+        ;;
+
+        "FreeBSD"|"freebsd"*)
+            cores="$(sysctl -n hw.ncpu)"
+        ;;
+    esac
+    MAKEFLAGS="-j${cores:-1}"
+}
+
 export RANGER_LOAD_DEFAULT_RC
 export HISTCONTROL
+[[ "${MAKEFLAGS}" ]] && \
+    export MAKEFLAGS
 
 #####################
 ##### Man Pages #####
