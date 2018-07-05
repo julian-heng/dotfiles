@@ -3,7 +3,7 @@
 function check_file
 (
     [[ "$-" != *"x"* ]] && exec > /dev/null 2>&1
-    if [[ -d "$1" || "$(< "$1")" == *"\\0"* ]]; then
+    if [[ -d "$1" || "$(< "$1")" == *"\\x00"* ]]; then
         return 1
     else
         return 0
