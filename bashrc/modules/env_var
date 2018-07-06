@@ -5,6 +5,7 @@
 
 RANGER_LOAD_DEFAULT_RC="FALSE"
 HISTCONTROL="ignoreboth"
+EDITOR="vim"
 
 [[ ! "${MAKEFLAGS}" ]] && {
     case "${OSTYPE:-$(uname -s)}" in
@@ -30,6 +31,8 @@ HISTCONTROL="ignoreboth"
 
 export RANGER_LOAD_DEFAULT_RC
 export HISTCONTROL
+export EDITOR
+
 [[ "${MAKEFLAGS}" ]] && \
     export MAKEFLAGS
 
