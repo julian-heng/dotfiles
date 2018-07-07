@@ -2,12 +2,44 @@
 # shellcheck disable=2030,2031
 
 ## Settings
-: "${wal_dir:=/usr/share/wal}"
+: "${wal_path:=/usr/share/wal}"
 : "${xfce_property:=/backdrop/screen0/monitor0/workspace0/last-image}"
+: "${recursive:=false}"
+: "${save:=false}"
+
+function get_full_path
+(
+    target="$1"
+
+    if [[ -f "${target}" ]]; then
+        filename="${target##*/}"
+        [[ "${filename}" == "${target}" ]] && \
+            target="./${target}"
+        target="${target%/*}"
+        cd "${target}" || exit
+        full_path="${PWD}/${filename}"
+    else
+        cd "${target}" || exit
+        full_path="${PWD}"
+    fi
+
+    printf "%s" "${full_path%/}"
+)
+
+function check_image
+(
+    ext="${1##*.}"
+    if [[ ! -d "$1" && ${ext,,} =~ ^(jpg|png)$ ]]; then
+        return 0
+    else
+        return 1
+    fi
+)
 
 function change_wal
 (
     img="$1"
+    printf "%s\\n" "Changing wallpaper to \"${img}\""
     : "$(pgrep xfce4-session)"
     IFS="=" \
     read -rd '' _ dbus_session \
@@ -18,21 +50,92 @@ function change_wal
                  --set "${img}"
 )
 
+function print_usage
+(
+    printf "%s\\n" "
+Usage: ${0##*/} -o --option --option \"VALUE\"
+
+    Options:
+
+    [-i|--image \"PATH\"]         Image to use for wallpaper
+    [-p|--property \"VALUE\"]     Property to set wallpaper to
+    [-r|--recursive]            Searches for a random wallpaper
+                                recursively
+    [-s|--save-last]            Write the file path of the 
+                                wallpaper to ${HOME}/.last_wal
+    [-h|--help]                 Show this message
+
+    Settings:
+
+    wal_path:       ${wal_path}
+    xfce_property:  ${xfce_property}
+    recursive:      ${recursive}
+    save:           ${save}
+
+    This bash script will set a wallpaper for the Xfce4 desktop
+    environment. Settings are within the script. If no arguments
+    are passed, then these settings will be used.
+"
+)
+
+function get_args
+{
+    while (($# > 0)); do
+        case "$1" in
+            "-i"|"--image")     wal_path="$(get_full_path "${2%/}")"; shift ;;
+            "-p"|"--property")  xfce_property="$2"; shift ;;
+            "-r"|"--recursive") recursive="true" ;;
+            "-s"|"--save-last") save="true" ;;
+            "-h"|"--help")      print_usage; exit ;;
+        esac
+        shift
+    done
+}
+
 function main
 (
-    [[ "$1" ]] && wal_dir="${1%/}"
-    img_path=("${wal_dir}/"*/*)
+    get_args "$@"
+    if [[ -d "${wal_path}" ]]; then
+        if [[ "${recursive}" == "true" ]]; then
+            shopt -s globstar
+            for i in "${wal_path}"/**/*; do
+                check_image "$i" && \
+                    img_path+=("$i")
+            done
+            shopt -u globstar
+        else
+            for i in "${wal_path}"/*; do
+                check_image "$i" && \
+                    img_path+=("$i")
+            done
+        fi
+    elif [[ -f "${wal_path}" ]]; then
+        img_path="${wal_path}"
+    else
+        printf "%s\\n" "Not a valid file"
+        exit 1
+    fi
+
+    [[ ! "${img_path[@]}" ]] && {
+        printf "%s\\n" "No valid files"
+        exit 1
+    }
 
     [[ -f "${HOME}/.last_wal" ]] && \
         last_wal="$(< "${HOME}/.last_wal")"
 
-    until [[ "${img}" && "${last_wal}" != "${img}" ]]; do
-        index="$((RANDOM % ${#img_path[@]}))"
-        img="${img_path[${index}]}"
-    done
+    if ((${#img_path} > 1)); then
+        until [[ "${img}" && "${last_wal}" != "${img}" ]]; do
+            index="$((RANDOM % ${#img_path[@]}))"
+            img="${img_path[${index}]}"
+        done
+    else
+        img="${img_path}"
+    fi
 
-    printf "%s" "${img}" > "${HOME}/.last_wal"
-    printf "%s\\n" "Changing wallpaper to \"${img}\""
+    [[ "${save}" == "true" ]] && \
+        printf "%s" "${img}" > "${HOME}/.last_wal"
+
     change_wal "${img}"
 )
 
