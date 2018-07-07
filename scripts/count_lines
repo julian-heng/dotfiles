@@ -1,9 +1,32 @@
 #!/usr/bin/env bash
 
+function get_full_path
+(
+    target="$1"
+    filename="${target##*/}"
+
+    [[ "${filename}" == "${target}" ]] && \
+        target="./${target}"
+    target="${target%/*}"
+    cd "${target}" || exit
+    full_path="${PWD}/${filename}"
+
+    printf "%s" "${full_path}"
+)
+
 function check_file
 (
-    [[ "$-" != *"x"* ]] && exec > /dev/null 2>&1
-    if [[ -d "$1" || "$(< "$1")" == *"\\x00"* ]]; then
+    [[ "${exclude[*]}" ]] && {
+        for pattern in "${exclude[@]}"; do
+            [[ $1 =~ ${pattern} ]] && \
+                exit_code="true"
+        done
+    }
+
+    [[ "${exit_code}" || ! -e "$1" || -d "$1" ]] && \
+        exit_code="true"
+
+    if [[ "${exit_code}" == "true" ]]; then
         return 1
     else
         return 0
@@ -12,56 +35,262 @@ function check_file
 
 function _count_lines
 (
-    mapfile -t line < "$1"
-    printf "%s\\n" "${#line[@]},$1"
+    file_path="$1"
+
+    if ((BASH_VERSINFO[0] < 4)); then
+        while IFS=$'\n' read -r line; do
+            ((count++))
+        done < "${file_path}"
+    else
+        mapfile -t line < "${file_path}"
+    fi
+
+    line_count="${count:-${#line[@]}}"
+
+    [[ "${display_full}" == "true" ]] && \
+        file_path="$(get_full_path "${file_path}")"
+
+    printf "%s\\n" "${line_count},${file_path}"
+)
+
+function reverse_array
+(
+    for i in "$@"; do
+        temp_arr=("${i}" "${temp_arr[@]}")
+    done
+    printf "%s\\n" "${temp_arr[@]}"
+)
+
+function _qsort
+{
+    (($# == 0)) && {
+        unset qreturn
+        return
+    }
+
+    local pivot="$1"; shift
+    local i
+    local -a higher
+    local -a lower
+
+    for i in "$@"; do
+        if ((${i%%,*} < ${pivot%%,*})); then
+            lower+=("$i")
+        else
+            higher+=("$i")
+        fi
+    done
+
+    _qsort "${higher[@]}"
+    higher=("${qreturn[@]}")
+
+    _qsort "${lower[@]}"
+    qreturn+=("${pivot}" "${higher[@]}")
+}
+
+function qsort
+(
+    qreturn=()
+    _qsort "$@"
+    printf "%s\\n" "${qreturn[@]}"
 )
 
 function print_padding
 (
-    for i in "$@"; do
-        unset arr
+    arr=("$@")
+
+    [[ "${sort}" == "true" ]] && {
+        if ((BASH_VERSINFO[0] < 4)); then
+            IFS=$'\n' read -d "" -ra arr < <(qsort "${arr[@]}")
+        else
+            mapfile -t arr < <(qsort "${arr[@]}")
+        fi
+    }
+
+    [[ "${reverse}" == "true" ]] && \
+        mapfile -t arr < <(reverse_array "${arr[@]}")
+
+    [[ "${display_num}" ]] && \
+        arr=("${arr[@]:0:${display_num}}")
+
+    for i in "${arr[@]}"; do
         IFS=$'\n' read -d "" -r count name <<< "${i//,/$'\n'}"
-        line_length="${#count}"
-        { ((line_length >= max)) || [[ -z "${max}" ]]; } && {
-            max="${#count}"
+
+        ((count >= ${max_count:=0})) && {
             max_count="${count}"
             max_filename="${name}"
         }
+
+        line_length="${#count}"
+        ((line_length >= ${padding:=0})) && \
+            padding="${#count}"
+
         count_arr+=("${count}")
         name_arr+=("${name}")
         ((total_count+=count))
     done
 
-    for ((i=0; i < $#; i++)); do
-        out+=("$(printf "%-${max}s  %s\\n" "${count_arr[$i]}" "${name_arr[$i]}")")
+    for ((i=0; i < ${#arr[@]}; i++)); do
+        out+=("$(printf "%-${padding}s%s%s\\n" "${count_arr[$i]}" "${sep:- }" "${name_arr[$i]}")")
     done
 
     printf "%s\\n" "${out[@]}"
 
-    (($# != 1)) && {
-        printf "\\n%s\\n" "Total no. of lines: ${total_count}"
-        printf "%s\\n\\n" "Longest file: ${max_filename} @ ${max_count} lines"
+    ((${#arr[@]} != 1)) && {
+        [[ "${display_total}" == "true" ]] && \
+            printf "\\n%s\\n" "Total no. of lines: ${total_count}"
+
+        [[ "${display_top}" == "true" ]] && {
+            printf "%s\\n" "Longest file:"
+            printf "%-4s%s\\n" "" "${max_filename}"
+            printf "%-4s%s\\n" "" "${max_count} lines"
+        }
+
+        printf "\\n"
     }
 )
 
+function print_example
+(
+    less < <(printf "%s" "Showing number of lines in current directory:
+    $ $0
+    $ $0 .
+    $ $0 ./*
+
+Show the number of lines in a directory:
+    $ $0 /path/to/dir
+    $ $0 /path/to/dir/*
+
+Show the number of lines in current directory recursively:
+    $ $0 -rr
+    $ $0 -rr .
+
+    $ $0 --recursive
+    $ $0 --recursive .
+
+Show the number of lines in a directory recursively:
+    $ $0 -rr /path/to/dir
+
+    If globstar is enabled (shopt -s globstar)
+    Note: Bash will complain if there's too many files
+    $ $0 /path/to/dir/**/*
+
+Show the number or lines sorted from shortest to longest
+    $ $0 --sort
+    $ $0 -ss
+
+Show the number of lines sorted from longest to shortest
+    $ $0 -ss -r
+    $ $0 -ss --reverse
+
+Show the top 5 shortest files
+    $ $0 -ss -n 5
+
+Show the top 5 longest files
+    $ $0 -ss -r -n 5
+
+Show the total number of lines
+    $ $0 -t
+    $ $0 --total
+
+Show details on the longest file
+    $ $0 -tt
+    $ $0 --top
+
+Show the total number of files and details on the longest file
+    $ $0 -t -tt
+    $ $0 --total --top
+
+Show the number of lines of files without \"foobar\" in the path name
+    $ $0 --exclude \"foobar\"
+    $ $0 -e \"foobar\"
+
+Show the number of lines of files without \"foo\", \"bar\" and \"baz\"
+    $ $0 -e 'foo' 'bar' 'baz'
+    $ $0 -e 'foo|bar|baz'
+")
+)
+
+function print_usage
+(
+    printf "%s\\n" "
+Usage: ${0##*/} -o --option --option \"VALUE\"
+
+    Options:
+
+    [-r|--reverse]              Reverse the order of the list
+    [-n|--number \"num\"]         Show n amount of files
+    [-t|--total]                Show the total number of lines
+    [-e|--exclude]              Don't show any files containing
+                                this regex pattern
+    [-f|--full-path]            Show the file's full path instead
+                                of the relative path
+    [-s|--seperator \"sep\"]      Use character as a seperator
+                                between line count and file name
+
+    [-rr|--recursive]           Include files from subfolders
+    [-tt|--top]                 Show the longest file and lines
+    [-ss|--sort]                Sort by lowest to highest
+
+    [-ee|--example]             Show examples
+    [-h|--help]                 Show this message
+
+    This bash script will list the number of lines
+    a file contains. If no arguments are passed, then
+    it will use the files in the current directory.
+"
+)
+
+function get_args
+{
+    while (($# > 0)); do
+        case "$1" in
+            "-r"|"--reverse")       reverse="true" ;;
+            "-n"|"--number")        display_num="$2"; shift ;;
+            "-t"|"--total")         display_total="true" ;;
+            "-f"|"--full-path")     display_full="true" ;;
+            "-e"|"--exclude")
+                shift
+                for i in "$@"; do
+                    case "$1" in
+                        "-"*)   break ;;
+                        *)      exclude+=("$1"); shift ;;
+                    esac
+                done
+            ;;
+
+            "-s"|"--seperator")     sep=" $2 "; shift ;;
+            "-rr"|"--recursive")    recursive="true" ;;
+            "-tt"|"--top")          display_top="true" ;;
+            "-ss"|"--sort")         sort="true" ;;
+            "-ee"|"--example")      print_example; exit ;;
+            "-h"|"--help")          print_usage; exit ;;
+            *)                      [[ -e "$1" ]] && file_list+=("${1%/}") ;;
+        esac
+        shift
+    done
+
+    [[ ! "${file_list[*]}" || -d "${file_list[*]}" ]] && {
+        if [[ "${recursive}" == "true" ]]; then
+            shopt -s globstar
+            file_list=("${file_list[*]:-.}"/**/*)
+            shopt -u globstar
+        else
+            file_list=("${file_list[*]:-.}"/*)
+        fi
+    }
+}
+
 function main
 (
-    if (($# == 1)) && [[ -f "$1" ]]; then
-        check_file "$1" && \
-            output+=("$(_count_lines "$1")")
-    elif (($# == 1)) && [[ -d "$1" ]]; then
-        for i in "${1%/}"/*; do
-            check_file "$i" && \
-                output+=("$(_count_lines "$i")")
-        done
-    elif (($# > 1)); then
-        for i in "$@"; do
-            check_file "$i" && \
-                output+=("$(_count_lines "$i")")
-        done
-    fi
+    get_args "$@"
 
-    [[ "${output[@]}" ]] && \
+    for i in "${file_list[@]}"; do
+        check_file "$i" && \
+            output+=("$(_count_lines "$i")")
+    done
+
+    [[ "${output[*]}" ]] && \
         print_padding "${output[@]}"
 )
 
