@@ -38,19 +38,32 @@ function _count_lines
     file_path="$1"
 
     if ((BASH_VERSINFO[0] < 4)); then
-        while IFS=$'\n' read -r line; do
-            ((count++))
+        while IFS=$'\n' read -r _line; do
+            line+=("${_line}")
         done < "${file_path}"
     else
         mapfile -t line < "${file_path}"
     fi
 
-    line_count="${count:-${#line[@]}}"
+    if [[ "${character}" == "true" ]]; then
+        raw_file="$(< "${file_path}")"
+        char_count="${#raw_file}"
+        out="${char_count}"
+    elif [[ "${word}" == "true" ]]; then
+        words=(${line[@]})
+        word_count="${#words[@]}"
+        out="${word_count}"
+    else
+        line_count="${#line[@]}"
+        out="${line_count}"
+    fi
 
     [[ "${display_full}" == "true" ]] && \
         file_path="$(get_full_path "${file_path}")"
 
-    printf "%s\\n" "${line_count},${file_path}"
+    out+=",${file_path}"
+
+    printf "%s\\n" "${out}"
 )
 
 function reverse_array
@@ -131,7 +144,7 @@ function print_padding
     done
 
     for ((i=0; i < ${#arr[@]}; i++)); do
-        out+=("$(printf "%-${padding}s%s%s\\n" "${count_arr[$i]}" "${sep:- }" "${name_arr[$i]}")")
+        out+=("$(printf "%-${padding}s%s%s" "${count_arr[$i]}" "${sep:- }" "${name_arr[$i]}")")
     done
 
     printf "%s\\n" "${out[@]}"
@@ -227,6 +240,8 @@ Usage: ${0##*/} -o --option --option \"VALUE\"
                                 of the relative path
     [-s|--seperator \"sep\"]      Use character as a seperator
                                 between line count and file name
+    [-c|--character]            Count characters alongside lines
+    [-w|--word]                 Count words alongside lines
 
     [-rr|--recursive]           Include files from subfolders
     [-tt|--top]                 Show the longest file and lines
@@ -260,6 +275,8 @@ function get_args
             ;;
 
             "-s"|"--seperator")     sep=" $2 "; shift ;;
+            "-c"|"--character")     character="true" ;;
+            "-w"|"--word")          word="true" ;;
             "-rr"|"--recursive")    recursive="true" ;;
             "-tt"|"--top")          display_top="true" ;;
             "-ss"|"--sort")         sort="true" ;;
