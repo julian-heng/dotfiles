@@ -36,6 +36,13 @@ function upgit
     done
 )
 
+function gcll
+(
+    for repo in "$@"; do
+        git clone "${repo}"
+    done
+)
+
 alias dl="aria2c --dir=${HOME}/Downloads/"
 
 alias gp="git pull"
