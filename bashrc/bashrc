@@ -91,14 +91,11 @@ function main
         "${module_dir}/prompt"
     )
 
-    case "${distro}" in
-        "MacOS"|"FreeBSD")
-            modules+=("/usr/local/share/bash-completion/bash_completion")
-        ;;
-        *)
-            modules+=("/usr/share/bash-completion/bash_completion")
-        ;;
-    esac
+    if [[ -f "/usr/local/share/bash-completion/bash_completion" ]]; then
+        modules+=("/usr/local/share/bash-completion/bash_completion")
+    elif [[ -f "/usr/share/bash-completion/bash_completion" ]]; then
+        modules+=("/usr/share/bash-completion/bash_completion")
+    fi
 
     for i in "${modules[@]}"; do
         secure_source "${i}"
