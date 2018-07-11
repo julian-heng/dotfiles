@@ -9,9 +9,7 @@ function get_os
         ;;
 
         "Linux"|"linux"*)
-            if type -p lsb_release >/dev/null; then
-                : "$(lsb_release -si)"
-            elif [[ -f "/etc/lsb-release" ]]; then
+            if [[ -f "/etc/lsb-release" ]]; then
                 : "$(awk '/DISTRIB_ID/ {print $1}' /etc/lsb-release)"
                 : "${_/DISTRIB_ID=/}"
             elif [[ -f "/etc/os-release" ]]; then
@@ -126,12 +124,6 @@ function install
 (
     print_header "Installing dotfile files"
     check_git_modules
-
-    [[ ! -d "${config_dir}" ]] && {
-        prin "Warning: ${config_dir} does not exist"
-        print_run "Install: Running" "mkdir -p ${config_dir}"
-    }
-
     for entry in "$@"; do
         : "${entry//,}"
         read -r _file _link <<< "${_}"
@@ -183,6 +175,25 @@ function check_version
     }
 }
 
+function print_usage
+(
+    printf "%s\\n" "
+Usage: ${0##*/} -o --option --option \"VALUE\"
+
+    Options:
+
+    [-i|--install]              Install dotfiles
+    [-u|--uninstall]            Uninstall dotfiles
+    [-d|--dry]                  Don't finalise any actions
+    [-f|--force-install]        Skip checking for correct bash version
+    [-o|--overwrite]            Overwrite files when installing
+    [-p|--profile \"FILE\"]       Use selected profile
+    [-g|--check-git-modules]    Check if git submodules are intialised
+    [-x]                        Set xtrace on
+    [-h|--help]                 Show this message
+"
+)
+
 function get_args
 {
     while (($# > 0)); do
@@ -194,6 +205,7 @@ function get_args
             "-o"|"--overwrite")         overwrite="true" ;;
             "-i"|"--install")           action="install" ;;
             "-g"|"--check-git-modules") action="check_git" ;;
+            "-h"|"--help")              print_usage; exit 0 ;;
             "-p"|"--profile")
                 if [[ "${profile}" ]]; then
                     prin "Warning: \"${profile}\" is already selected"
