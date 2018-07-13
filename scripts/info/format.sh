@@ -1,0 +1,1 @@
+/home/julian/.dotfiles/skhd/scripts/format.sh
