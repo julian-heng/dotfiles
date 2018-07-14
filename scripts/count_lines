@@ -282,7 +282,10 @@ function get_args
             "-ss"|"--sort")         sort="true" ;;
             "-ee"|"--example")      print_example; exit ;;
             "-h"|"--help")          print_usage; exit ;;
-            *)                      [[ -e "$1" ]] && file_list+=("${1%/}") ;;
+            *)
+                [[ -e "$1" ]] && \
+                    file_list+=("${1%/}")
+            ;;
         esac
         shift
     done
