@@ -19,9 +19,10 @@ function format
                     ((count++))
                     word=" ${word})"
                 else
-                    until read -r i && [[ "${i}" != ")" ]]; do
+                    ((count++))
+                    while read -r i && [[ "${i}" != ")" ]]; do
                         ((count++))
-                    done < <(printf "%s\\n""$@")
+                    done < <(printf "%s\\n" "$@")
                 fi
             ;;
             "|")
@@ -41,7 +42,8 @@ function format
                     done < <(printf "%s\\n" "$@")
                     word=" ${word%*[[:space:]]}"
                 else
-                    until read -r i && [[ "${i}" != "|" ]]; do
+                    ((count++))
+                    while read -r i && [[ "${i}" != "|" ]]; do
                         ((count++))
                     done < <(printf "%s\\n" "$@")
                 fi
@@ -56,6 +58,7 @@ function format
             ;;
         esac
         line+="${word}"
+        ((count == 0)) && ((count++))
         shift "${count}"
     done
     printf "%s" "${line}"
