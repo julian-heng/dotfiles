@@ -126,10 +126,10 @@ function prompter
     (
         unset _PWD
         : "${PWD}"
-        : "${_//${HOME}/\~}"
+        : "${_//${HOME}/'~'}"
         : "${_#/}"
 
-        mapfile -d "/" -t parts < <(printf "%s" "${_:-"/"}")
+        mapfile -d "/" -t parts < <(printf "%s" "${_:-'/'}")
 
         for part in "${parts[@]::${#parts[@]}-1}"; do
             count="0"
@@ -148,11 +148,14 @@ function prompter
         done
 
         _PWD+="/${parts[-1]}"
-        [[ "${_PWD:1:1}" == "~" ]] && _PWD="${_PWD#/}"
 
-        ((${#_PWD} > 20)) && _PWD="${parts[-1]}"
+        [[ "${_PWD:1:1}" == "~" ]] && \
+            _PWD="${_PWD#/}"
 
-        printf "%s" "${_PWD:-"/"}"
+        ((${#_PWD} > 20)) && \
+            _PWD="${parts[-1]}"
+
+        printf "%s" "${_PWD:-'/'}"
     )
 
     local c1="${fb[2]}"
