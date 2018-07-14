@@ -124,6 +124,12 @@ function install
 (
     print_header "Installing dotfile files"
     check_git_modules
+
+    [[ ! -e "${config_dir}" ]] && {
+        prin "Warning: Config directory does not exist"
+        print_run "Install: Running" "mkdir -p ${config_dir}"
+    }
+
     for entry in "$@"; do
         : "${entry//,}"
         read -r _file _link <<< "${_}"
