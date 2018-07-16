@@ -43,6 +43,11 @@ function gcll
     done
 )
 
+function man
+(
+    MANWIDTH="$((${COLUMNS:-100} > 100 ? 100 : COLUMNS))" command man "$@"
+)
+
 alias dl="aria2c --dir=${HOME}/Downloads/"
 
 alias gp="git pull"
