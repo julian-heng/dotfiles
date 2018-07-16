@@ -129,7 +129,7 @@ function prompter
         : "${_//${HOME}/'~'}"
         : "${_#/}"
 
-        mapfile -d "/" -t parts < <(printf "%s" "${_:-'/'}")
+        mapfile -d "/" -t parts < <(printf "%s" "${_:-/}")
 
         for part in "${parts[@]::${#parts[@]}-1}"; do
             count="0"
@@ -155,7 +155,7 @@ function prompter
         ((${#_PWD} > 20)) && \
             _PWD="${parts[-1]}"
 
-        printf "%s" "${_PWD:-'/'}"
+        printf "%s" "${_PWD:-/}"
     )
 
     local c1="${fb[2]}"
