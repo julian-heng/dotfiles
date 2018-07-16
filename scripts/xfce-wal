@@ -1,79 +1,130 @@
 #!/usr/bin/env bash
-# shellcheck disable=2030,2031
 
-## Settings
 : "${wal_path:=/usr/share/wal}"
-: "${xfce_property:=/backdrop/screen0/monitor0/workspace0/last-image}"
-: "${recursive:=false}"
-: "${save:=false}"
+: "${all_monitors:=true}"
+: "${recursive:=true}"
 
 function get_full_path
 (
     target="$1"
 
-    if [[ -f "${target}" ]]; then
+    [[ -f "${target}" ]] && {
         filename="${target##*/}"
         [[ "${filename}" == "${target}" ]] && \
             target="./${target}"
         target="${target%/*}"
-        cd "${target}" || exit
-        full_path="${PWD}/${filename}"
-    else
-        cd "${target}" || exit
-        full_path="${PWD}"
-    fi
+    }
+
+    cd "${target}" || exit
+    full_path="${PWD}"
 
     printf "%s" "${full_path%/}"
 )
 
-function check_image
+function monitor_count
+(
+    type -p xrandr > /dev/null && {
+        awk '/\yconnected\y/ {
+                sum += 1
+            }
+            END {
+                printf "%s", sum
+            }' <(xrandr --query)
+    }
+)
+
+function list_monitors
+(
+    type -p xrandr > /dev/null && {
+        awk 'BEGIN { count = 0 }
+        /\yconnected\y/ {
+            printf "%s%s%s %s\n", "Monitor", count, ":", $0
+            count++
+        }' <(xrandr --query)
+    }
+)
+
+function check_img
 (
     ext="${1##*.}"
-    if [[ ! -d "$1" && ${ext,,} =~ ^(jpg|png)$ ]]; then
+    if [[ ! -d "$1" && "${ext,,}" =~ ^(jpg|png)$ ]]; then
         return 0
     else
         return 1
     fi
 )
 
+function get_file_list
+(
+    dir="$1"
+    if [[ -f "${dir}" ]] && check_img "${dir}"; then
+        printf "%s\\n" "${dir}"
+    elif [[ -d "${dir}" ]]; then
+        if [[ "${recursive}" == "true" ]]; then
+            shopt -s globstar
+            for i in "${dir}"/**/*; do
+                check_img "$i" && \
+                    list+=("$i")
+            done
+            shopt -u globstar
+        else
+            for i in "${dir}"/*/*; do
+                check_img "$i" && \
+                    list+=("$i")
+            done
+        fi
+    fi
+
+    printf "%s\\n" "${list[@]}"
+)
+
+function rand
+(
+    printf "%s" "$((RANDOM % $1))"
+)
+
 function change_wal
 (
     img="$1"
-    printf "%s\\n" "Changing wallpaper to \"${img}\""
-    : "$(pgrep xfce4-session)"
+    monitor="${2:-0}"
+    property="/backdrop/screen0/monitor${monitor}/workspace0/last-image"
+    pid="$(pgrep -x xfce4-session)"
+
     IFS="=" \
     read -rd '' _ dbus_session \
-        < <(grep -z DBUS_SESSION_BUS_ADDRESS "/proc/${_}/environ")
+        < <(grep -z DBUS_SESSION_BUS_ADDRESS "/proc/${pid}/environ")
     export DBUS_SESSION_BUS_ADDRESS="${dbus_session}"
+
+    printf "%s\\n" "Changing monitor${monitor} wallpaper to \"${img}\""
     xfconf-query --channel xfce4-desktop \
-                 --property "${xfce_property}" \
+                 --property "${property}" \
                  --set "${img}"
 )
 
 function print_usage
 (
     printf "%s\\n" "
-Usage: ${0##*/} -o --option --option \"VALUE\"
+Usage: ${0##*/} -o --option --option \"value\"
 
     Options:
 
-    [-i|--image \"PATH\"]         Image to use for wallpaper
-    [-p|--property \"VALUE\"]     Property to set wallpaper to
-    [-r|--recursive]            Searches for a random wallpaper
-                                recursively
-    [-s|--save-last]            Write the file path of the 
-                                wallpaper to ${HOME}/.last_wal
+    [-i|--image \"path\"]         Image or directory for wallpaper
+    [-m|--monitor \"num\"]        Index for the monitor to change
+    [-a|--all]                  Change the wallpaper on all monitors
+    [-s|--same-image]           Use the same image for all monitors
+    [-r|--recursive]            Search the image directory recursively
+    [-l|--list-monitors]        List all the monitors available
     [-h|--help]                 Show this message
 
     Settings:
 
     wal_path:       ${wal_path}
-    xfce_property:  ${xfce_property}
+    all_monitors:   ${all_monitors}
     recursive:      ${recursive}
-    save:           ${save}
 
     This bash script will set a wallpaper for the Xfce4 desktop
-    environment. Settings are within the script. If no arguments
+    environment. Xrandr is required to detect the number of displays
+    connected. Settings are within the script. If no arguments are
     are passed, then these settings will be used.
 "
 )
@@ -82,11 +133,13 @@ function get_args
 {
     while (($# > 0)); do
         case "$1" in
-            "-i"|"--image")     wal_path="$(get_full_path "${2%/}")"; shift ;;
-            "-p"|"--property")  xfce_property="$2"; shift ;;
-            "-r"|"--recursive") recursive="true" ;;
-            "-s"|"--save-last") save="true" ;;
-            "-h"|"--help")      print_usage; exit ;;
+            "-i"|"--image")         wal_path="$(get_full_path "${2%/}")"; shift ;;
+            "-m"|"--monitor")       monitor="$2"; shift ;;
+            "-a"|"--all")           all_monitors="true" ;;
+            "-s"|"--same-image")    same="true" ;;
+            "-r"|"--recursive")     recursive="true" ;;
+            "-l"|"--list-monitors") list_monitors; exit ;;
+            "-h"|"--help")          print_usage; exit ;;
         esac
         shift
     done
@@ -95,48 +148,36 @@ function get_args
 function main
 (
     get_args "$@"
-    if [[ -d "${wal_path}" ]]; then
-        if [[ "${recursive}" == "true" ]]; then
-            shopt -s globstar
-            for i in "${wal_path}"/**/*; do
-                check_image "$i" && \
-                    img_path+=("$i")
-            done
-            shopt -u globstar
-        else
-            for i in "${wal_path}"/*; do
-                check_image "$i" && \
-                    img_path+=("$i")
-            done
-        fi
-    elif [[ -f "${wal_path}" ]]; then
-        img_path="${wal_path}"
+    [[ ! -d "${HOME}/.last_wal" ]] && \
+        mkdir -p "${HOME}/.last_wal"
+
+    mapfile -t file_list < <(get_file_list "${wal_path}")
+
+    if [[ "${all_monitors}" == "true" ]]; then
+        num_monitors="$(monitor_count)"
     else
-        printf "%s\\n" "Not a valid file"
-        exit 1
+        num_monitors="$((monitor + 1))"
     fi
 
-    [[ ! "${img_path[@]}" ]] && {
-        printf "%s\\n" "No valid files"
-        exit 1
-    }
+    function _change_wal
+    (
+        [[ -f "${HOME}/.last_wal/monitor$i" ]] && \
+            last_wal="$(< "${HOME}/.last_wal/monitor$i")"
 
-    [[ -f "${HOME}/.last_wal" ]] && \
-        last_wal="$(< "${HOME}/.last_wal")"
+        [[ "${same}" != "true" ]] && \
+            unset img
 
-    if ((${#img_path} > 1)); then
-        until [[ "${img}" && "${last_wal}" != "${img}" ]]; do
-            index="$((RANDOM % ${#img_path[@]}))"
-            img="${img_path[${index}]}"
+        until [[ "${img}" && "${img}" != "${last_wal}" ]]; do
+            index="$(rand "${#file_list[@]}")"
+            img="${file_list[${index}]}"
         done
-    else
-        img="${img_path}"
-    fi
+        printf "%s" "${img}" > "${HOME}/.last_wal/monitor$i"
+        change_wal "${img}" "$i"
+    )
 
-    [[ "${save}" == "true" ]] && \
-        printf "%s" "${img}" > "${HOME}/.last_wal"
-
-    change_wal "${img}"
+    for ((i = ${monitor:-0}; i < ${num_monitors:-1}; i++)); do
+        _change_wal &
+    done
 )
 
 main "$@"
