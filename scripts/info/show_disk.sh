@@ -2,15 +2,10 @@
 
 function trim
 (
-    function _trim
-    (
-        set -f
-        set -- $*
-        printf "%s" "$*"
-        set +f
-    )
-
-    _trim "${1//\"}"
+    set -f
+    set -- $*
+    printf "%s" "${*//\"}"
+    set +f
 )
 
 function get_search
