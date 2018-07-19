@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
 
-function check_apps
+function trim
 (
-    if ! type -p udisksctl > /dev/null; then
-        return 1
-    fi
+    function _trim
+    (
+        set -f
+        set -- $*
+        printf "%s" "$*"
+        set +f
+    )
+
+    _trim "${1//\"}"
 )
 
 function get_search
@@ -15,16 +21,14 @@ function get_search
 
     if [[ "${search}" ]]; then
         while [[ "${match}" != "true" ]] && read -r df_line; do
-            if [[ "${df_line}" =~ ${search} ]]; then
+            [[ "${df_line}" =~ ${search} ]] && {
                 match="true"
-                dev_match="${df_line%% *}"
-            else
-                ((count++))
-            fi
-        done < <(printf "%s\\n" "${df_out[@]}")
+                dev_match="${df_line}"
+            }
+        done < <(printf "%s\\n" "${df_out[@]%% *}")
     else
         match="true"
-        dev_match="/dev/sda5"
+        dev_match="$(get_root)"
     fi
 
     if [[ "${match}" == "true" ]]; then
@@ -34,83 +38,67 @@ function get_search
     fi
 )
 
+function get_root
+(
+    root="$(awk -F',|:' '/"\/"\}/ { printf "%s", $2}' \
+        <(printf "%s\\n" "${lsblk_out[@]}"))"
+    root="$(trim "${root}")"
+    printf "%s" "${root}"
+)
+
 function get_disk_device
 (
-    device="$(awk '/ Device:/ { printf "%s", $2 }' \
-                <(printf "%s\\n" "${udisks_out[@]}"))"
+    awk_script='
+        $0 ~ disk {
+            printf "%s", $2
+        }'
+
+    device="$(awk -F',|: |}' -v disk="${1:-${search}}" "${awk_script}" \
+            <(printf "%s\\n" "${lsblk_out[@]}"))"
+    device="$(trim "${device}")"
+
     printf "%s" "${device}"
 )
 
 function get_disk_name
 (
     awk_script='
-        function strloop(a)
-        {
-            j = ""
-            for (i = a; i <= NF; i++) {
-                if (j == "")
-                    j = $i
-                else
-                    j = j":"$i
-            }
-            return j
-        }
-        / IdLabel:/ { name = strloop(2) }
-        /Name:/ {
-            if (name == "")
-                name = strloop(2)
-        }
-        END {
-            printf "%s", name
+        $0 ~ disk {
+            if ($4 == "null")
+                printf "%s", $6
+            else
+                printf "%s", $4
         }'
 
-    name="$(awk "${awk_script}" <(printf "%s\\n" "${udisks_out[@]}"))"
+    name="$(awk -F',|: |}' -v disk="${1:-${search}}" "${awk_script}" \
+            <(printf "%s\\n" "${lsblk_out[@]}"))"
+    name="$(trim "${name}")"
     printf "%s" "${name}"
 )
 
 function get_disk_part
 (
     awk_script='
-        function strloop(a)
-        {
-            j = ""
-            for (i = a; i <= NF; i++) {
-                if (j == "")
-                    j = $i
-                else
-                    j = j":"$i
-            }
-            return j
-        }
-        /IdType:/ { part = strloop(2) }
-        END {
-            printf "%s", part
+        $0 ~ disk {
+            printf "%s", $8
         }'
 
-    part="$(awk "${awk_script}" <(printf "%s\\n" "${udisks_out[@]}"))"
-    printf "%s\\n" "${part}"
+    part="$(awk -F',|: |}' -v disk="${1:-${search}}" "${awk_script}" \
+            <(printf "%s\\n" "${lsblk_out[@]}"))"
+    part="$(trim "${part}")"
+    printf "%s" "${part}"
 )
 
 function get_disk_mount
 (
     awk_script='
-        function strloop(a)
-        {
-            j = ""
-            for (i = a; i <= NF; i++) {
-                if (j == "")
-                    j = $i
-                else
-                    j = j":"$i
-            }
-            return j
-        }
-        /MountPoints:/ { mount = strloop(2) }
-        END {
-            printf "%s", mount
+        $0 ~ disk {
+            printf "%s", $10
         }'
 
-    mount="$(awk "${awk_script}" <(printf "%s\\n" "${udisks_out[@]}"))"
+    mount="$(awk -F',|: |}' -v disk="${1:-${search}}" "${awk_script}" \
+            <(printf "%s\\n" "${lsblk_out[@]}"))"
+    mount="$(trim "${mount}")"
     printf "%s" "${mount}"
 )
 
@@ -150,26 +138,15 @@ function get_disk_percent
 
 function get_disk_info
 (
-    udisks_script='
-        function strloop(a)
-        {
-            j = ""
-            for (i = a; i <= NF; i++) {
-                if (j == "")
-                    j = $i
-                else
-                    j = j":"$i
-            }
-            return j
+    lsblk_script='
+        $0 ~ disk {
+            device = $2
+            name = $4
+            if (name == "null")
+                name = $6
+            part = $8
+            mount = $10
         }
-        / Device:/ { device = $2 }
-        / IdLabel:/ { name = strloop(2) }
-        /Name:/ {
-            if (name == "")
-                name = strloop(2) 
-        }
-        /IdType:/ { part = strloop(2) }
-        /MountPoints:/ { mount = strloop(2) }
         END {
             printf "%s %s %s %s", \
                 device, name, part, mount
@@ -193,7 +170,10 @@ function get_disk_info
             disk_name \
             disk_part \
             disk_mount \
-            < <(awk "${udisks_script}" <(printf "%s\\n" "${udisks_out[@]}"))
+            < <(awk -F',|: |}' \
+                    -v disk="${search}" \
+                    "${lsblk_script}" \
+                    <(printf "%s\\n" "${lsblk_out[@]}"))
 
     read -r disk_used \
             disk_capacity \
@@ -202,9 +182,10 @@ function get_disk_info
                         "${df_script}" \
                         < <(printf "%s\\n" "${df_out[@]}"))
 
-    disk_name="${disk_name//:/ }"
-    disk_part="${disk_part//:/ }"
-    disk_mount="${disk_mount//:/ }"
+    disk_device="$(trim "${disk_device}")"
+    disk_name="$(trim "${disk_name}")"
+    disk_part="$(trim "${disk_part}")"
+    disk_mount="$(trim "${disk_mount}")"
 
     printf "%s,%s,%s,%s,%s,%s,%s" \
         "${disk_device}" \
@@ -247,8 +228,6 @@ Usage: $0 --option --option \"value\"
 
     If notify-send is not installed, then the script will
     print to standard output.
-
-    Requires udisksctl for script to work.
 "
 )
 
@@ -300,8 +279,6 @@ function main
 
     ! search="$(get_search "${search}")" && \
         return 1
-
-    mapfile -t udisks_out < <(udisksctl info --block-device "${search}")
 
     if [[ ! "${show[*]}" ]]; then
         IFS="," \
@@ -370,6 +347,14 @@ function main
     fi
 )
 
+lsblk_flags=(
+    "--output"
+    "KNAME,LABEL,PARTLABEL,FSTYPE,MOUNTPOINT"
+    "--paths"
+    "--json"
+)
+
 mapfile -t df_out < <(df -P --block-size=1)
+mapfile -t lsblk_out < <(lsblk "${lsblk_flags[@]}")
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && \
-    check_apps && main "$@" || :
+    main "$@" || :
