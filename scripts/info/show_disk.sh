@@ -209,7 +209,7 @@ Usage: $0 --option --option \"value\"
     [--capacity]            Show total amount of disk space
     [--percent]             Show percentage of disk space used
     [-d|--disk]             Show information for selected disk
-                            Defaults to /dev/sda5
+                            Defaults to block device used at root
     [-h|--help]             Show this message
 
     Available functions:
