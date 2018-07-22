@@ -63,7 +63,7 @@ function get_temp
 function get_fan_speed
 (
     mapfile -t out < <(istats fan --value-only)
-    : "${out[2]}"
+    : "${out[1]}"
     : "${_:-0}"
     : "${_// } RPM"
     printf "%s" "${_}"
