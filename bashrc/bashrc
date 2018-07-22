@@ -102,6 +102,12 @@ function main
     for i in "${modules[@]}"; do
         secure_source "${i}"
     done
+
+    unset secure_source
+    unset detect_os
+    unset get_full_path
+    unset get_module_path
+    unset main
 }
 
 main
