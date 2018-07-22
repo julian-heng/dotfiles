@@ -91,11 +91,13 @@ function main
         "${module_dir}/prompt"
     )
 
-    if [[ -f "/usr/local/share/bash-completion/bash_completion" ]]; then
-        modules+=("/usr/local/share/bash-completion/bash_completion")
-    elif [[ -f "/usr/share/bash-completion/bash_completion" ]]; then
-        modules+=("/usr/share/bash-completion/bash_completion")
-    fi
+    ! type -p __load_completion > /dev/null && {
+        if [[ -f "/usr/local/share/bash-completion/bash_completion" ]]; then
+            modules+=("/usr/local/share/bash-completion/bash_completion")
+        elif [[ -f "/usr/share/bash-completion/bash_completion" ]]; then
+            modules+=("/usr/share/bash-completion/bash_completion")
+        fi
+    }
 
     for i in "${modules[@]}"; do
         secure_source "${i}"
