@@ -109,7 +109,11 @@ function get_fan
     done
     shopt -u globstar
 
-    fan="$(< "${fan_file}")"
+    if [[ ! "${fan_file}" ]]; then
+        printf ""
+    else
+        fan="$(< "${fan_file}")"
+    fi
     fan="${fan:-0} RPM"
     printf "%s" "${fan}"
 )
