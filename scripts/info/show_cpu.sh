@@ -110,7 +110,7 @@ function get_fan
     shopt -u globstar
 
     if [[ ! "${fan_file}" ]]; then
-        printf ""
+        return 1
     else
         fan="$(< "${fan_file}")"
     fi
