@@ -106,10 +106,14 @@ case "${distro}" in
         alias update="sudo apt update && sudo apt upgrade"
     ;;
     "Antergos"*|"Arch"*)
-        alias update="yay"
+        if type -p yay > /dev/null; then
+            alias update="yay"
+        else
+            alias update="sudo pacman -Syu"
+        fi
     ;;
     "Fedora"|"CentOS"*)
-        if type -p dnf >/dev/null; then
+        if type -p dnf > /dev/null; then
             alias update="sudo dnf update"
         else
             alias update="sudo yum update"
