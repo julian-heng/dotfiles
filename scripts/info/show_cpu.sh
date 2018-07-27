@@ -8,17 +8,43 @@ function trim
     set +f
 )
 
-function get_cores
+function notify
 (
+    title="${title_parts[*]}"
+    subtitle="${subtitle_parts[*]}"
+    message="${message_parts[*]}"
+
+    if [[ "${stdout}" ]]; then
+        [[ "${title}" ]] && \
+            display+=("${title}")
+        [[ "${subtitle}" ]] && \
+            display+=("${subtitle}")
+        [[ "${message}" ]] && \
+            display+=("${message}")
+        printf "%s\\n" "${display[@]}"
+    else
+        if [[ "${subtitle}" && "${message}" ]]; then
+            body="${subtitle}\\n${message}"
+        elif [[ ! "${subtitle}" || ! "${message}" ]]; then
+            body+="${subtitle}"
+            body+="${message}"
+        elif [[ ! "${subtitle}" && ! "${message}" ]]; then
+            body=""
+        fi
+        notify-send --icon=dialog-information "${title}" "${body}"
+    fi
+)
+
+function get_cores
+{
     for line in "${cpu_file[@]}"; do
         [[ "${line}" =~ ^processor ]] && \
             ((cores++))
     done
-    printf "%s" "${cores}"
-)
+}
 
 function get_cpu
-(
+{
     speed_dir="/sys/devices/system/cpu"
 
     for i in "${cpu_file[@]}"; do
@@ -54,20 +80,17 @@ function get_cpu
     fi
 
     cpu="$(trim "${cpu}")"
-
-    printf "%s" "${cpu}"
-)
+}
 
 function get_load
-(
+{
     load_file="/proc/loadavg"
-    read -r a b c _ _ < "${load_file}"
-    load_avg="$a $b $c"
-    printf "%s" "${load_avg}"
-)
+    read -ra load_arr < "${load_file}"
+    load_avg="${load_arr[*]:0:3}"
+}
 
 function get_cpu_usage
-(
+{
     awk_script='
         { sum += $3 }
         END {
@@ -76,11 +99,10 @@ function get_cpu_usage
 
     cpu_usage="$(awk -v cores="${cores:-1}" \
                      -v sum="0" "${awk_script}" <(ps aux))"
-    printf "%s" "${cpu_usage}"
-)
+}
 
 function get_temp
-(
+{
     temp_dir="/sys/class/hwmon"
 
     for file in "${temp_dir}"/*; do
@@ -93,11 +115,10 @@ function get_temp
 
     temp="$(($(< "${temp_file}") / 1000))"
     temp+="°C"
-    printf "%s" "${temp}"
-)
+}
 
 function get_fan
-(
+{
     fan_dir="/sys/devices/platform"
 
     shopt -s globstar
@@ -115,11 +136,10 @@ function get_fan
         fan="$(< "${fan_file}")"
     fi
     fan="${fan:-0} RPM"
-    printf "%s" "${fan}"
-)
+}
 
 function get_uptime
-(
+{
     uptime_file="/proc/uptime"
 
     read -r secs _ < "${uptime_file}"
@@ -141,8 +161,7 @@ function get_uptime
     ((${secs/s} == 0)) && unset secs
 
     uptime="${days}${hours}${mins}${secs}"
-    printf "%s" "${uptime}"
-)
+}
 
 function print_usage
 (
@@ -152,23 +171,7 @@ Usage: $0 --option --option \"value\"
     Options:
 
     [--stdout]              Print to stdout
-    [--disable \"func\"]      Disable a specific info
-    [--show \"func\"]         Show a specific info
-    [--cpu]                 Show cpu info
-    [--load]                Show load average
-    [--cpu-usage]           Show cpu usage
-    [--temp]                Show cpu temperature (Celcius)
-    [--fan]                 Show cpu fan speed
-    [--uptime]              Show uptime
     [-h|--help]             Show this message
-
-    Available functions:
-        - cpu
-        - load
-        - cpu-usage
-        - temp
-        - fan
-        - uptime
 
     If notify-send is not installed, then the script will
     print to standard output.
@@ -177,82 +180,39 @@ Usage: $0 --option --option \"value\"
 
 function get_args
 {
-    [[ ! "$*" ]] && \
-        return 0
-
     while (($# > 0)); do
         case "$1" in
-            "--stdout") stdout="true" ;;
-            "--disable")
-                for i in "$@"; do
-                    case "$i" in
-                        "--disable") continue ;;
-                        "-"*) break ;;
-                        *) unset -f "get_$i" ;;
-                    esac
-                done
-            ;;
-
-            "--show")
-                for i in "$@"; do
-                    case "$i" in
-                        "--show") continue ;;
-                        "-"*) break ;;
-                        *) show+=("$i") ;;
-                    esac
-                done
-            ;;
-
-            "--cpu") show+=("cpu") ;;
-            "--load") show+=("load") ;;
-            "--cpu-usage") show+=("cpu_usage") ;;
-            "--temp") show+=("temp") ;;
-            "--fan") show+=("fan") ;;
-            "--uptime") show+=("uptime") ;;
-            "-h"|"--help") print_usage; exit ;;
+            "--stdout")     stdout="true" ;;
+            "-h"|"--help")  print_usage; exit ;;
         esac
         shift
     done
 
-    [[ "${show[*]}" =~ cpu ]] && \
-        show=("cores" "${show[@]}")
+    ! type -p notify-send > /dev/null && \
+        stdout="true"
 }
 
 function main
 (
-    ! [[ "$-" =~ x ]] && \
-        exec 2> /dev/null
-
-    ! source "${BASH_SOURCE[0]//${0##*/}}format.sh" && \
-        exit 1
+    mapfile -t cpu_file < "/proc/cpuinfo"
 
     get_args "$@"
 
-    ! type -p notify-send > /dev/null && \
-        stdout="true"
+    get_cores
+    get_cpu
+    get_load
+    get_cpu_usage
+    get_temp
+    get_fan
+    get_uptime
 
-    if [[ ! "${show[*]}" ]]; then
-        cores="$(get_cores)"
-        cpu="$(get_cpu)"
-        load="$(get_load)"
-        cpu_usage="$(get_cpu_usage)"
-        temp="$(get_temp)"
-        fan="$(get_fan)"
-        uptime="$(get_uptime)"
-    else
-        for i in "${show[@]}"; do
-            declare "$i=$(get_"$i")"
-        done
-    fi
+    title_parts+=("${cpu:-CPU}")
 
-    [[ ! "${stdout}" || "${cpu}" ]] && \
-        title_parts+=("${cpu:-CPU}")
-
-    [[ "${load}" ]] && \
-        subtitle_parts+=("Load avg:" "${load}" "|")
+    [[ "${load_avg}" ]] && \
+        subtitle_parts+=("Load avg:" "${load_avg}" "|")
 
     [[ "${cpu_usage}" ]] && \
-        subtitle_parts+=("${cpu_usage}" "%" "|")
+        subtitle_parts+=("${cpu_usage}%" "|")
 
     [[ "${temp}" ]] && \
         subtitle_parts+=("${temp}" "|")
@@ -263,31 +223,8 @@ function main
     [[ "${uptime}" ]] && \
         message_parts+=("Uptime:" "${uptime}")
 
-    title="$(format "${title_parts[@]}")"
-    subtitle="$(format "${subtitle_parts[@]}")"
-    message="$(format "${message_parts[@]}")"
-
-    if [[ "${stdout}" ]]; then
-        [[ "${title}" ]] && \
-            display+=("${title}")
-        [[ "${subtitle}" ]] && \
-            display+=("${subtitle}")
-        [[ "${message}" ]] && \
-            display+=("${message}")
-        printf "%s\\n" "${display[@]}"
-    else
-        if [[ "${subtitle}" && "${message}" ]]; then
-            body="${subtitle}\\n${message}"
-        elif [[ ! "${subtitle}" || ! "${message}" ]]; then
-            body+="${subtitle}"
-            body+="${message}"
-        elif [[ ! "${subtitle}" && ! "${message}" ]]; then
-            body=""
-        fi
-        notify-send --icon=dialog-information "${title}" "${body}"
-    fi
+    notify
 )
 
-mapfile -t cpu_file < "/proc/cpuinfo"
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && \
     main "$@"
