@@ -16,3 +16,6 @@
 [submodule "/home/julian/.dotfiles/vimrc/bundle/indentLine"]
 	path = vimrc/bundle/indentLine
 	url = https://github.com/Yggdroot/indentLine.git
+[submodule "vimrc/bundle/vim-markdown-preview"]
+	path = vimrc/bundle/vim-markdown-preview
+	url = https://github.com/JamshedVesuna/vim-markdown-preview.git
