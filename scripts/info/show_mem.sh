@@ -94,16 +94,16 @@ function main
         title_parts+=("Memory" "(${mem_percent}%)")
 
     [[ "${mem_used}" ]] && \
-        subtitle_parts+=("${mem_used}" "MiB" "|")
+        subtitle_parts+=("${mem_used}" "MiB")
 
     [[ "${mem_total}" ]] && \
-        subtitle_parts+=("${mem_total}" "MiB")
+        subtitle_parts+=("|" "${mem_total}" "MiB")
 
     [[ "${swap_used}" ]] && \
-        message_parts+=("Swap:" "${swap_used}" "MiB" "|")
+        message_parts+=("Swap:" "${swap_used}" "MiB")
 
     [[ "${swap_total}" ]] && \
-        message_parts+=("${swap_total}" "MiB")
+        message_parts+=("|" "${swap_total}" "MiB")
 
     notify
 )

@@ -181,19 +181,19 @@ function main
         title_parts+=("(${disk_mount})")
 
     [[ "${disk_used}" ]] && \
-        subtitle_parts+=("${disk_used}" "GiB" "|")
+        subtitle_parts+=("${disk_used}" "GiB")
 
     [[ "${disk_capacity}" ]] && \
-        subtitle_parts+=("${disk_capacity}" "GiB")
+        subtitle_parts+=("|" "${disk_capacity}" "GiB")
 
     [[ "${disk_percent}" ]] && \
         subtitle_parts+=("(${disk_percent}%)")
 
     [[ "${disk_device}" ]] && \
-        message_parts+=("${disk_device}" "|")
+        message_parts+=("${disk_device}")
 
     [[ "${disk_part}" ]] && \
-        message_parts+=("${disk_part}")
+        message_parts+=("|" "${disk_part}")
 
     notify
 )
