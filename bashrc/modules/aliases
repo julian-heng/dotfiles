@@ -75,9 +75,6 @@ alias yt2mp3="
                 -o '%(playlist_index)s %(title)s.%(ext)s' \
                 -v"
 
-[[ -f "${HOME}/.dotfiles/scripts/count_lines" ]] && \
-    alias count_lines="bash ${HOME}/.dotfiles/scripts/count_lines"
-
 case "${distro}" in
     "MacOS"|"FreeBSD")
         : "-G"
