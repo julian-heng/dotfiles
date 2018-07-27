@@ -107,7 +107,12 @@ function get_temp
 
     for file in "${temp_dir}"/*; do
         [[ "$(< "${file}/name")" =~ temp ]] && \
-            temp_file="${file}/temp1_input"
+            for i in "${file}/temp"*; do
+                [[ "$i" =~ '_input'$ ]] && {
+                    temp_file="$i"
+                    break
+                }
+            done
     done
 
     [[ ! "${temp_file}" ]] && \
@@ -209,16 +214,16 @@ function main
     title_parts+=("${cpu:-CPU}")
 
     [[ "${load_avg}" ]] && \
-        subtitle_parts+=("Load avg:" "${load_avg}" "|")
+        subtitle_parts+=("Load avg:" "${load_avg}")
 
     [[ "${cpu_usage}" ]] && \
-        subtitle_parts+=("${cpu_usage}%" "|")
+        subtitle_parts+=("|" "${cpu_usage}%")
 
     [[ "${temp}" ]] && \
-        subtitle_parts+=("${temp}" "|")
+        subtitle_parts+=("|" "${temp}")
 
     [[ "${fan}" ]] && \
-        subtitle_parts+=("${fan}")
+        subtitle_parts+=("|" "${fan}")
 
     [[ "${uptime}" ]] && \
         message_parts+=("Uptime:" "${uptime}")
