@@ -40,11 +40,22 @@ function get_search
 
     if [[ "${search}" ]]; then
         while [[ "${match}" != "true" ]] && read -r df_line; do
-            [[ "${df_line}" =~ ${search} ]] && {
-                match="true"
-                dev_match="${df_line}"
-            }
-        done < <(printf "%s\\n" "${df_out[@]%% *}")
+            case "${type:-disk}" in
+                "disk")
+                    [[ "${df_line}" =~ ${search} ]] && {
+                        match="true"
+                        dev_match="${df_line%% *}"
+                    }
+                ;;
+
+                "mount")
+                    [[ "${df_line}" =~ ${search}$ ]] && {
+                        match="true"
+                        dev_match="${df_line%% *}"
+                    }
+                ;;
+            esac
+        done < <(printf "%s\\n" "${df_out[@]}")
     else
         match="true"
         dev_match="$(get_root)"
@@ -128,6 +139,7 @@ Usage: $0 --option --option \"value\"
     [--stdout]              Print to stdout
     [-d|--disk]             Show information for selected disk
                             Defaults to $(get_root)
+    [-m|--mount]            Show information for a mounted disk
     [-h|--help]             Show this message
 
     If notify-send is not installed, then the script will
@@ -140,7 +152,8 @@ function get_args
     while (($# > 0)); do
         case "$1" in
             "--stdout")     stdout="true" ;;
-            "-d"|"--disk")  search="$2" ;;
+            "-d"|"--disk")  type="disk"; search="$2" ;;
+            "-m"|"--mount") type="mount"; search="$2" ;;
             "-h"|"--help")  print_usage; exit ;;
         esac
         shift
