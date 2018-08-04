@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+[[ "$(dmesg -k)" =~ 'DMAR: IOMMU enabled' ]] && {
+    shopt -s nullglob
+    for i in /sys/kernel/iommu_groups/*/devices/*; do
+        : "${i#*/iommu_groups/*}"
+        : "${_%%/*}"
+        printf "%s" "IOMMU Group ${_} "
+        lspci -nns "${i##*/}"
+    done
+    shopt -u nullglob
+}
