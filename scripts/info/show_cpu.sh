@@ -106,13 +106,15 @@ function get_temp
     temp_dir="/sys/class/hwmon"
 
     for file in "${temp_dir}"/*; do
-        [[ "$(< "${file}/name")" =~ temp ]] && \
-            for i in "${file}/temp"*; do
-                [[ "$i" =~ '_input'$ ]] && {
-                    temp_file="$i"
-                    break
-                }
-            done
+        [[ -f "${file}/name" ]] && {
+            [[ "$(< "${file}/name")" =~ temp ]] && \
+                for i in "${file}/temp"*; do
+                    [[ "$i" =~ '_input'$ ]] && {
+                        temp_file="$i"
+                        break
+                    }
+                done
+        }
     done
 
     [[ ! "${temp_file}" ]] && \
