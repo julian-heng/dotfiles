@@ -37,7 +37,7 @@ function get_bat_info
         }
     done
 
-    if [[ ! "${bat_dir}" || ! -f "${bat_dir}/uevent" ]]; then
+    if [[ ! -f "${bat_dir}/uevent" ]]; then
         exit 1
     else
         bat_file="${bat_dir}/uevent"
