@@ -49,6 +49,7 @@ function get_bat_info
         /POWER_SUPPLY_CHARGE_FULL/ { charge_full = $2}
         /POWER_SUPPLY_CHARGE_FULL_DESIGN/ { charge_design = $2 }
         /POWER_SUPPLY_CURRENT_NOW/ { current_now = $2 }
+        /POWER_SUPPLY_TEMP/ { temp = $2 }
         /POWER_SUPPLY_CYCLE_COUNT/ { cycles = $2 }
         END {
             percent = (charge_now / charge_full) * 100
@@ -60,15 +61,18 @@ function get_bat_info
             time *= 3600
             time -= time % 1
 
+            temp /= 10
+
             condition = (charge_full / charge_design) * 100
 
-            printf "%s %0.2f %s %d %0.2f",
-                state, percent, time, cycles, condition
+            printf "%s %0.2f %s %0.2f %d %0.2f",
+                state, percent, time, temp, cycles, condition
         }'
 
     read -r bat_state \
             bat_percent \
             bat_time \
+            bat_temp \
             bat_cycles \
             bat_condition \
             < <(awk -F"=" "${awk_script}" "${bat_file}")
@@ -127,16 +131,19 @@ function main
         title_parts+=("(${bat_percent}%)")
 
     [[ "${bat_time}" ]] && \
-        subtitle_parts+=("${bat_time} remaining")
+        subtitle_parts+=("${bat_time}")
 
     [[ "${bat_condition}" ]] && \
         subtitle_parts+=("|" "Condition: ${bat_condition}%")
+
+    [[ "${bat_temp}" ]] && \
+        subtitle_parts+=("|" "${bat_temp}°C")
 
     [[ "${bat_cycles}" ]] && \
         subtitle_parts+=("|" "${bat_cycles} cycles")
 
     [[ "${bat_state}" ]] && \
-        message_parts+=("Source: ${bat_state}")
+        message_parts+=("${bat_state}")
 
     notify
 )
