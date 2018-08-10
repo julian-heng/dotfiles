@@ -7,8 +7,8 @@ bold=$'\e[1m'
 reset=$'\e[0m'
 
 for i in {0..7}; do
-    f+=("$(printf "%b" "\\e[3${i}m")")
-    b+=("$(printf "%b" "\\e[4${i}m")")
-    fb+=("${f[$i]}${bold}")
-    bb+=("${b[$i]}${bold}")
+    printf -v f[$i] "%b" "\\e[3${i}m"
+    printf -v b[$i] "%b" "\\e[4${i}m"
+    printf -v fb[$i] "%s" "${f[$i]}${bold}"
+    printf -v bb[$i] "%s" "${b[$i]}${bold}"
 done
