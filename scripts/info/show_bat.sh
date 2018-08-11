@@ -6,6 +6,24 @@ function notify
     subtitle="${subtitle_parts[*]}"
     message="${message_parts[*]}"
 
+    [[ "${title:0:1}" == "|" ]] && \
+        title="${title##'| '}"
+
+    [[ "${title:-1:1}" == "|" ]] && \
+        title="${title%%' |'}"
+
+    [[ "${subtitle:0:1}" == "|" ]] && \
+        subtitle="${subtitle##'| '}"
+
+    [[ "${subtitle:-1:1}" == "|" ]] && \
+        subtitle="${subtitle%%' |'}"
+
+    [[ "${message:0:1}" == "|" ]] && \
+        message="${message##'| '}"
+
+    [[ "${message:-1:1}" == "|" ]] && \
+        message="${message%%' |'}"
+
     if [[ "${stdout}" ]]; then
         [[ "${title}" ]] && \
             display+=("${title}")
@@ -54,10 +72,13 @@ function get_bat_info
         END {
             percent = (charge_now / charge_full) * 100
 
-            if (state == "Charging")
-                time = (charge_full - charge_now) / current_now
-            else
-                time = charge_now / current_now
+            if (current_now != 0)
+            {
+                if (state == "Charging")
+                    time = (charge_full - charge_now) / current_now
+                else
+                    time = charge_now / current_now
+            }
             time *= 3600
             time -= time % 1
 
@@ -130,7 +151,7 @@ function main
     [[ "${bat_percent}" ]] && \
         title_parts+=("(${bat_percent}%)")
 
-    [[ "${bat_time}" ]] && \
+    [[ "${bat_state}" != "Full" &&  "${bat_time}" ]] && \
         subtitle_parts+=("${bat_time}")
 
     [[ "${bat_condition}" ]] && \
