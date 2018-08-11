@@ -14,6 +14,24 @@ function notify
     subtitle="${subtitle_parts[*]}"
     message="${message_parts[*]}"
 
+    [[ "${title:0:1}" == "|" ]] && \
+        title="${title##'| '}"
+
+    [[ "${title:-1:1}" == "|" ]] && \
+        title="${title%%' |'}"
+
+    [[ "${subtitle:0:1}" == "|" ]] && \
+        subtitle="${subtitle##'| '}"
+
+    [[ "${subtitle:-1:1}" == "|" ]] && \
+        subtitle="${subtitle%%' |'}"
+
+    [[ "${message:0:1}" == "|" ]] && \
+        message="${message##'| '}"
+
+    [[ "${message:-1:1}" == "|" ]] && \
+        message="${message%%' |'}"
+
     if [[ "${stdout}" ]]; then
         [[ "${title}" ]] && \
             display+=("${title}")
