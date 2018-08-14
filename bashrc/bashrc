@@ -3,7 +3,7 @@
 ##########################
 # shellcheck disable=1090,2148,2154
 
-function secure_source
+secure_source()
 {
     local file="$1"
     if [[ -f "${file}" ]]; then
@@ -13,43 +13,43 @@ function secure_source
     fi
 }
 
-function detect_os
-(
+get_distro()
+{
     case "${OSTYPE:-$(uname -s)}" in
         "Darwin"|"darwin"*)
-            : "MacOS"
+            distro="MacOS"
         ;;
 
         "Linux"|"linux"*)
             if type -p lsb_release > /dev/null; then
-                : "$(lsb_release -si)"
+                distro="$(lsb_release -si)"
             elif [[ -f "/etc/lsb-release" ]]; then
-                : "$(awk '/DISTRIB_ID/ {print $1}' /etc/lsb-release)"
-                : "${_/DISTRIB_ID=/}"
+                distro="$(awk '/DISTRIB_ID/ {print $1}' /etc/lsb-release)"
+                distro="${_/DISTRIB_ID=/}"
             elif [[ -f "/etc/os-release" ]]; then
-                : "$(awk -F "=" '/NAME/ {print $2; exit}' /etc/os-release)"
-                : "${_/NAME=/}"
-                : "${_//\"/}"
+                distro="$(awk -F "=" '/NAME/ {print $2; exit}' /etc/os-release)"
+                distro="${distro/NAME=/}"
+                distro="${distro//\"/}"
             fi
         ;;
 
         "FreeBSD"|"freebsd"*)
-            : "FreeBSD"
+            distro="FreeBSD"
         ;;
 
         "MSYS"*|"msys")
-            : "Windows"
+            distro="Windows"
         ;;
 
         "")
-            printf "%s\\n" "Error: Cannot detect os"
+            printf "%s\\n" "Error: Cannot detect os" >&2
         ;;
     esac
-    printf "%s" "${_}"
-)
+    printf "%s" "${distro}"
+}
 
-function get_full_path
-(
+get_full_path()
+{
     target="$1"
 
     if [[ -f "${target}" ]]; then
@@ -58,30 +58,29 @@ function get_full_path
             target="./${target}"
         target="${target%/*}"
         cd "${target}" || exit
-        : "${PWD}/${filename}"
+        full_path="${PWD}/${filename}"
     elif [[ -d "${target}" ]]; then
         cd "${target}" || exit
-        : "${PWD}"
+        full_path="${PWD}"
     fi
 
-    full_path="${_}"
     printf "%s" "${full_path%/}"
-)
+}
 
-function get_module_dir
-(
-    if [[ "${distro}" != "Windows" ]]; then
-        : "$(awk -F' -> ' '{printf "%s", $2}' <(ls -l "${BASH_SOURCE[0]}"))"
-        : "${_%/*}/modules"
-    else
-        : "${HOME}/.dotfiles/bashrc/modules"
-    fi
-    printf "%s" "${_}"
-)
-
-function main
+get_module_dir()
 {
-    distro="$(detect_os)"
+    if [[ "${distro}" != "Windows" ]]; then
+        module_dir="$(awk -F' -> ' '{printf "%s", $2}' <(ls -l "${BASH_SOURCE[0]}"))"
+        module_dir="${module_dir%/*}/modules"
+    else
+        module_dir="${HOME}/.dotfiles/bashrc/modules"
+    fi
+    printf "%s" "${module_dir}"
+}
+
+main()
+{
+    distro="$(get_distro)"
     module_dir="$(get_module_dir)"
 
     modules=(
@@ -104,7 +103,7 @@ function main
     done
 
     unset secure_source
-    unset detect_os
+    unset get_distro
     unset get_full_path
     unset get_module_path
     unset main

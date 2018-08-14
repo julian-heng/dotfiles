@@ -30,14 +30,6 @@ PS4='+${BASH_SOURCE}:${LINENO}:${FUNCNAME:-}: '
     MAKEFLAGS="-j${cores:-1}"
 }
 
-export RANGER_LOAD_DEFAULT_RC
-export HISTCONTROL
-export EDITOR
-export PS4
-
-[[ "${MAKEFLAGS}" ]] && \
-    export MAKEFLAGS
-
 #####################
 ##### Man Pages #####
 #####################
@@ -49,6 +41,18 @@ LESS_TERMCAP_se="${reset}"          # leave standout mode
 LESS_TERMCAP_so="${fb[3]}"          # enter standout mode - yellow
 LESS_TERMCAP_ue="${reset}"          # leave underline mode
 LESS_TERMCAP_us="${fb[6]}"          # enter underline mode - cyan
+
+###################
+##### Exports #####
+###################
+
+export RANGER_LOAD_DEFAULT_RC
+export HISTCONTROL
+export EDITOR
+export PS4
+
+[[ "${MAKEFLAGS}" ]] && \
+    export MAKEFLAGS
 
 export LESS_TERMCAP_mb
 export LESS_TERMCAP_md

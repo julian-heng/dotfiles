@@ -3,42 +3,42 @@
 ##################
 # shellcheck disable=2148,2154
 
-function prompter
+prompter()
 {
-    function __get_git_branch_status
-    (
+    __get_git_branch_status()
+    {
         [[ "$1" == *"$2 "[[:digit:]]* ]] && {
-            : "${1##*$2}"
-            : "${_/]}"
-            : "${_//[[:space:]]}"
-            printf "%s" "${_}"
+            status="${1##*$2}"
+            status="${staus/]}"
+            status="${status//[[:space:]]}"
+            printf "%s" "${status}"
         }
-    )
+    }
 
-    function __get_git_branch
-    (
+    __get_git_branch()
+    {
         case "$1" in
             *"No commits"*)
-                : "NA"
+                branch="NA"
             ;;
 
             *"no branch"*)
-                : "${1%%\(*}"
-                : "${_//#}"
-                : "${_//[[:space:]]}"
+                branch="${1%%\(*}"
+                branch="${branch//#}"
+                branch="${branch//[[:space:]]}"
             ;;
 
             *)
-                : "${1%%\...*}"
-                : "${_//#}"
-                : "${_//[[:space:]]}"
+                branch="${1%%\...*}"
+                branch="${branch//#}"
+                branch="${branch//[[:space:]]}"
             ;;
         esac
-        printf "%s" "${_}"
-    )
+        printf "%s" "${branch}"
+    }
 
-    function _git_prompt
-    (
+    _git_prompt()
+    {
         unset _git_status
         unset num_stages
         unset num_changed
@@ -61,75 +61,56 @@ function prompter
                             break
                         ;;
 
-                        "??")
-                            ((num_untracked++))
-                            break
-                        ;;
-
-                        "U"?|?"U"|"DD"|"AA")
-                            ((num_conflicts++))
-                            break
-                        ;;
-
-                        ?"M"|?"D")
-                            ((num_changed++))
-                        ;;
-
-                        ?" ")
-                        ;;
-
-                        "U")
-                            ((num_conflicts++))
-                        ;;
-
-                        " ")
-                        ;;
-
-                        *)
-                            ((num_staged++))
-                        ;;
+                        "??")       ((num_untracked++)); break ;;
+                        "U"?|?"U"|\
+                        "DD"|"AA")  ((num_conflicts++)); break ;;
+                        ?"M"|?"D")  ((num_changed++)) ;;
+                        ?" ") ;;
+                        "U")        ((num_conflicts++)) ;;
+                        " ") ;;
+                        *)          ((num_staged++)) ;;
                     esac
-                    status="${status:0:(${#status}-1)}"
+                    status="${status:0:${#status}-1}"
                 done
             done < <(git status --porcelain --branch)
 
             git_prompt="-[${c2}${_git_branch}${reset}"
 
             [[ "${_git_behind}" ]] && \
-                git_prompt+="${fb[7]}↓${_git_behind}${reset}"
+                git_prompt="${git_prompt}${fb[7]}↓${_git_behind}${reset}"
 
             [[ "${_git_ahead}" ]] && \
-                git_prompt+="${fb[7]}↑${_git_ahead}${reset}"
+                git_prompt="${git_prompt}${fb[7]}↑${_git_ahead}${reset}"
 
             ((num_conflicts > 0)) && \
-                _git_status+="${f[1]}✖${num_conflicts}${reset}"
+                _git_status="${_git_status}${f[1]}✖${num_conflicts}${reset}"
 
             ((num_changed > 0)) && \
-                _git_status+="${f[4]}✚${num_changed}${reset}"
+                _git_status="${_git_status}${f[4]}✚${num_changed}${reset}"
 
             ((num_staged > 0)) && \
-                _git_status+="${f[6]}●${num_staged}${reset}"
+                _git_status="${_git_status}${f[6]}●${num_staged}${reset}"
 
             ((num_untracked > 0)) && \
-                _git_status+="${bold}…${num_untracked}${reset}"
+                _git_status="${_git_status}${bold}…${num_untracked}${reset}"
 
             [[ "${_git_status}" ]] && \
-                git_prompt+="|${_git_status}"
+                git_prompt="${git_prompt}|${_git_status}"
 
-            git_prompt+="]"
+            git_prompt="${git_prompt}]"
         }
 
         printf "%s" "${git_prompt}"
-    )
+    }
 
-    function dir_prompt
-    (
+    dir_prompt()
+    {
         unset _PWD
-        : "${PWD}"
-        : "${_//${HOME}/'~'}"
-        : "${_#/}"
+        cwd="${PWD}"
+        cwd="${cwd//${HOME}/'~'}"
+        cwd="${cwd#/}"
 
-        mapfile -d "/" -t parts < <(printf "%s" "${_:-/}")
+        mapfile -d "/" -t parts < <(printf "%s" "${cwd:-/}")
 
         for part in "${parts[@]::${#parts[@]}-1}"; do
             count="0"
@@ -138,16 +119,16 @@ function prompter
             mapfile -d ' ' -t in_part <<< "${part}"
             for i in "${in_part[@]}"; do
                 if [[ "${i:0:1}" == "." ]] && ((count == 0)); then
-                    in_PWD+="${i:0:2}"
+                    in_PWD="${in_PWD}${i:0:2}"
                     ((count++))
                 else
-                    in_PWD+="${i:0:1}"
+                    in_PWD="${in_PWD}${i:0:1}"
                 fi
             done
-            _PWD+="/${in_PWD}"
+            _PWD="${_PWD}/${in_PWD}"
         done
 
-        _PWD+="/${parts[-1]}"
+        _PWD="${_PWD}/${parts[-1]}"
 
         [[ "${_PWD:1:1}" == "~" ]] && \
             _PWD="${_PWD#/}"
@@ -156,7 +137,7 @@ function prompter
             _PWD="${parts[-1]}"
 
         printf "%s" "${_PWD:-/}"
-    )
+    }
 
     local c1="${fb[2]}"
     local c2="${fb[4]}"
