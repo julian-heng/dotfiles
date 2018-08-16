@@ -15,11 +15,14 @@
 
 upgit()
 {
+    local -a git_dirs
+    local item
+    local git_dir
+
     header()
     {
-        eval printf "%0.s=" "{1..${#1}}" && printf "\\n"
-        printf "%s\\n" "$1"
-        eval printf "%0.s=" "{1..${#1}}" && printf "\\n"
+        eval printf -v line "%0.s=" "{1..${#1}}"
+        printf "%s\\n" "${line}" "$1" "${line}"
     }
 
     if [[ "$1" ]]; then
@@ -38,6 +41,8 @@ upgit()
         git -C "${git_dir}" pull
         printf "\\n"
     done
+
+    unset header
 }
 
 gcll()
