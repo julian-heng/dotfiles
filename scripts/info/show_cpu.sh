@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 
-function trim
-(
-    set -f
-    set -- $*
-    printf "%s" "$*"
-    set +f
-)
+trim()
+{
+    [[ "$*" ]] && {
+        set -f
+        set -- $*
+        printf "%s" "$*"
+        set +f
+    }
+}
 
-function notify
-(
+notify()
+{
     title="${title_parts[*]}"
     subtitle="${subtitle_parts[*]}"
     message="${message_parts[*]}"
@@ -51,9 +53,9 @@ function notify
         fi
         notify-send --icon=dialog-information "${title}" "${body}"
     fi
-)
+}
 
-function get_cores
+get_cores()
 {
     for line in "${cpu_file[@]}"; do
         [[ "${line}" =~ ^processor ]] && \
@@ -61,7 +63,7 @@ function get_cores
     done
 }
 
-function get_cpu
+get_cpu()
 {
     speed_dir="/sys/devices/system/cpu"
 
@@ -100,14 +102,14 @@ function get_cpu
     cpu="$(trim "${cpu}")"
 }
 
-function get_load
+get_load()
 {
     load_file="/proc/loadavg"
     read -ra load_arr < "${load_file}"
     load_avg="${load_arr[*]:0:3}"
 }
 
-function get_cpu_usage
+get_cpu_usage()
 {
     awk_script='
         { sum += $3 }
@@ -119,7 +121,7 @@ function get_cpu_usage
                      -v sum="0" "${awk_script}" <(ps aux))"
 }
 
-function get_temp
+get_temp()
 {
     temp_dir="/sys/class/hwmon"
 
