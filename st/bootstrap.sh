@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-check_app()
+check_apps()
 {
     app_list=("curl" "patch")
 
@@ -90,6 +90,7 @@ apply_patches()
 
 main()
 {
+    check_apps
     clone
     copy_config
     apply_patches
