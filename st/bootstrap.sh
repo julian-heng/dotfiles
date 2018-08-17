@@ -127,6 +127,7 @@ Usage: ${0##*/} -o --option
     [-sc|--skip-copy]       Skip copying config file
     [-sp|--skip-patch]      Skip patching
     [-si|--skip-install]    Skip installing st
+    [-p|--show-patches]     Show patches to be applied
     [-h|--help]             Show this message
 "
 }
