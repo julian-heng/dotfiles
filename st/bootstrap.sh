@@ -17,9 +17,13 @@ check_app()
     }
 }
 
-count()
+check_git_repo_url()
 {
-    printf "%s" "$#"
+    if [[ "$(git -C "$1" config --get remote.origin.url)" == "$2" ]]; then
+        return 0
+    else
+        return 1
+    fi
 }
 
 clone()
@@ -34,18 +38,33 @@ clone()
         printf "%s\\n" "OK"
     fi
 
-    if [[ ! -e "${dir}/st" ]] || (($(count "${dir}/st/"*) == 1)); then
-        clone="${dir}/st"
-        printf "%s\\n" "Cloning \"git://git.suckless.org/st\" to ${clone}"
+    if [[ ! -e "${dir}/st" ]]; then
+        clone="true"
+        clone_dir="${dir}/st"
+        printf "%s\\n" "Cloning \"git://git.suckless.org/st\" to ${clone_dir}"
+    elif check_git_repo_url "${dir}/st" "git://git.suckless.org/st"; then
+        clone="false"
+        clone_dir="${dir}/st"
+        printf "%s\\n" "Git repo for st already exist"
     else
-        printf -v clone "%s%(%d-%m-%Y-%T)T" "${dir}/st-"
-        printf "%s\\n" "Directory is not empty, using ${clone}"
+        clone="true"
+        printf -v clone_dir "%s%(%d-%m-%Y-%T)T" "${dir}/st-" "-1"
+        printf "%s\\n" "Directory is not empty, using ${clone_dir}"
     fi
 
-    git clone git://git.suckless.org/st "${clone}"
+    [[ "${clone}" == "true" ]] && \
+        git clone git://git.suckless.org/st "${clone_dir}"
+}
 
-    printf "%s\\n" "Copying config"
-    cp "${BASH_SOURCE%/*}/config.h" "${clone}"
+copy_config()
+{
+    [[ -e "${clone_dir}/config.h" ]] && {
+        printf "%s\\n" "Warning: Config file already exist. Backing up to config.h.bootstrap"
+        mv "${clone_dir}/config.h" "${clone_dir}/config.h.bootstrap"
+    }
+
+    printf "%s\\n" "Copying config file"
+    cp "${BASH_SOURCE%/*}/config.h" "${clone_dir}/config.h"
 }
 
 apply_patches()
@@ -57,7 +76,7 @@ apply_patches()
         "https://st.suckless.org/patches/scrollback/st-scrollback-mouse-altscreen-0.8.diff"
     )
 
-    cd "${clone}" || exit 1
+    cd "${clone_dir}" || exit 1
 
     for url in "${urls[@]}"; do
         printf "%s\\n" "Getting ${url}"
@@ -72,6 +91,7 @@ apply_patches()
 main()
 {
     clone
+    copy_config
     apply_patches
 }
 
