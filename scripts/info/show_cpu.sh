@@ -125,15 +125,15 @@ get_temp()
 {
     temp_dir="/sys/class/hwmon"
 
-    for file in "${temp_dir}"/*; do
-        [[ -f "${file}/name" ]] && {
-            [[ "$(< "${file}/name")" =~ temp ]] && \
-                for i in "${file}/temp"*; do
-                    [[ "$i" =~ '_input'$ ]] && {
-                        temp_file="$i"
-                        break
-                    }
-                done
+    for temp_file in "${temp_dir}"/*; do
+        [[ -f "${temp_file}/name" && "$(< "${temp_file}/name")" =~ temp ]] && {
+            for i in "${temp_file}/temp"*; do
+                [[ "$i" =~ '_input'$ ]] && {
+                    temp_file="$i"
+                    break
+                }
+            done
+            break
         }
     done
 
@@ -144,28 +144,31 @@ get_temp()
     temp+="°C"
 }
 
-function get_fan
+get_fan()
 {
     fan_dir="/sys/devices/platform"
 
     shopt -s globstar
     for i in "${fan_dir}"/**/*; do
         [[ "$i" =~ 'fan1_input'$ ]] && {
-            fan_file="$i"
-            break
+            fan_files+=("$i")
         }
     done
     shopt -u globstar
 
-    if [[ ! "${fan_file}" ]]; then
+    if [[ ! "${fan_files[*]}" ]]; then
         return 1
     else
-        fan="$(< "${fan_file}")"
+        for fan_file in "${fan_files[@]}"; do
+            fan="$(< "${fan_file}")"
+            ((fan != 0)) && \
+                break
+        done
     fi
     fan="${fan:-0} RPM"
 }
 
-function get_uptime
+get_uptime()
 {
     uptime_file="/proc/uptime"
 
@@ -190,8 +193,8 @@ function get_uptime
     uptime="${days}${hours}${mins}${secs}"
 }
 
-function print_usage
-(
+print_usage()
+{
     printf "%s\\n" "
 Usage: $0 --option --option \"value\"
 
@@ -203,9 +206,9 @@ Usage: $0 --option --option \"value\"
     If notify-send is not installed, then the script will
     print to standard output.
 "
-)
+}
 
-function get_args
+get_args()
 {
     while (($# > 0)); do
         case "$1" in
@@ -219,8 +222,8 @@ function get_args
         stdout="true"
 }
 
-function main
-(
+main()
+{
     mapfile -t cpu_file < "/proc/cpuinfo"
 
     get_args "$@"
@@ -251,7 +254,7 @@ function main
         message_parts+=("Uptime:" "${uptime}")
 
     notify
-)
+}
 
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && \
     main "$@"
