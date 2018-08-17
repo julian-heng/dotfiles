@@ -162,6 +162,8 @@ Usage: $0 --option --option \"value\"
     [-m|--mount]            Show information for a mounted disk
     [-h|--help]             Show this message
 
+    Note: Does not work with lvm containers.
+
     If notify-send is not installed, then the script will
     print to standard output.
 "
