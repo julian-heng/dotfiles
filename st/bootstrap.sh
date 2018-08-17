@@ -1,5 +1,22 @@
 #!/usr/bin/env bash
 
+check_app()
+{
+    app_list=("curl" "patch")
+
+    for i in "${app_list[@]}"; do
+        ! type -p "$i" > /dev/null && \
+            missing+=("$i")
+    done
+
+    ((${#missing[@]} > 0)) && {
+        for i in "${missing[@]}"; do
+            printf "%s\\n" "Dependency: $i is not installed"
+        done
+        exit 1
+    }
+}
+
 count()
 {
     printf "%s" "$#"
