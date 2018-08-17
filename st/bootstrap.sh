@@ -79,13 +79,6 @@ apply_patches()
     [[ "${patch}" == "false" ]] && \
         return 0
 
-    urls=(
-        "https://st.suckless.org/patches/alpha/st-alpha-0.8.1.diff"
-        "https://st.suckless.org/patches/scrollback/st-scrollback-0.8.diff"
-        "https://st.suckless.org/patches/scrollback/st-scrollback-mouse-0.8.diff"
-        "https://st.suckless.org/patches/scrollback/st-scrollback-mouse-altscreen-0.8.diff"
-    )
-
     cd "${clone_dir}" || exit 1
 
     for url in "${urls[@]}"; do
@@ -138,6 +131,13 @@ Usage: ${0##*/} -o --option
 "
 }
 
+show_patches()
+{
+    for url in "${urls[@]}"; do
+        printf "%s\\n" "${url}"
+    done
+}
+
 get_args()
 {
     while (($# > 0)); do
@@ -146,7 +146,8 @@ get_args()
             "-sc"|"--skip-copy")    copy="false" ;;
             "-sp"|"--skip-patch")   patch="false" ;;
             "-si"|"--skip-install") install="false" ;;
-            "-h"|"--help")  show_usage; exit 0 ;;
+            "-p"|"--show-patches")  show_patches; exit 0 ;;
+            "-h"|"--help")          show_usage; exit 0 ;;
         esac
         shift
     done
@@ -154,6 +155,13 @@ get_args()
 
 main()
 {
+    urls=(
+        "https://st.suckless.org/patches/alpha/st-alpha-0.8.1.diff"
+        "https://st.suckless.org/patches/scrollback/st-scrollback-0.8.diff"
+        "https://st.suckless.org/patches/scrollback/st-scrollback-mouse-0.8.diff"
+        "https://st.suckless.org/patches/scrollback/st-scrollback-mouse-altscreen-0.8.diff"
+    )
+
     get_args "$@"
     check_apps
     clone
