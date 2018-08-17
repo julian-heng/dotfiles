@@ -123,6 +123,21 @@ Keywords=shell;prompt;command;commandline;cmd;'
     printf "%s" "${desktop_entry}" > "${HOME}/.local/share/applications/st.desktop"
 }
 
+show_usage()
+{
+    printf "%s\\n" "
+Usage: ${0##*/} -o --option
+
+    Options:
+
+    [-scl|--skip-clone]     Skip cloning the st git repo
+    [-sc|--skip-copy]       Skip copying config file
+    [-sp|--skip-patch]      Skip patching
+    [-si|--skip-install]    Skip installing st
+    [-h|--help]             Show this message
+"
+}
+
 get_args()
 {
     while (($# > 0)); do
@@ -131,6 +146,7 @@ get_args()
             "-sc"|"--skip-copy")    copy="false" ;;
             "-sp"|"--skip-patch")   patch="false" ;;
             "-si"|"--skip-install") install="false" ;;
+            "-h"|"--help")  show_usage; exit 0 ;;
         esac
         shift
     done
