@@ -5,8 +5,13 @@ check_apps()
     app_list=("curl" "patch")
 
     for i in "${app_list[@]}"; do
-        ! type -p "$i" > /dev/null && \
+        printf "%s" "Checking for $i..."
+        if ! type -p "$i" > /dev/null; then
             missing+=("$i")
+            printf "%s\\n" "Not OK"
+        else
+            printf "%s\\n" "OK"
+        fi
     done
 
     ((${#missing[@]} > 0)) && {
