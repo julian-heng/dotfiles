@@ -2,7 +2,7 @@
 
 check_apps()
 {
-    app_list=("curl" "patch")
+    app_list=("sudo" "make" "curl" "patch")
 
     for i in "${app_list[@]}"; do
         printf "%s" "Checking for $i..."
@@ -93,12 +93,35 @@ apply_patches()
     done
 }
 
+make_and_install
+{
+    cd "${clone_dir}" || exit 1
+    make
+    sudo make install
+    mkdir -p "${HOME}/.local/share/applications"
+
+    desktop_entry='[Desktop Entry]
+Name=Simple Terminal
+GenericName=Terminal
+Comment=standard terminal emulator for the X window system
+Exec=st
+Terminal=false
+Type=Application
+Encoding=UTF-8
+Icon=terminal
+Categories=System;TerminalEmulator;
+Keywords=shell;prompt;command;commandline;cmd;'
+
+    printf "%s" "${desktop_entry}" > "${HOME}/.local/share/applications/st.desktop"
+}
+
 main()
 {
     check_apps
     clone
     copy_config
     apply_patches
+    make_and_install
 }
 
 main "$@"
