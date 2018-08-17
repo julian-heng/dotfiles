@@ -33,6 +33,19 @@ syntax on
 set list
 set listchars=tab:▸\ ,eol:¬,trail:˺,nbsp:█
 
+" Remap keys
+
+" left = j
+" up = k
+" down = l
+" right = ;
+
+noremap ; l
+noremap l j
+noremap j h
+
+set pastetoggle=<F3>
+
 " Lightline status line
 let g:lightline = {
       \ 'active': {
