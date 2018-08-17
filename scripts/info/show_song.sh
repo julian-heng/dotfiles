@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-function notify
-(
+notify()
+{
     title="${title_parts[*]}"
     subtitle="${subtitle_parts[*]}"
     message="${message_parts[*]}"
@@ -43,18 +43,18 @@ function notify
         fi
         notify-send --icon=dialog-information "${title}" "${body}"
     fi
-)
+}
 
-function check_app_state
-(
+check_app_state()
+{
     if pgrep -x cmus > /dev/null; then
         awk '/status/ { printf "%s", $2 }' <(cmus-remote -Q)
     else
         printf "%s" "none"
     fi
-)
+}
 
-function get_song_info
+get_song_info()
 {
     format="format_print %{title}:%{artist}:%{album}"
     IFS=":" \
@@ -64,8 +64,8 @@ function get_song_info
             < <(cmus-remote -C "${format}")
 }
 
-function print_usage
-(
+print_usage()
+{
     printf "%s\\n" "
 Usage: $0 --option --option \"value\"
 
@@ -77,9 +77,9 @@ Usage: $0 --option --option \"value\"
     If notify-send is not installed, then the script will
     print to standard output.
 "
-)
+}
 
-function get_args
+get_args()
 {
     while (($# > 0)); do
         case "$1" in
@@ -93,8 +93,8 @@ function get_args
         stdout="true"
 }
 
-function main
-(
+main()
+{
     get_args "$@"
 
     case "$(check_app_state)" in
@@ -122,7 +122,7 @@ function main
     esac
 
     notify
-)
+}
 
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && \
     main "$@"

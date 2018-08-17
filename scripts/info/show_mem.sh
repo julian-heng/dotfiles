@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-function notify
-(
+notify()
+{
     title="${title_parts[*]}"
     subtitle="${subtitle_parts[*]}"
     message="${message_parts[*]}"
@@ -43,9 +43,9 @@ function notify
         fi
         notify-send --icon=dialog-information "${title}" "${body}"
     fi
-)
+}
 
-function get_mem_info
+get_mem_info()
 {
     awk_script='
         /MemTotal/ { total = used = $2}
@@ -74,8 +74,8 @@ function get_mem_info
             < <(awk "${awk_script}" "/proc/meminfo")
 }
 
-function print_usage
-(
+print_usage()
+{
     printf "%s\\n" "
 Usage: $0 --option --option \"value\"
 
@@ -87,9 +87,9 @@ Usage: $0 --option --option \"value\"
     If notify-send is not installed, then the script will
     print to standard output.
 "
-)
+}
 
-function get_args
+get_args()
 {
     while (($# > 0)); do
         case "$1" in
@@ -103,8 +103,8 @@ function get_args
         stdout="true"
 }
 
-function main
-(
+main()
+{
     get_args "$@"
     get_mem_info
 
@@ -124,7 +124,7 @@ function main
         message_parts+=("|" "${swap_total}" "MiB")
 
     notify
-)
+}
 
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && \
     main "$@"
