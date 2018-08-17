@@ -93,7 +93,7 @@ apply_patches()
     done
 }
 
-make_and_install
+make_and_install()
 {
     cd "${clone_dir}" || exit 1
     make
