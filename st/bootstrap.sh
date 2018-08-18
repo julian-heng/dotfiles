@@ -2,7 +2,7 @@
 
 check_apps()
 {
-    app_list=("sudo" "make" "curl" "patch")
+    app_list=("sudo" "make" "pkg-config" "gcc" "curl" "patch")
 
     for i in "${app_list[@]}"; do
         printf "%s" "Checking for $i..."
@@ -29,6 +29,30 @@ check_git_repo_url()
     else
         return 1
     fi
+}
+
+confirm_dependencies()
+{
+    [[ "${dependency_check}" == "false" ]] && \
+        return 0
+
+    prompt="Please confirm that you have installed all of
+the dependencies required for st to build.
+    - libxft-dev
+    - libx11-dev
+    - libfontconfig-dev
+
+Enter yes or no: "
+
+    printf "\\n%s" "${prompt}"
+
+    while read -r ans; do
+        case "${ans}" in
+            "yes")  return 0 ;;
+            "no")   return 1 ;;
+            *)      printf "%s" "Please enter yes or no: " ;;
+        esac
+    done
 }
 
 clone()
@@ -143,12 +167,13 @@ get_args()
 {
     while (($# > 0)); do
         case "$1" in
-            "-scl"|"--skip-clone")  clone="false" ;;
-            "-sc"|"--skip-copy")    copy="false" ;;
-            "-sp"|"--skip-patch")   patch="false" ;;
-            "-si"|"--skip-install") install="false" ;;
-            "-p"|"--show-patches")  show_patches; exit 0 ;;
-            "-h"|"--help")          show_usage; exit 0 ;;
+            "-scl"|"--skip-clone")          clone="false" ;;
+            "-scd"|"--skip-dependencies")   dependency_check="false" ;;
+            "-sc"|"--skip-copy")            copy="false" ;;
+            "-sp"|"--skip-patch")           patch="false" ;;
+            "-si"|"--skip-install")         install="false" ;;
+            "-p"|"--show-patches")          show_patches; exit 0 ;;
+            "-h"|"--help")                  show_usage; exit 0 ;;
         esac
         shift
     done
@@ -165,10 +190,12 @@ main()
 
     get_args "$@"
     check_apps
-    clone
-    copy_config
-    apply_patches
-    make_and_install
+    confirm_dependencies && {
+        clone
+        copy_config
+        apply_patches
+        make_and_install
+    }
 }
 
 main "$@"
