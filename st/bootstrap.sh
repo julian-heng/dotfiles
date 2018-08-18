@@ -56,7 +56,7 @@ clone()
         printf "%s\\n" "Directory is not empty, using ${clone_dir}"
     fi
 
-    [[ "${clone}" == "true" ]] && \
+    [[ "${clone}" != "false" ]] && \
         git clone git://git.suckless.org/st "${clone_dir}"
 }
 
