@@ -9,7 +9,7 @@ prompter()
     {
         [[ "$1" == *"$2 "[[:digit:]]* ]] && {
             status="${1##*$2}"
-            status="${staus/]}"
+            status="${status/]}"
             status="${status//[[:space:]]}"
             printf "%s" "${status}"
         }
