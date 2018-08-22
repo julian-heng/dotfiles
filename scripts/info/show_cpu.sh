@@ -74,9 +74,14 @@ get_cpu()
         }
     done
 
+    case "${speed_type}" in
+        "max")  search="bios_limit|scaling_max|cpuinfo_max" ;;
+        *)      search="scaling_cur" ;;
+    esac
+
     shopt -s globstar
     for i in "${speed_dir}"/**/*; do
-        [[ "$i" =~ bios_limit|scaling_max|cpuinfo_max ]] && {
+        [[ "$i" =~ ${search} ]] && {
             speed_file="$i"
             break
         }
@@ -201,6 +206,8 @@ Usage: $0 --option --option \"value\"
     Options:
 
     [--stdout]              Print to stdout
+    [-s|--speed-type]       Use [current] or [max]imum cpu frequency
+                            Default is current
     [-h|--help]             Show this message
 
     If notify-send is not installed, then the script will
@@ -212,8 +219,9 @@ get_args()
 {
     while (($# > 0)); do
         case "$1" in
-            "--stdout")     stdout="true" ;;
-            "-h"|"--help")  print_usage; exit ;;
+            "--stdout")             stdout="true" ;;
+            "-s"|"--speed-type")    speed_type="$2"; shift ;;
+            "-h"|"--help")          print_usage; exit ;;
         esac
         shift
     done
