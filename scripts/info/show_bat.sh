@@ -52,6 +52,7 @@ get_bat_info()
     for file in "${bat_dir}"/*; do
         [[ "${file##${bat_dir}/}" =~ ^'BAT' && "$(< "${file}/type")" == "Battery" ]] && {
             bat_dir="${file}"
+            break
         }
     done
 
