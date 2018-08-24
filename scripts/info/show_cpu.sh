@@ -89,7 +89,7 @@ get_cpu()
     shopt -u globstar
 
     [[ "${speed_file}" ]] && \
-        speed="$(awk 'END { printf "%0.1f", $1 / 1000000}' "${speed_file}")"
+        speed="$(awk 'END { printf "%0.2f", $1 / 1000000}' "${speed_file}")"
 
     cpu="${cpu//*:}"
     cpu="${cpu//:}"
