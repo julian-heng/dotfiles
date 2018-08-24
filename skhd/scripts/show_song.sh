@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 # shellcheck disable=1090,2194
 
-function check_apps
+check_apps()
 (
     if ! type -p osascript > /dev/null; then
         return 1
     fi
 )
 
-function count_char
+count_char()
 (
     : "${*}"
     printf "%s" "${#_}"
 )
 
-function check_app_state
+check_app_state()
 (
     match="false"
 
@@ -53,7 +53,7 @@ function check_app_state
         "${app_state}"
 )
 
-function get_song_info
+get_song_info()
 (
     app="$1"
 
@@ -88,7 +88,7 @@ EOF
         "${album}"
 )
 
-function main
+main()
 (
     ! { source "${BASH_SOURCE[0]//${0##*/}}notify.sh" && \
         source "${BASH_SOURCE[0]//${0##*/}}format.sh"; } && \

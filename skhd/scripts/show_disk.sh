@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # shellcheck disable=1004,1090
 
-function check_apps
+check_apps()
 (
     if ! type -p df diskutil > /dev/null; then
         return 1
     fi
 )
 
-function get_search
+get_search()
 (
     search="$1"
     count="0"
@@ -36,7 +36,7 @@ function get_search
     fi
 )
 
-function get_df_output
+get_df_output()
 (
     while read -r line; do
         [[ "${line}" != *"TimeMachine"* ]] && \
@@ -45,21 +45,21 @@ function get_df_output
     printf "%s\\n" "${disk_cache[@]:${1:-1}}"
 )
 
-function get_diskutil_out
+get_diskutil_out()
 (
     while read -r line; do
         printf "%s\\n" "${line}"
     done < <(diskutil info "$1")
 )
 
-function get_disk_device
+get_disk_device()
 (
     : "$(awk '/Device Node/ {print $3}' \
             < <(printf "%s\\n" "$@"))"
     printf "%s" "${_}"
 )
 
-function get_disk_name
+get_disk_name()
 (
     awk_script='
         /Volume Name/ {
@@ -78,7 +78,7 @@ function get_disk_name
     printf "%s" "${_}"
 )
 
-function get_disk_part
+get_disk_part()
 (
     awk_script='
         /File System Personality:/ {
@@ -97,7 +97,7 @@ function get_disk_part
     printf "%s" "${_}"
 )
 
-function get_disk_mount
+get_disk_mount()
 (
     awk_script='
         /Mount Point:/ {
@@ -116,7 +116,7 @@ function get_disk_mount
     printf "%s" "${_}"
 )
 
-function get_disk_capacity
+get_disk_capacity()
 (
     if diskutil apfs > /dev/null; then
         awk_script='/Volume Total Space/ {printf "%0.2f", ($9 / (2 * (1024 ^ 2)))}'
@@ -127,7 +127,7 @@ function get_disk_capacity
     printf "%s" "${_}"
 )
 
-function get_disk_used
+get_disk_used()
 (
     if diskutil apfs > /dev/null; then
         awk_script='/Volume Used Space/ {printf "%0.2f", ($9 / (2 * (1024 ^ 2)))}'
@@ -139,18 +139,18 @@ function get_disk_used
     printf "%s" "${_}"
 )
 
-function get_disk_percent
+get_disk_percent()
 (
     : "$(awk -v a="$1" -v b="$2" \
         'BEGIN {printf "%0.2f", (a / b) * 100}')"
     printf "%s" "${_}"
 )
 
-function get_disk_info
+get_disk_info()
 (
     if diskutil apfs > /dev/null; then
         awk_script='
-            function strloop(a)
+            strloop(a)
             {
                 j = ""
                 for (i = a; i <= NF; i++) {
@@ -174,7 +174,7 @@ function get_disk_info
             }'
     else
         awk_script='
-            function strloop(a)
+            strloop(a)
             {
                 j = ""
                 for (i = a; i <= NF; i++) {
@@ -222,7 +222,7 @@ function get_disk_info
         "${disk_percent}"
 )
 
-function main
+main()
 (
     ! { source "${BASH_SOURCE[0]//${0##*/}}notify.sh" && \
         source "${BASH_SOURCE[0]//${0##*/}}format.sh"; } && \

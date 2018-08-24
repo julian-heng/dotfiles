@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 # shellcheck disable=1004,1090
 
-function check_apps
+check_apps()
 (
     if ! type -p pmset system_profiler > /dev/null; then
         return 1
     fi
 )
 
-function get_bat_cache
+get_bat_cache()
 (
     pmset -g batt; system_profiler SPPowerDataType
 )
 
-function get_bat_state
+get_bat_state()
 (
     : "$(awk '/drawing/ {print $4}' \
             < <(printf "%s\\n" "$@"))"
@@ -21,7 +21,7 @@ function get_bat_state
     printf "%s" "${_}"
 )
 
-function get_bat_percent
+get_bat_percent()
 (
     : "$(awk '/id=/ {print $3}' \
             < <(printf "%s\\n" "$@"))"
@@ -29,7 +29,7 @@ function get_bat_percent
     printf "%s" "${_}"
 )
 
-function get_bat_time
+get_bat_time()
 (
     : "$(awk '/id=/ {print $5}' \
             < <(printf "%s\\n" "$@"))"
@@ -43,21 +43,21 @@ function get_bat_time
     printf "%s" "${_}"
 )
 
-function get_bat_cycles
+get_bat_cycles()
 (
     : "$(awk '/Cycle Count/ {print $3}' \
             < <(printf "%s\\n" "$@"))"
     printf "%s" "${_}"
 )
 
-function get_bat_condition
+get_bat_condition()
 (
     : "$(awk '/Condition/ {print $2}' \
             < <(printf "%s\\n" "$@"))"
     printf "%s" "${_}"
 )
 
-function get_bat_info
+get_bat_info()
 (
     awk_script='
         /drawing/ {a = $4}
@@ -95,7 +95,7 @@ function get_bat_info
         "${bat_condition}"
 )
 
-function main
+main()
 (
     ! { source "${BASH_SOURCE[0]//${0##*/}}notify.sh" && \
         source "${BASH_SOURCE[0]//${0##*/}}format.sh"; } && \

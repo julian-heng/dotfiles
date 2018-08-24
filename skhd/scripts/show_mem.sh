@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # shellcheck disable=1004,1090
 
-function check_apps
+check_apps()
 (
     if ! type -p vm_stat sysctl > /dev/null; then
         return 1
     fi
 )
 
-function trim_digits
+trim_digits()
 (
     case "${1##*.}" in
         "00")   printf "%s" "${1/.*}" ;;
@@ -16,19 +16,19 @@ function trim_digits
     esac
 )
 
-function get_mem_cache
+get_mem_cache()
 (
     vm_stat; sysctl vm.swapusage hw.memsize
 )
 
-function get_mem_total
+get_mem_total()
 (
     : "$(awk \
         '/hw/ {printf "%0.0f", $2 / (1024 ^ 2)}' < <(printf "%s\\n" "$@"))"
     printf "%s" "${_}"
 )
 
-function get_mem_used
+get_mem_used()
 (
     : "$(awk '
         /wired/ {a = substr($4, 1, length($4)-1)}
@@ -38,7 +38,7 @@ function get_mem_used
     printf "%s" "${_}"
 )
 
-function get_mem_percent
+get_mem_percent()
 (
     if [[ ! "$1" && ! "$2" ]]; then
         cache="$(get_mem_cache)"
@@ -54,7 +54,7 @@ function get_mem_percent
     printf "%s" "${_}"
 )
 
-function get_swap_used
+get_swap_used()
 (
     : "$(awk \
         '/vm/ { print $4 }' < <(printf "%s\\n" "$@"))"
@@ -62,7 +62,7 @@ function get_swap_used
     printf "%s" "${_}"
 )
 
-function get_swap_total
+get_swap_total()
 (
     : "$(awk \
         '/vm/ { print $7 }' < <(printf "%s\\n" "$@"))"
@@ -70,7 +70,7 @@ function get_swap_total
     printf "%s" "${_}"
 )
 
-function get_mem_info
+get_mem_info()
 (
     read -r mem_percent \
             mem_used \
@@ -99,7 +99,7 @@ function get_mem_info
         "${swap_total}"
 )
 
-function main
+main()
 (
     ! { source "${BASH_SOURCE[0]//${0##*/}}notify.sh" && \
         source "${BASH_SOURCE[0]//${0##*/}}format.sh"; } && \
