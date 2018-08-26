@@ -163,7 +163,7 @@ prompter()
     ((exit != 0)) && \
         head="[${fb[1]}${exit}${reset}]${head}"
 
-    userhost="${c1}\\u${reset}@${c1}\\h${reset}"
+    userhost="${c1}${USER:-\\u}${reset}@${c1}${HOSTNAME:-\\w}${reset}"
     dir="${c2}$(dir_prompt)${reset}"
     git="$(_git_prompt)"
 
