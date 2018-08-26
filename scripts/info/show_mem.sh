@@ -50,7 +50,7 @@ get_mem_info()
     awk_script='
         /MemTotal/ { total = used = $2}
         /Shmem/ { used += $2 }
-        /MemFree|Buffers|Cached|SReclaimable/ { 
+        /MemFree|Buffers|Cached|SReclaimable/ {
             used -= $2
         }
         /SwapTotal/ { swap_total = $2 }
