@@ -21,10 +21,12 @@ set laststatus=2
 set noshowmode
 "set cursorline
 set path+=**
+call matchadd('ColorColumn', '\%80v', 100)
 autocmd BufRead scp://* :set bt=acwrite
 
 highlight LineNr ctermfg=DarkGrey
 highlight CursorLine cterm=NONE
+highlight ColorColumn ctermbg=7
 
 syntax on
 
