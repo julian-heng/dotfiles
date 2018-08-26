@@ -5,6 +5,8 @@
 
 prompter()
 {
+    local exit="$?"
+
     __get_git_branch_status()
     {
         [[ "$1" == *"$2 "[[:digit:]]* ]] && {
@@ -140,15 +142,33 @@ prompter()
         printf "%s" "${_PWD:-/}"
     }
 
-    local c1="${fb[2]}"
-    local c2="${fb[4]}"
+    local c1
+    local c2
+    local time
     local -a prompt_line
 
     unset prompt_line
     unset PS1
 
-    prompt_line+=("${c1}\\u${reset}@${c1}\\h${reset}: (${c2}$(dir_prompt)${reset})$(_git_prompt)")
-    prompt_line+=("\\$ ")
+    if ((EUID == 0)); then
+        c1="${fb[1]}"
+        c2="${fb[1]}"
+        head="#"
+    else
+        c1="${fb[2]}"
+        c2="${fb[4]}"
+        head="$"
+    fi
+
+    ((exit != 0)) && \
+        head="[${fb[1]}${exit}${reset}]${head}"
+
+    userhost="${c1}\\u${reset}@${c1}\\h${reset}"
+    dir="${c2}$(dir_prompt)${reset}"
+    git="$(_git_prompt)"
+
+    prompt_line+=("┌[${userhost}]: (${dir})${git}")
+    prompt_line+=("└${head} ")
     IFS=$'\n' PS1="${prompt_line[*]}"
     export PS1
 
