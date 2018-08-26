@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-function notify
-(
+notify()
+{
     title="${title_parts[*]}"
     subtitle="${subtitle_parts[*]}"
     message="${message_parts[*]}"
@@ -43,15 +43,16 @@ function notify
         fi
         notify-send --icon=dialog-information "${title}" "${body}"
     fi
-)
+}
 
-function get_bat_info
+get_bat_info()
 {
     bat_dir="/sys/class/power_supply"
 
     for file in "${bat_dir}"/*; do
         [[ "${file##${bat_dir}/}" =~ ^'BAT' && "$(< "${file}/type")" == "Battery" ]] && {
             bat_dir="${file}"
+            break
         }
     done
 
@@ -113,8 +114,8 @@ function get_bat_info
     bat_time="${hours}${mins}${secs}"
 }
 
-function print_usage
-(
+print_usage()
+{
     printf "%s\\n" "
 Usage: $0 --option --option \"value\"
 
@@ -126,9 +127,9 @@ Usage: $0 --option --option \"value\"
     If notify-send is not installed, then the script will
     print to standard output.
 "
-)
+}
 
-function get_args
+get_args()
 {
     while (($# > 0)); do
         case "$1" in
@@ -142,8 +143,8 @@ function get_args
         stdout="true"
 }
 
-function main
-(
+main()
+{
     get_args "$@"
     get_bat_info
 
@@ -167,7 +168,7 @@ function main
         message_parts+=("${bat_state}")
 
     notify
-)
+}
 
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && \
     main "$@"

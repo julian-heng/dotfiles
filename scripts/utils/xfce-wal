@@ -4,7 +4,7 @@
 : "${all_monitors:=true}"
 : "${recursive:=true}"
 
-function get_full_path
+get_full_path()
 (
     target="$1"
 
@@ -21,7 +21,7 @@ function get_full_path
     printf "%s" "${full_path%/}"
 )
 
-function monitor_count
+monitor_count()
 (
     type -p xrandr > /dev/null && {
         awk '/\yconnected\y/ {
@@ -33,7 +33,7 @@ function monitor_count
     }
 )
 
-function list_monitors
+list_monitors()
 (
     type -p xrandr > /dev/null && {
         awk 'BEGIN { count = 0 }
@@ -44,7 +44,7 @@ function list_monitors
     }
 )
 
-function check_img
+check_img()
 (
     ext="${1##*.}"
     if [[ ! -d "$1" && "${ext,,}" =~ ^(jpg|png)$ ]]; then
@@ -54,7 +54,7 @@ function check_img
     fi
 )
 
-function get_file_list
+get_file_list()
 (
     dir="$1"
     if [[ -f "${dir}" ]] && check_img "${dir}"; then
@@ -78,12 +78,12 @@ function get_file_list
     printf "%s\\n" "${list[@]}"
 )
 
-function rand
+rand()
 (
     printf "%s" "$((RANDOM % $1))"
 )
 
-function change_wal
+change_wal()
 (
     img="$1"
     monitor="${2:-0}"
@@ -101,7 +101,7 @@ function change_wal
                  --set "${img}"
 )
 
-function print_usage
+print_usage()
 (
     printf "%s\\n" "
 Usage: ${0##*/} -o --option --option \"value\"
@@ -129,7 +129,7 @@ Usage: ${0##*/} -o --option --option \"value\"
 "
 )
 
-function get_args
+get_args()
 {
     while (($# > 0)); do
         case "$1" in
@@ -145,7 +145,7 @@ function get_args
     done
 }
 
-function main
+main()
 (
     get_args "$@"
     [[ ! -d "${HOME}/.last_wal" ]] && \
@@ -159,7 +159,7 @@ function main
         num_monitors="$((monitor + 1))"
     fi
 
-    function _change_wal
+    _change_wal
     (
         [[ -f "${HOME}/.last_wal/monitor$i" ]] && \
             last_wal="$(< "${HOME}/.last_wal/monitor$i")"

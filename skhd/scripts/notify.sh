@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-function notify
+notify()
 (
     type -p osascript > /dev/null && {
         title="$1"

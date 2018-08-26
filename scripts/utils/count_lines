@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-function get_full_path
+get_full_path()
 (
     target="$1"
     filename="${target##*/}"
@@ -14,7 +14,7 @@ function get_full_path
     printf "%s" "${full_path}"
 )
 
-function check_file
+check_file()
 (
     [[ "${exclude[*]}" ]] && {
         for pattern in "${exclude[@]}"; do
@@ -33,7 +33,7 @@ function check_file
     fi
 )
 
-function _count_lines
+_count_lines()
 (
     file_path="$1"
 
@@ -66,7 +66,7 @@ function _count_lines
     printf "%s\\n" "${out}"
 )
 
-function reverse_array
+reverse_array()
 (
     for i in "$@"; do
         temp_arr=("${i}" "${temp_arr[@]}")
@@ -74,7 +74,7 @@ function reverse_array
     printf "%s\\n" "${temp_arr[@]}"
 )
 
-function _qsort
+_qsort()
 {
     (($# == 0)) && {
         unset qreturn
@@ -101,14 +101,14 @@ function _qsort
     qreturn+=("${pivot}" "${higher[@]}")
 }
 
-function qsort
+qsort()
 (
     qreturn=()
     _qsort "$@"
     printf "%s\\n" "${qreturn[@]}"
 )
 
-function print_padding
+print_padding()
 (
     arr=("$@")
 
@@ -163,7 +163,7 @@ function print_padding
     }
 )
 
-function print_example
+print_example()
 (
     less < <(printf "%s" "Showing number of lines in current directory:
     $ $0
@@ -224,7 +224,7 @@ Show the number of lines of files without \"foo\", \"bar\" and \"baz\"
 ")
 )
 
-function print_usage
+print_usage()
 (
     printf "%s\\n" "
 Usage: ${0##*/} -o --option --option \"VALUE\"
@@ -256,7 +256,7 @@ Usage: ${0##*/} -o --option --option \"VALUE\"
 "
 )
 
-function get_args
+get_args()
 {
     while (($# > 0)); do
         case "$1" in
@@ -301,7 +301,7 @@ function get_args
     }
 }
 
-function main
+main()
 (
     get_args "$@"
 

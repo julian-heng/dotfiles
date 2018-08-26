@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # shellcheck disable=1090,2034,2154
 
-function convert_mem
+convert_mem()
 (
     : "$(awk -v a="$1" 'BEGIN {printf "%0.2f", a / 1024}')"
     printf "%s" "${_}"
 )
 
-function get_args
+get_args()
 {
     while (($# > 0)); do
         case "$1" in
@@ -18,7 +18,7 @@ function get_args
     done
 }
 
-function main
+main()
 (
     script_dir="${BASH_SOURCE[0]//${0##*/}}"
 

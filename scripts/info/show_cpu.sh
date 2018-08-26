@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 
-function trim
-(
-    set -f
-    set -- $*
-    printf "%s" "$*"
-    set +f
-)
+trim()
+{
+    [[ "$*" ]] && {
+        set -f
+        set -- $*
+        printf "%s" "$*"
+        set +f
+    }
+}
 
-function notify
-(
+notify()
+{
     title="${title_parts[*]}"
     subtitle="${subtitle_parts[*]}"
     message="${message_parts[*]}"
@@ -51,9 +53,9 @@ function notify
         fi
         notify-send --icon=dialog-information "${title}" "${body}"
     fi
-)
+}
 
-function get_cores
+get_cores()
 {
     for line in "${cpu_file[@]}"; do
         [[ "${line}" =~ ^processor ]] && \
@@ -61,7 +63,7 @@ function get_cores
     done
 }
 
-function get_cpu
+get_cpu()
 {
     speed_dir="/sys/devices/system/cpu"
 
@@ -72,9 +74,14 @@ function get_cpu
         }
     done
 
+    case "${speed_type}" in
+        "max")  search="bios_limit|scaling_max|cpuinfo_max" ;;
+        *)      search="scaling_cur" ;;
+    esac
+
     shopt -s globstar
     for i in "${speed_dir}"/**/*; do
-        [[ "$i" =~ bios_limit|scaling_max|cpuinfo_max ]] && {
+        [[ "$i" =~ ${search} ]] && {
             speed_file="$i"
             break
         }
@@ -82,7 +89,7 @@ function get_cpu
     shopt -u globstar
 
     [[ "${speed_file}" ]] && \
-        speed="$(awk 'END { printf "%0.1f", $1 / 1000000}' "${speed_file}")"
+        speed="$(awk 'END { printf "%0.2f", $1 / 1000000}' "${speed_file}")"
 
     cpu="${cpu//*:}"
     cpu="${cpu//:}"
@@ -100,14 +107,14 @@ function get_cpu
     cpu="$(trim "${cpu}")"
 }
 
-function get_load
+get_load()
 {
     load_file="/proc/loadavg"
     read -ra load_arr < "${load_file}"
     load_avg="${load_arr[*]:0:3}"
 }
 
-function get_cpu_usage
+get_cpu_usage()
 {
     awk_script='
         { sum += $3 }
@@ -119,19 +126,19 @@ function get_cpu_usage
                      -v sum="0" "${awk_script}" <(ps aux))"
 }
 
-function get_temp
+get_temp()
 {
     temp_dir="/sys/class/hwmon"
 
-    for file in "${temp_dir}"/*; do
-        [[ -f "${file}/name" ]] && {
-            [[ "$(< "${file}/name")" =~ temp ]] && \
-                for i in "${file}/temp"*; do
-                    [[ "$i" =~ '_input'$ ]] && {
-                        temp_file="$i"
-                        break
-                    }
-                done
+    for temp_file in "${temp_dir}"/*; do
+        [[ -f "${temp_file}/name" && "$(< "${temp_file}/name")" =~ temp ]] && {
+            for i in "${temp_file}/temp"*; do
+                [[ "$i" =~ '_input'$ ]] && {
+                    temp_file="$i"
+                    break
+                }
+            done
+            break
         }
     done
 
@@ -142,28 +149,31 @@ function get_temp
     temp+="°C"
 }
 
-function get_fan
+get_fan()
 {
     fan_dir="/sys/devices/platform"
 
     shopt -s globstar
     for i in "${fan_dir}"/**/*; do
         [[ "$i" =~ 'fan1_input'$ ]] && {
-            fan_file="$i"
-            break
+            fan_files+=("$i")
         }
     done
     shopt -u globstar
 
-    if [[ ! "${fan_file}" ]]; then
+    if [[ ! "${fan_files[*]}" ]]; then
         return 1
     else
-        fan="$(< "${fan_file}")"
+        for fan_file in "${fan_files[@]}"; do
+            fan="$(< "${fan_file}")"
+            ((fan != 0)) && \
+                break
+        done
     fi
     fan="${fan:-0} RPM"
 }
 
-function get_uptime
+get_uptime()
 {
     uptime_file="/proc/uptime"
 
@@ -188,27 +198,30 @@ function get_uptime
     uptime="${days}${hours}${mins}${secs}"
 }
 
-function print_usage
-(
+print_usage()
+{
     printf "%s\\n" "
 Usage: $0 --option --option \"value\"
 
     Options:
 
     [--stdout]              Print to stdout
+    [-s|--speed-type]       Use [current] or [max]imum cpu frequency
+                            Default is current
     [-h|--help]             Show this message
 
     If notify-send is not installed, then the script will
     print to standard output.
 "
-)
+}
 
-function get_args
+get_args()
 {
     while (($# > 0)); do
         case "$1" in
-            "--stdout")     stdout="true" ;;
-            "-h"|"--help")  print_usage; exit ;;
+            "--stdout")             stdout="true" ;;
+            "-s"|"--speed-type")    speed_type="$2"; shift ;;
+            "-h"|"--help")          print_usage; exit ;;
         esac
         shift
     done
@@ -217,8 +230,8 @@ function get_args
         stdout="true"
 }
 
-function main
-(
+main()
+{
     mapfile -t cpu_file < "/proc/cpuinfo"
 
     get_args "$@"
@@ -249,7 +262,7 @@ function main
         message_parts+=("Uptime:" "${uptime}")
 
     notify
-)
+}
 
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && \
     main "$@"

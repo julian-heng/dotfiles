@@ -3,50 +3,78 @@
 #############################
 # shellcheck disable=2139,2148,2154
 
-function vscp
-(
-    IFS=":"\
-    read -r server \
-            file \
-            <<< "$1"
-    remote="scp://${server}${file}"
-    vim "${remote}"
-)
+#vscp()
+#(
+#    IFS=":"\
+#    read -r server \
+#            file \
+#            <<< "$1"
+#    remote="scp://${server}${file}"
+#    vim "${remote}"
+#)
 
-function upgit
-(
+upgit()
+{
+    local -a git_dirs
+    local item
+    local git_dir
+
+    header()
+    {
+        eval printf -v line "%0.s=" "{1..${#1}}"
+        printf "%s\\n" "${line}" "$1" "${line}"
+    }
+
     if [[ "$1" ]]; then
-        : "${1%/}"
+        dir="${1%/}"
     else
-        : "${PWD}"
+        dir="${PWD}"
     fi
 
-    for item in "${_}/"*; do
+    for item in "${dir}/"*; do
         { [[ -d "${item}/.git" ]] || git -C "${item}" rev-parse --git-dir > /dev/null 2>&1; } && \
             git_dirs+=("${item}")
     done
 
     for git_dir in "${git_dirs[@]}"; do
-        header="Updating ${git_dir}"
-        eval printf "%0.s=" "{1..${#header}}" && printf "\\n"
-        printf "%s\\n" "${header}"
-        eval printf "%0.s=" "{1..${#header}}" && printf "\\n"
+        header "Updating ${git_dir}"
         git -C "${git_dir}" pull
         printf "\\n"
     done
-)
 
-function gcll
-(
-    for repo in "$@"; do
-        git clone "${repo}"
+    unset header
+}
+
+gcll()
+{
+    local -a args
+    local -a repo_list
+    local repo
+
+    while (($# > 0)); do
+        case "$1" in
+            "http"*)
+                #printf "%s\\n" "$1"
+                repo_list+=("$1")
+            ;;
+
+            *)
+                #printf "%s\\n" "$1"
+                args+=("$1")
+            ;;
+        esac
+        shift
     done
-)
 
-function man
-(
+    for repo in "${repo_list[@]}"; do
+        git clone "${repo}" "${args[@]}"
+    done
+}
+
+man()
+{
     MANWIDTH="$((${COLUMNS:-100} > 100 ? 100 : COLUMNS))" command man "$@"
-)
+}
 
 alias dl="aria2c --dir=${HOME}/Downloads/"
 
@@ -70,20 +98,19 @@ alias 7zcomp="
 alias yt2mp3="
     youtube-dl  --output ${HOME}/Downloads/ \
                 -x \
-                --audio-format \
+                --audio-format mp3\
                 --audio-quality 0 \
                 -o '%(playlist_index)s %(title)s.%(ext)s' \
                 -v"
 
 case "${distro}" in
     "MacOS"|"FreeBSD")
-        : "-G"
+        color_flag="-G"
     ;;
     *)
-        : "--color"
+        color_flag="--color"
     ;;
 esac
-color_flag="${_}"
 
 alias ls="ls ${color_flag}"
 alias ll="ls ${color_flag} -l"
@@ -102,9 +129,11 @@ case "${distro}" in
         alias cout="brew cask outdated"
         alias cleanup="brew cleanup && brew cask cleanup"
     ;;
+
     "Ubuntu"*|"Debian"*)
         alias update="sudo apt update && sudo apt upgrade"
     ;;
+
     "Antergos"*|"Arch"*)
         if type -p yay > /dev/null; then
             alias update="yay"
@@ -112,23 +141,30 @@ case "${distro}" in
             alias update="sudo pacman -Syu"
         fi
     ;;
+
     "Fedora"|"CentOS"*)
         if type -p dnf > /dev/null; then
             alias update="sudo dnf update"
-        else
+        elif type -p yum > /dev/null; then
             alias update="sudo yum update"
+        else
+            printf "%s\\n" "${fb[1]}Error:${reset} Cannot find dnf or yum, 'update' alias not set" >&2
         fi
     ;;
+
     "VoidLinux")
         alias update="sudo xbps-install -Su"
     ;;
+
     "FreeBSD")
         alias update="sudo pkg update && sudo pkg upgrade"
     ;;
+
     "Windows")
         alias update="choco upgrade all"
     ;;
+
     "")
-        printf "%s\\n" "${fb[1]}Error:${reset} Cannot detect distro, 'update' alias not set"
+        printf "%s\\n" "${fb[1]}Error:${reset} Cannot detect distro, 'update' alias not set" >&2
     ;;
 esac

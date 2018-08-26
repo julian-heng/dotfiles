@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-function format
+format()
 (
     while (($# > 0)); do
         word=""

@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 
-function trim
-(
-    set -f
-    set -- $*
-    printf "%s" "${*//\"}"
-    set +f
-)
+trim()
+{
+    [[ "$*" ]] && {
+        set -f
+        set -- $*
+        printf "%s" "${*//\"}"
+        set +f
+    }
+}
 
-function notify
-(
+notify()
+{
     title="${title_parts[*]}"
     subtitle="${subtitle_parts[*]}"
     message="${message_parts[*]}"
@@ -49,10 +51,10 @@ function notify
         fi
         notify-send --icon=dialog-information "${title}" "${body}"
     fi
-)
+}
 
-function get_search
-(
+get_search()
+{
     search="$1"
     match="false"
 
@@ -84,17 +86,17 @@ function get_search
     else
         return 1
     fi
-)
+}
 
-function get_root
-(
+get_root()
+{
     root="$(awk -F',|:' '/"\/"\}/ { printf "%s", $2}' \
         <(printf "%s\\n" "${lsblk_out[@]}"))"
     root="$(trim "${root}")"
     printf "%s" "${root}"
-)
+}
 
-function get_disk_info
+get_disk_info()
 {
     lsblk_script='
         $0 ~ disk {
@@ -147,8 +149,8 @@ function get_disk_info
     disk_mount="$(trim "${disk_mount}")"
 }
 
-function print_usage
-(
+print_usage()
+{
     printf "%s\\n" "
 Usage: $0 --option --option \"value\"
 
@@ -160,12 +162,14 @@ Usage: $0 --option --option \"value\"
     [-m|--mount]            Show information for a mounted disk
     [-h|--help]             Show this message
 
+    Note: Does not work with lvm containers.
+
     If notify-send is not installed, then the script will
     print to standard output.
 "
-)
+}
 
-function get_args
+get_args()
 {
     while (($# > 0)); do
         case "$1" in
@@ -181,8 +185,8 @@ function get_args
         stdout="true"
 }
 
-function main
-(
+main()
+{
     lsblk_flags=(
         "--output"
         "KNAME,LABEL,PARTLABEL,FSTYPE,MOUNTPOINT"
@@ -227,7 +231,7 @@ function main
         message_parts+=("|" "${disk_part}")
 
     notify
-)
+}
 
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && \
     main "$@"
