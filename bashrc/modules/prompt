@@ -144,7 +144,10 @@ prompter()
 
     local c1
     local c2
-    local time
+    local userhost
+    local head
+    local dir
+    local git
     local -a prompt_line
 
     unset prompt_line
