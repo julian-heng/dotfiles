@@ -161,7 +161,7 @@ prompter()
     fi
 
     ((exit != 0)) && \
-        head="[${fb[1]}${exit}${reset}]${head}"
+        head="[${exit}]${head}"
 
     userhost="${c1}\\u${reset}@${c1}\\h${reset}"
     dir="${c2}$(dir_prompt)${reset}"
