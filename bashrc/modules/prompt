@@ -144,7 +144,10 @@ prompter()
 
     local c1
     local c2
-    local time
+    local userhost
+    local head
+    local dir
+    local git
     local -a prompt_line
 
     unset prompt_line
@@ -163,7 +166,7 @@ prompter()
     ((exit != 0)) && \
         head="[${exit}]${head}"
 
-    userhost="${c1}\\u${reset}@${c1}\\h${reset}"
+    userhost="${c1}${USER:-\\u}${reset}@${c1}${HOSTNAME:-\\w}${reset}"
     dir="${c2}$(dir_prompt)${reset}"
     git="$(_git_prompt)"
 
