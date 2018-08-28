@@ -56,7 +56,7 @@ get_bat_info()
         }
     done
 
-    if [[ ! -f "${bat_dir}/uevent" || ! -f "${bat_dir}/current_now" ]]; then
+    if [[ ! -f "${bat_dir}/uevent" ]]; then
         exit 1
     else
         bat_file="${bat_dir}/uevent"
@@ -64,30 +64,31 @@ get_bat_info()
 
     awk_script='
         /POWER_SUPPLY_STATUS/ { state = $2 }
-        /POWER_SUPPLY_CHARGE_NOW/ { charge_now = $2 }
-        /POWER_SUPPLY_CHARGE_FULL/ { charge_full = $2}
-        /POWER_SUPPLY_CHARGE_FULL_DESIGN/ { charge_design = $2 }
+        /POWER_SUPPLY_(CHARGE|ENERGY)_NOW/ { charge_now = $2 }
+        /POWER_SUPPLY_(CHARGE|ENERGY)_FULL/ { charge_full = $2}
+        /POWER_SUPPLY_(CHARGE|ENERGY)_FULL_DESIGN/ { charge_design = $2 }
         /POWER_SUPPLY_CURRENT_NOW/ { current_now = $2 }
         /POWER_SUPPLY_TEMP/ { temp = $2 }
         /POWER_SUPPLY_CYCLE_COUNT/ { cycles = $2 }
         END {
             percent = (charge_now / charge_full) * 100
 
-            if (current_now != 0)
+            if (current_now == "")
+                time = -1
+            else if (current_now != 0)
             {
                 if (state == "Charging")
                     time = (charge_full - charge_now) / current_now
                 else
                     time = charge_now / current_now
+                time *= 3600
+                time -= time % 1
             }
-            time *= 3600
-            time -= time % 1
 
             temp /= 10
-
             condition = (charge_full / charge_design) * 100
 
-            printf "%s %0.2f %s %0.2f %d %0.2f",
+            printf "%s %0.2f %s %d %d %0.2f",
                 state, percent, time, temp, cycles, condition
         }'
 
@@ -99,19 +100,23 @@ get_bat_info()
             bat_condition \
             < <(awk -F"=" "${awk_script}" "${bat_file}")
 
-    hours="$((bat_time / 60 / 60 % 24))"
-    mins="$((bat_time / 60 % 60))"
-    secs="$(((bat_time % 60) % 60))"
+    if ((bat_time != -1)); then
+        hours="$((bat_time / 60 / 60 % 24))"
+        mins="$((bat_time / 60 % 60))"
+        secs="$(((bat_time % 60) % 60))"
 
-    hours+="h "
-    mins+="m "
-    secs+="s"
+        hours+="h "
+        mins+="m "
+        secs+="s"
 
-    ((${hours/h*} == 0)) && unset hours
-    ((${mins/m*} == 0)) && unset mins
-    ((${secs/s} == 0)) && unset secs
+        ((${hours/h*} == 0)) && unset hours
+        ((${mins/m*} == 0)) && unset mins
+        ((${secs/s} == 0)) && unset secs
 
-    bat_time="${hours}${mins}${secs}"
+        bat_time="${hours}${mins}${secs}"
+    else
+        bat_time="Unknown"
+    fi
 }
 
 print_usage()
