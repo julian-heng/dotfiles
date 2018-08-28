@@ -76,6 +76,11 @@ man()
     MANWIDTH="$((${COLUMNS:-100} > 100 ? 100 : COLUMNS))" command man "$@"
 }
 
+cb()
+{
+    cd "$@" "${OLDPWD}"
+}
+
 alias dl="aria2c --dir=${HOME}/Downloads/"
 
 alias gp="git pull"
