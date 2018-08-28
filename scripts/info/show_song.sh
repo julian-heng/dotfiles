@@ -48,7 +48,12 @@ notify()
 check_app_state()
 {
     if pgrep -x cmus > /dev/null; then
-        awk '/status/ { printf "%s", $2 }' <(cmus-remote -Q)
+        while read -r a b; do
+            [[ "$a" =~ ^status ]] && {
+                printf "%s" "$b"
+                break
+            }
+        done < <(cmus-remote -Q)
     else
         printf "%s" "none"
     fi
