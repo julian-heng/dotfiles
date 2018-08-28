@@ -99,7 +99,7 @@ get_cpu()
 
     if [[ "${speed}" ]]; then
         cpu="${cpu//@*}"
-        cpu="${cpu}(${cores}) @ ${speed}GHz"
+        cpu="${cpu} (${cores}) @ ${speed}GHz"
     else
         cpu="${cpu//@/(${cores}) @}"
     fi
