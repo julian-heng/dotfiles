@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 
+trim()
+{
+    [[ "$*" ]] && {
+        set -f
+        set -- $*
+        printf "%s" "$*"
+        set +f
+    }
+}
+
 notify()
 {
     title="${title_parts[*]}"
@@ -176,7 +186,7 @@ get_bat_info()
         ((${mins/m*} == 0)) && unset mins
         ((${secs/s} == 0)) && unset secs
 
-        bat_time="${hours}${mins}${secs}"
+        bat_time="$(trim "${hours}${mins}${secs}")"
     else
         bat_time="Unknown"
     fi
