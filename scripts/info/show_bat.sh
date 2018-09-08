@@ -60,12 +60,6 @@ get_bat_info()
         }
     done
 
-    #if [[ ! -f "${bat_dir}/uevent" ]]; then
-    #    exit 1
-    #else
-    #    bat_file="${bat_dir}/uevent"
-    #fi
-
     if [[ -f "${bat_dir}/status" ]]; then
         bat_status="$(< "${bat_dir}/status")"
     elif [[ -f "${bat_dir}/state" ]]; then
