@@ -47,35 +47,98 @@ notify()
 
 get_bat_info()
 {
-    bat_dir="/sys/class/power_supply"
+    if [[ -d "/sys/devices/platform/smapi" ]]; then
+        bat_dir="/sys/devices/platform/smapi"
+    else
+        bat_dir="/sys/class/power_supply"
+    fi
 
     for file in "${bat_dir}"/*; do
-        [[ "${file##${bat_dir}/}" =~ ^'BAT' && "$(< "${file}/type")" == "Battery" ]] && {
+        [[ "${file##${bat_dir}/}" =~ ^'BAT' ]] && {
             bat_dir="${file}"
             break
         }
     done
 
-    if [[ ! -f "${bat_dir}/uevent" ]]; then
-        exit 1
+    #if [[ ! -f "${bat_dir}/uevent" ]]; then
+    #    exit 1
+    #else
+    #    bat_file="${bat_dir}/uevent"
+    #fi
+
+    if [[ -f "${bat_dir}/status" ]]; then
+        bat_status="$(< "${bat_dir}/status")"
+    elif [[ -f "${bat_dir}/state" ]]; then
+        bat_status="$(< "${bat_dir}/state")"
     else
-        bat_file="${bat_dir}/uevent"
+        exit 1
+    fi
+
+    if [[ -f "${bat_dir}/charge_full" ]]; then
+        bat_charge_full="$(< "${bat_dir}/charge_full")"
+    elif [[ -f "${bat_dir}/energy_full" ]]; then
+        bat_charge_full="$(< "${bat_dir}/energy_full")"
+    elif [[ -f "${bat_dir}/last_full_capacity" ]]; then
+        bat_charge_full="$(($(< "${bat_dir}/last_full_capacity") * 100))"
+    else
+        exit 1
+    fi
+
+    if [[ -f "${bat_dir}/charge_now" ]]; then
+        bat_charge_now="$(< "${bat_dir}/charge_now")"
+    elif [[ -f "${bat_dir}/energy_now" ]]; then
+        bat_charge_now="$(< "${bat_dir}/energy_now")"
+    elif [[ -f "${bat_dir}/remaining_capacity" ]]; then
+        bat_charge_now="$(($(< "${bat_dir}/remaining_capacity") * 100))"
+        [[ "${bat_status}" == "Charging" ]] && \
+            bat_charge_now="$((bat_charge_full - bat_charge_now))"
+    else
+        exit 1
+    fi
+
+    if [[ -f "${bat_dir}/charge_full_design" ]]; then
+        bat_charge_full_design="$(< "${bat_dir}/charge_full_design")"
+    elif [[ -f "${bat_dir}/energy_full_design" ]]; then
+        bat_charge_full_design="$(< "${bat_dir}/energy_full_design")"
+    elif [[ -f "${bat_dir}/design_capacity" ]]; then
+        bat_charge_full_design="$(($(< "${bat_dir}/design_capacity") * 100))"
+    else
+        exit 1
+    fi
+
+    if [[ -f "${bat_dir}/current_now" ]]; then
+        if [[ "${bat_dir}" =~ 'smapi' ]]; then
+            bat_current_now="$(($(< "${bat_dir}/current_now") * 1000))"
+            [[ "${bat_current_now}" =~ ^'-' ]] && \
+                bat_current_now="$((-bat_current_now))"
+        else
+            bat_current_now="$(< "${bat_dir}/current_now")"
+        fi
+    else
+        exit 1
+    fi
+
+    if [[ -f "${bat_dir}/temp" ]]; then
+        bat_temp="$(< "${bat_dir}/temp")"
+    elif [[ -f "${bat_dir}/temperature" ]]; then
+        bat_temp="$(($(< "${bat_dir}/temperature") / 100))"
+    else
+        exit 1
+    fi
+
+    if [[ -f "${bat_dir}/cycle_count" ]]; then
+        bat_cycles="$(< "${bat_dir}/cycle_count")"
+    else
+        exit 1
     fi
 
     awk_script='
-        /POWER_SUPPLY_STATUS/ { state = $2 }
-        /POWER_SUPPLY_(CHARGE|ENERGY)_NOW/ { charge_now = $2 }
-        /POWER_SUPPLY_(CHARGE|ENERGY)_FULL/ { charge_full = $2}
-        /POWER_SUPPLY_(CHARGE|ENERGY)_FULL_DESIGN/ { charge_design = $2 }
-        /POWER_SUPPLY_CURRENT_NOW/ { current_now = $2 }
-        /POWER_SUPPLY_TEMP/ { temp = $2 }
-        /POWER_SUPPLY_CYCLE_COUNT/ { cycles = $2 }
-        END {
+        BEGIN {
             percent = (charge_now / charge_full) * 100
 
-            if (current_now == "")
+            if (current_now == "" || current_now == 0)
                 time = -1
-            else if (current_now != 0)
+            else
             {
                 if (state == "Charging")
                     time = (charge_full - charge_now) / current_now
@@ -88,17 +151,23 @@ get_bat_info()
             temp /= 10
             condition = (charge_full / charge_design) * 100
 
-            printf "%s %0.2f %s %d %d %0.2f",
-                state, percent, time, temp, cycles, condition
+            printf "%0.2f %d %d %0.2f",
+                percent, time, temp, condition
         }'
 
-    read -r bat_state \
-            bat_percent \
+    bat_stats="$(awk -v state="${bat_status^}" \
+                     -v current_now="${bat_current_now}" \
+                     -v charge_now="${bat_charge_now}" \
+                     -v charge_full="${bat_charge_full}" \
+                     -v charge_design="${bat_charge_full_design}" \
+                     -v temp="${bat_temp}" \
+                     "${awk_script}")"
+
+    read -r bat_percent \
             bat_time \
             bat_temp \
-            bat_cycles \
             bat_condition \
-            < <(awk -F"=" "${awk_script}" "${bat_file}")
+            <<< "${bat_stats}"
 
     if ((bat_time != -1)); then
         hours="$((bat_time / 60 / 60 % 24))"
@@ -157,7 +226,7 @@ main()
     [[ "${bat_percent}" ]] && \
         title_parts+=("(${bat_percent}%)")
 
-    [[ "${bat_state}" != "Full" &&  "${bat_time}" ]] && \
+    [[ ! "${bat_status}" =~ (Full|idle) && "${bat_time}" ]] && \
         subtitle_parts+=("${bat_time}")
 
     [[ "${bat_condition}" ]] && \
@@ -167,10 +236,10 @@ main()
         subtitle_parts+=("|" "${bat_temp}°C")
 
     [[ "${bat_cycles}" ]] && \
-        subtitle_parts+=("|" "${bat_cycles} cycles")
+        subtitle_parts+=("|" "${bat_cycles} Cycles")
 
-    [[ "${bat_state}" ]] && \
-        message_parts+=("${bat_state}")
+    [[ "${bat_status}" ]] && \
+        message_parts+=("${bat_status^}")
 
     notify
 }
