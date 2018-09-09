@@ -181,4 +181,4 @@ prompter()
     unset dir_prompt
 }
 
-PROMPT_COMMAND=prompter
+PROMPT_COMMAND="prompter; history -a"
