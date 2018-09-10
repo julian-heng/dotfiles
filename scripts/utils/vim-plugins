@@ -48,15 +48,9 @@ get_plugin_manager()
         line="${vimrc_contents[${count}]}"
         [[ ! "${line}" =~ ^\" ]] && \
             case "${vimrc_contents[${count}]}" in
-                *"pathogen#infect"*)
-                    plugin="pathogen"
-                ;;
-                *"plug#begin"*)
-                    plugin="plug"
-                ;;
-                *"vundle#begin"*)
-                    plugin="vundle"
-                ;;
+                *"pathogen#infect"*) plugin="pathogen" ;;
+                *"plug#begin"*) plugin="plug" ;;
+                *"vundle#begin"*) plugin="vundle" ;;
             esac
     done
 }
@@ -69,28 +63,30 @@ get_plugins()
     case "${plugin}" in
         "pathogen")
             count="0"
+
             while [[ ! "${pathogen_dir}" ]] && ((++count < ${#vimrc_contents[@]})); do
                 line="${vimrc_contents[${count}]}"
-                [[ ! "${line}" =~ ^\" ]] && {
-                    [[ "${line}" =~ pathogen ]] && [[ "${line}" =~ ^runtime ]] && {
-                        pathogen_dir="${line//runtime }"
-                        pathogen_dir="${vimrc_file%/*}/${pathogen_dir%%/*}"
-                    }
+                [[ "${line}" =~ ^runtime && "${line}" =~ pathogen ]] && {
+                    pathogen_dir="${line//runtime }"
+                    pathogen_dir="${vimrc_file%/*}/${pathogen_dir%%/*}"
                 }
             done
-            [[ -d "${pathogen_dir}" ]] && {
+
+            [[ -d "${pathogen_dir}" ]] && \
                 for plugin_path in "${pathogen_dir}"/*; do
                     plugin_name="${plugin_path##${pathogen_dir}/}"
+                    plugin_name="${plugin_name/.vim}"
                     plugin_author="$(get_repo_author "${plugin_path}")"
-                    [[ "${plugin_name}" && "${plugin_author}" ]] && \
-                        plugins+=("${plugin_name},${plugin_author}")
+                    [[ "${plugin_name}" ]] && \
+                        plugins+=("${plugin_name},${plugin_author:-Unknown}")
                 done
-            }
         ;;
+
         "plug")
             count="0"
             unset start
             unset end
+
             while [[ ! "${start}" || ! "${end}" ]] && ((++count < ${#vimrc_contents[@]})); do
                 line="${vimrc_contents[${count}]}"
                 [[ ! "${line}" =~ ^\" ]] && \
@@ -102,7 +98,7 @@ get_plugins()
 
             diff="$((end - start))"
             for line in "${vimrc_contents[@]:${start}:${diff}}"; do
-                [[ "${line}" =~ ^Plug ]] && {
+                [[ "${line}" =~ ^Plug ]] && \
                     if [[ "${line}" == *"|"* ]]; then
                         IFS=$'\n' read -d "" -ra multi_plug <<< "${line//"|"/$'\n'}"
                         for plug in "${multi_plug[@]}"; do
@@ -111,7 +107,6 @@ get_plugins()
                     else
                         plugins+=("$(process_plug "${line}")")
                     fi
-                }
             done
         ;;
     esac
@@ -147,8 +142,9 @@ process_plug()
         plugin_name="${plugin}"
         plugin_author="Unmanaged"
     }
-    [[ "${plugin_name}" && "${plugin_author}" ]] && \
-        printf "%s" "${plugin_name},${plugin_author}"
+
+    [[ "${plugin_name}" ]] && \
+        printf "%s" "${plugin_name},${plugin_author:-Unknown}"
 }
 
 print_plugins()
@@ -173,14 +169,11 @@ print_plugins()
     done
 
     for ((i = 0; i < ${#plugins[@]}; i++)); do
-        out+=("$(printf "%-${padding}s %s %s" "${name_arr[$i]}" "|" "${author_arr[$i]}")")
+        printf -v "out[$i]" "%-${padding}s %s %s" "${name_arr[$i]}" "|" "${author_arr[$i]}"
     done
 
     eval printf -v line "%0.s=" "{1..${max_line}}"
-
-    printf "%s\\n" "${line}"
-    printf "%s\\n" "${out[0]}"
-    printf "%s\\n" "${line}"
+    printf "%s\\n" "${line}" "${out[0]}" "${line}"
     printf "%s\\n" "${out[@]:1}"
 }
 
