@@ -150,13 +150,14 @@ get_bat_info()
                     time = charge_now / current_now
                 time *= 3600
                 time -= time % 1
+                current_now /= 1000
             }
 
             temp /= 10
             condition = (charge_full / charge_design) * 100
 
-            printf "%0.2f %d %d %0.2f",
-                percent, time, temp, condition
+            printf "%0.2f %d %d %0.2f %0.0f",
+                percent, time, temp, condition, current_now
         }'
 
     bat_stats="$(awk -v state="${bat_status^}" \
@@ -171,6 +172,7 @@ get_bat_info()
             bat_time \
             bat_temp \
             bat_condition \
+            bat_current \
             <<< "${bat_stats}"
 
     if ((bat_time != -1)); then
@@ -244,6 +246,9 @@ main()
 
     [[ "${bat_status}" ]] && \
         message_parts+=("${bat_status^}")
+
+    [[ "${bat_current}" ]] && \
+        message_parts+=("|" "${bat_current} mAh")
 
     notify
 }
