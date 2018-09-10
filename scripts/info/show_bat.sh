@@ -122,6 +122,14 @@ get_bat_info()
         exit 1
     fi
 
+    if [[ -f "${bat_dir}/voltage_now" ]]; then
+        bat_voltage_now="$(< "${bat_dir}/voltage_now")"
+    elif [[ -f "${bat_dir}/voltage" ]]; then
+        bat_voltage_now="$(($(< "${bat_dir}/voltage") * 100))"
+    else
+        exit 1
+    fi
+
     if [[ -f "${bat_dir}/temp" ]]; then
         bat_temp="$(< "${bat_dir}/temp")"
     elif [[ -f "${bat_dir}/temperature" ]]; then
@@ -141,7 +149,10 @@ get_bat_info()
             percent = (charge_now / charge_full) * 100
 
             if (current_now == "" || current_now == 0)
+            {
                 time = -1
+                power = -1
+            }
             else
             {
                 if (state == "Charging")
@@ -150,18 +161,21 @@ get_bat_info()
                     time = charge_now / current_now
                 time *= 3600
                 time -= time % 1
+
+                power = (current_now * voltage_now) / 10 ^ 12
                 current_now /= 1000
             }
 
             temp /= 10
             condition = (charge_full / charge_design) * 100
 
-            printf "%0.2f %d %d %0.2f %0.0f",
-                percent, time, temp, condition, current_now
+            printf "%0.2f %d %d %0.2f %0.0f %0.2f",
+                percent, time, temp, condition, current_now, power
         }'
 
     bat_stats="$(awk -v state="${bat_status^}" \
                      -v current_now="${bat_current_now}" \
+                     -v voltage_now="${bat_voltage_now}" \
                      -v charge_now="${bat_charge_now}" \
                      -v charge_full="${bat_charge_full}" \
                      -v charge_design="${bat_charge_full_design}" \
@@ -173,6 +187,7 @@ get_bat_info()
             bat_temp \
             bat_condition \
             bat_current \
+            bat_power \
             <<< "${bat_stats}"
 
     if ((bat_time != -1)); then
@@ -249,6 +264,9 @@ main()
 
     [[ "${bat_current}" ]] && \
         message_parts+=("|" "${bat_current} mAh")
+
+    [[ "${bat_power}" ]] && \
+        message_parts+=("|" "${bat_power} Watts")
 
     notify
 }
