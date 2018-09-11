@@ -31,3 +31,6 @@
 [submodule "vimrc/bundle/tabular"]
 	path = vimrc/bundle/tabular
 	url = https://github.com/godlygeek/tabular.git
+[submodule "vimrc/bundle/traces.vim"]
+	path = vimrc/bundle/traces.vim
+	url = https://github.com/markonm/traces.vim.git
