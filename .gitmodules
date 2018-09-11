@@ -28,3 +28,6 @@
 [submodule "vimrc/bundle/vim-repeat"]
 	path = vimrc/bundle/vim-repeat
 	url = https://github.com/tpope/vim-repeat
+[submodule "vimrc/bundle/tabular"]
+	path = vimrc/bundle/tabular
+	url = https://github.com/godlygeek/tabular.git
