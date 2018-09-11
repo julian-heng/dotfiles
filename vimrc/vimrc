@@ -46,6 +46,23 @@ noremap ; l
 noremap l j
 noremap j h
 
+" Disable arrows
+nnoremap <Left> :echo "Nope."<CR>
+vnoremap <Left> :<C-u>echo "Nope."<CR>
+inoremap <Left> <C-o>:echo "Nope."<CR>
+
+nnoremap <Right> :echo "Nope."<CR>
+vnoremap <Right> :<C-u>echo "Nope."<CR>
+inoremap <Right> <C-o>:echo "Nope."<CR>
+
+nnoremap <Up> :echo "Nope."<CR>
+vnoremap <Up> :<C-u>echo "Nope."<CR>
+inoremap <Up> <C-o>:echo "Nope."<CR>
+
+nnoremap <Down> :echo "Nope."<CR>
+vnoremap <Down> :<C-u>echo "Nope."<CR>
+inoremap <Down> <C-o>:echo "Nope."<CR>
+
 set pastetoggle=<F3>
 
 " Lightline status line
