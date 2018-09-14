@@ -36,7 +36,8 @@ set list
 set listchars=tab:▸\ ,eol:¬,trail:˺,nbsp:█
 
 " Remap semicolon to colon
-nnoremap ; :
+nnoremap : q:
+nnoremap ; q:
 
 " Redefine navigation with ctrl key in certain modes
 nnoremap <C-h> <Left>
