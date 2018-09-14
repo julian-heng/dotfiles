@@ -36,8 +36,7 @@ set list
 set listchars=tab:▸\ ,eol:¬,trail:˺,nbsp:█
 
 " Remap semicolon to colon
-nnoremap : q:
-nnoremap ; q:
+nnoremap ; :
 
 " Redefine navigation with ctrl key in certain modes
 nnoremap <C-h> <Left>
@@ -48,12 +47,10 @@ cnoremap <C-h> <Left>
 nnoremap <C-j> <Down>
 inoremap <C-j> <Down>
 vnoremap <C-j> <Down>
-cnoremap <C-j> <Down>
 
 nnoremap <C-k> <Up>
 inoremap <C-k> <Up>
 vnoremap <C-k> <Up>
-cnoremap <C-k> <Up>
 
 nnoremap <C-l> <Right>
 inoremap <C-l> <Right>
@@ -66,20 +63,18 @@ vnoremap <Left> :<C-u>echo "Nope."<CR>
 inoremap <Left> <C-o>:echo "Nope."<CR>
 cnoremap <Left> <Nop>
 
-nnoremap <Right> :echo "Nope."<CR>
-vnoremap <Right> :<C-u>echo "Nope."<CR>
-inoremap <Right> <C-o>:echo "Nope."<CR>
-cnoremap <Right> <Nop>
+nnoremap <Down> :echo "Nope."<CR>
+vnoremap <Down> :<C-u>echo "Nope."<CR>
+inoremap <Down> <C-o>:echo "Nope."<CR>
 
 nnoremap <Up> :echo "Nope."<CR>
 vnoremap <Up> :<C-u>echo "Nope."<CR>
 inoremap <Up> <C-o>:echo "Nope."<CR>
-cnoremap <Up> <Nop>
 
-nnoremap <Down> :echo "Nope."<CR>
-vnoremap <Down> :<C-u>echo "Nope."<CR>
-inoremap <Down> <C-o>:echo "Nope."<CR>
-cnoremap <Down> <Nop>
+nnoremap <Right> :echo "Nope."<CR>
+vnoremap <Right> :<C-u>echo "Nope."<CR>
+inoremap <Right> <C-o>:echo "Nope."<CR>
+cnoremap <Right> <Nop>
 
 set pastetoggle=<F3>
 
