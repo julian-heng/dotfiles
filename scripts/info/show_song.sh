@@ -72,7 +72,7 @@ get_song_info()
 print_usage()
 {
     printf "%s\\n" "
-Usage: $0 --option --option \"value\"
+    Usage: ${0##*/} --option --option \"value\"
 
     Options:
 
