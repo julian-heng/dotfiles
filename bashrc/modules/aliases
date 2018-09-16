@@ -117,6 +117,7 @@ case "${distro}" in
     ;;
 esac
 
+color_flag+=" --classify"
 alias ls="ls ${color_flag}"
 alias ll="ls ${color_flag} -l"
 alias la="ls ${color_flag} -a"
