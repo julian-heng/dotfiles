@@ -21,7 +21,7 @@ prompter()
     __get_git_branch()
     {
         case "$1" in
-            *"No commits"*)
+            *"No commits"*|*"Initial commit"*)
                 branch="NA"
             ;;
 
