@@ -77,13 +77,13 @@ inoremap <Right> <C-o>:echo "Nope."<CR>
 cnoremap <Right> <Nop>
 
 " Set scoll
-nnoremap <C-d> <PageDown>
-vnoremap <C-d> <PageDown>
-inoremap <C-d> <PageDown>
+nnoremap <C-d> <PageUp>
+vnoremap <C-d> <PageUp>
+inoremap <C-d> <PageUp>
 
-nnoremap <C-f> <PageUp>
-vnoremap <C-f> <PageUp>
-inoremap <C-f> <PageUp>
+nnoremap <C-f> <PageDown>
+vnoremap <C-f> <PageDown>
+inoremap <C-f> <PageDown>
 
 set pastetoggle=<F3>
 
