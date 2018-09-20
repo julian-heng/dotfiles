@@ -76,6 +76,15 @@ vnoremap <Right> :<C-u>echo "Nope."<CR>
 inoremap <Right> <C-o>:echo "Nope."<CR>
 cnoremap <Right> <Nop>
 
+" Set scoll
+nnoremap <C-d> <PageDown>
+vnoremap <C-d> <PageDown>
+inoremap <C-d> <PageDown>
+
+nnoremap <C-f> <PageUp>
+vnoremap <C-f> <PageUp>
+inoremap <C-f> <PageUp>
+
 set pastetoggle=<F3>
 
 " Lightline status line
