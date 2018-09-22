@@ -114,13 +114,14 @@ case "${distro}" in
     ;;
     *)
         color_flag="--color"
+        ls_flag="--classify"
     ;;
 esac
 
-alias ls="ls ${color_flag}"
-alias ll="ls ${color_flag} -l"
-alias la="ls ${color_flag} -a"
-alias lal="ls ${color_flag} -al"
+alias ls="ls ${color_flag} ${ls_flag}"
+alias ll="ls ${color_flag} ${ls_flag} -l"
+alias la="ls ${color_flag} ${ls_flag} -a"
+alias lal="ls ${color_flag} ${ls_flag} -al"
 
 alias longfetch="neofetch -L; neofetch --off"
 
