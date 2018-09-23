@@ -1,0 +1,167 @@
+   #######################
+######## Environment ########
+   #######################
+
+SCRIPT_DIR := ${PWD}
+CONFIG_DIR := ${HOME}/.config
+BASHRC_DIR := $(SCRIPT_DIR)/bashrc
+COMPTON_DIR := $(SCRIPT_DIR)/compton
+MPV_DIR := $(SCRIPT_DIR)/mpv
+NEOFETCH_DIR := $(SCRIPT_DIR)/neofetch
+RANGER_DIR := $(SCRIPT_DIR)/ranger
+SKHD_DIR := $(SCRIPT_DIR)/skhd
+TMUX_DIR := $(SCRIPT_DIR)/tmux
+VIM_DIR := $(SCRIPT_DIR)/vimrc
+
+BASHRC_DEST := ${HOME}
+COMPTON_DEST := $(CONFIG_DIR)/compton.conf
+MPV_DEST := $(CONFIG_DIR)/mpv
+NEOFETCH_DEST := $(CONFIG_DIR)/neofetch
+RANGER_DEST := $(CONFIG_DIR)/ranger
+SKHD_DEST := ${HOME}/.skhdrc
+TMUX_DEST := ${HOME}/.tmux.conf
+VIM_DEST := ${HOME}/.vim
+
+   ###############
+######## Git ########
+   ###############
+
+.PHONY: submodule_init
+submodule_init:
+	@git submodule update --init --recursive
+
+.PHONY: submodule_update
+submodule_update:
+	@git submodule update --remote --recursive
+
+   ###################
+######## Profiles ########
+   ###################
+
+.PHONY: linux_headless
+linux_headless: bashrc_linux neofetch ranger tmux vim
+
+.PHONY: linux_lite
+linux_lite: bashrc_linux compton_noblur mpv neofetch ranger tmux vim
+
+.PHONY: linux
+linux: bashrc_linux compton_blur mpv neofetch ranger tmux vim
+
+.PHONY: mac
+mac: bashrc_macos mpv neofetch skhd ranger tmux vim
+
+.PHONY: windows
+windows: bashrc_common neofetch
+
+   ##################
+######## Bashrc ########
+   ##################
+
+.PHONY: bashrc_linux
+bashrc_linux: bashrc_common
+	@if [ -L $(BASHRC_DEST)/.inputrc ]; then \
+		rm -f $(BASHRC_DEST)/.inputrc; \
+	fi
+	@ln -svf $(BASHRC_DIR)/inputrc_linux $(BASHRC_DEST)/.inputrc
+
+.PHONY: bashrc_macos
+bashrc_macos: bashrc_common
+	@if [ -L $(BASHRC_DEST)/.inputrc ]; then \
+		rm -f $(BASHRC_DEST)/.inputrc; \
+	fi
+	@ln -svf $(BASHRC_DIR)/inputrc_macos $(BASHRC_DEST)/.inputrc
+
+.PHONY: bashrc_common
+bashrc_common:
+	@if [ -L $(BASHRC_DEST)/.bash_profile ]; then \
+		rm -f $(BASHRC_DEST)/.bash_profile; \
+	fi
+	@if [ -L $(BASHRC_DEST)/.bashrc ]; then \
+		rm -f $(BASHRC_DEST)/.bashrc; \
+	fi
+	@ln -svf $(BASHRC_DIR)/bash_profile $(BASHRC_DEST)/.bash_profile
+	@ln -svf $(BASHRC_DIR)/bashrc $(BASHRC_DEST)/.bashrc
+
+   ###################
+######## Compton ########
+   ###################
+
+.PHONY: compton_blur
+compton_blur:
+	@if [ -L $(COMPTON_DEST) ]; then \
+		rm -f $(COMPTON_DEST); \
+	fi
+	@ln -svf $(COMPTON_DIR)/blur.conf $(COMPTON_DEST)
+
+.PHONY: compton_noblur
+compton_noblur:
+	@if [ -L $(COMPTON_DEST) ]; then \
+		rm -f $(COMPTON_DEST); \
+	fi
+	@ln -svf $(COMPTON_DIR)/no-blur.conf $(COMPTON_DEST)
+
+   ###############
+######## Mpv ########
+   ###############
+
+.PHONY: mpv
+mpv:
+	@if [ -L $(MPV_DEST) ]; then \
+		rm -f $(MPV_DEST); \
+	fi
+	@ln -svf $(MPV_DIR) $(MPV_DEST)
+
+   ####################
+######## Neofetch ########
+   ####################
+
+.PHONY: neofetch
+neofetch:
+	@if [ -L $(NEOFETCH_DEST) ]; then \
+		rm -f $(NEOFETCH_DEST); \
+	fi
+	@ln -svf $(NEOFETCH_DIR) $(NEOFETCH_DEST)
+
+   ##################
+######## Ranger ########
+   ##################
+
+.PHONY: ranger
+ranger:
+	@if [ -L $(RANGER_DEST) ]; then \
+		rm -f $(RANGER_DEST); \
+	fi
+	@ln -svf $(RANGER_DIR) $(RANGER_DEST)
+
+   ################
+######## Skhd ########
+   ################
+
+.PHONY: skhd
+skhd:
+	@if [ -L $(SKHD_DEST) ]; then \
+		rm -f $(SKHD_DEST); \
+	fi
+	@ln -svf $(SKHD_DIR) $(SKHD_DEST)
+
+   ################
+######## Tmux ########
+   ################
+
+.PHONY: tmux
+tmux:
+	@if [ -L $(TMUX_DEST) ]; then \
+		rm -f $(TMUX_DEST); \
+	fi
+	@ln -svf $(TMUX_DIR) $(TMUX_DEST)
+
+   ###############
+######## Vim ########
+   ###############
+
+.PHONY: vim
+vim:
+	@if [ -L $(VIM_DEST) ]; then \
+		rm -f $(VIM_DEST); \
+	fi
+	@ln -svf $(VIM_DIR) $(VIM_DEST)
