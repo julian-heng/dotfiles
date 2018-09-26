@@ -2,6 +2,8 @@
 ######## Environment ########
    #######################
 
+MODE ?= install
+
 SCRIPT_DIR := ${PWD}
 CONFIG_DIR := ${HOME}/.config
 BASHRC_DIR := $(SCRIPT_DIR)/bashrc
@@ -62,14 +64,18 @@ bashrc_linux: bashrc_common
 	@if [ -L $(BASHRC_DEST)/.inputrc ]; then \
 		rm -f $(BASHRC_DEST)/.inputrc; \
 	fi
+ifeq ($(MODE), install)
 	@ln -svf $(BASHRC_DIR)/inputrc_linux $(BASHRC_DEST)/.inputrc
+endif
 
 .PHONY: bashrc_macos
 bashrc_macos: bashrc_common
 	@if [ -L $(BASHRC_DEST)/.inputrc ]; then \
 		rm -f $(BASHRC_DEST)/.inputrc; \
 	fi
+ifeq ($(MODE), install)
 	@ln -svf $(BASHRC_DIR)/inputrc_macos $(BASHRC_DEST)/.inputrc
+endif
 
 .PHONY: bashrc_common
 bashrc_common:
@@ -79,8 +85,10 @@ bashrc_common:
 	@if [ -L $(BASHRC_DEST)/.bashrc ]; then \
 		rm -f $(BASHRC_DEST)/.bashrc; \
 	fi
+ifeq ($(MODE), install)
 	@ln -svf $(BASHRC_DIR)/bash_profile $(BASHRC_DEST)/.bash_profile
 	@ln -svf $(BASHRC_DIR)/bashrc $(BASHRC_DEST)/.bashrc
+endif
 
    ###################
 ######## Compton ########
@@ -91,14 +99,18 @@ compton_blur:
 	@if [ -L $(COMPTON_DEST) ]; then \
 		rm -f $(COMPTON_DEST); \
 	fi
+ifeq ($(MODE), install)
 	@ln -svf $(COMPTON_DIR)/blur.conf $(COMPTON_DEST)
+endif
 
 .PHONY: compton_noblur
 compton_noblur:
 	@if [ -L $(COMPTON_DEST) ]; then \
 		rm -f $(COMPTON_DEST); \
 	fi
+ifeq ($(MODE), install)
 	@ln -svf $(COMPTON_DIR)/no-blur.conf $(COMPTON_DEST)
+endif
 
    ###############
 ######## Mpv ########
@@ -109,7 +121,9 @@ mpv:
 	@if [ -L $(MPV_DEST) ]; then \
 		rm -f $(MPV_DEST); \
 	fi
+ifeq ($(MODE), install)
 	@ln -svf $(MPV_DIR) $(MPV_DEST)
+endif
 
    ####################
 ######## Neofetch ########
@@ -120,7 +134,9 @@ neofetch:
 	@if [ -L $(NEOFETCH_DEST) ]; then \
 		rm -f $(NEOFETCH_DEST); \
 	fi
+ifeq ($(MODE), install)
 	@ln -svf $(NEOFETCH_DIR) $(NEOFETCH_DEST)
+endif
 
    ##################
 ######## Ranger ########
@@ -131,7 +147,9 @@ ranger:
 	@if [ -L $(RANGER_DEST) ]; then \
 		rm -f $(RANGER_DEST); \
 	fi
+ifeq ($(MODE), install)
 	@ln -svf $(RANGER_DIR) $(RANGER_DEST)
+endif
 
    ################
 ######## Skhd ########
@@ -142,7 +160,9 @@ skhd:
 	@if [ -L $(SKHD_DEST) ]; then \
 		rm -f $(SKHD_DEST); \
 	fi
+ifeq ($(MODE), install)
 	@ln -svf $(SKHD_DIR) $(SKHD_DEST)
+endif
 
    ################
 ######## Tmux ########
@@ -153,7 +173,9 @@ tmux:
 	@if [ -L $(TMUX_DEST) ]; then \
 		rm -f $(TMUX_DEST); \
 	fi
+ifeq ($(MODE), install)
 	@ln -svf $(TMUX_DIR) $(TMUX_DEST)
+endif
 
    ###############
 ######## Vim ########
@@ -164,4 +186,6 @@ vim:
 	@if [ -L $(VIM_DEST) ]; then \
 		rm -f $(VIM_DEST); \
 	fi
+ifeq ($(MODE), install)
 	@ln -svf $(VIM_DIR) $(VIM_DEST)
+endif
