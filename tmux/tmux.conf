@@ -1,1 +1,1 @@
-set -g default-terminal "screen-256color"
+set -g default-terminal "xterm-256color"
