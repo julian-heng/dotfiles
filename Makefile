@@ -12,7 +12,7 @@ MPV_DIR := $(SCRIPT_DIR)/mpv
 NEOFETCH_DIR := $(SCRIPT_DIR)/neofetch
 RANGER_DIR := $(SCRIPT_DIR)/ranger
 SKHD_DIR := $(SCRIPT_DIR)/skhd
-TMUX_DIR := $(SCRIPT_DIR)/tmux
+TMUX_DIR := $(SCRIPT_DIR)/tmux/tmux.conf
 VIM_DIR := $(SCRIPT_DIR)/vimrc
 
 BASHRC_DEST := ${HOME}
