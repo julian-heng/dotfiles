@@ -19,9 +19,6 @@
 [submodule "vimrc/bundle/vim-markdown-preview"]
 	path = vimrc/bundle/vim-markdown-preview
 	url = https://github.com/JamshedVesuna/vim-markdown-preview.git
-[submodule "vimrc/bundle/vim-startify"]
-	path = vimrc/bundle/vim-startify
-	url = https://github.com/mhinz/vim-startify
 [submodule "vimrc/bundle/vim-surround"]
 	path = vimrc/bundle/vim-surround
 	url = https://github.com/tpope/vim-surround
@@ -31,6 +28,3 @@
 [submodule "vimrc/bundle/tabular"]
 	path = vimrc/bundle/tabular
 	url = https://github.com/godlygeek/tabular.git
-[submodule "vimrc/bundle/traces.vim"]
-	path = vimrc/bundle/traces.vim
-	url = https://github.com/markonm/traces.vim.git
