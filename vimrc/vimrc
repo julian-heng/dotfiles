@@ -5,28 +5,38 @@ runtime bundle/vim-pathogen/autoload/pathogen.vim
 execute pathogen#infect()
 filetype plugin indent on
 
+" Vim Settings
 set nocompatible
 set backspace=2
-set number
 set hidden
 set history=100
 set smartindent
 set autoindent
-set hlsearch
-set showmatch
 set tabstop=4
 set shiftwidth=4
 set expandtab
-set laststatus=2
-set noshowmode
-"set cursorline
 set path+=**
-call matchadd('ColorColumn', '\%80v', 100)
 autocmd BufRead scp://* :set bt=acwrite
 
+" Aesthetics
+set number
+set laststatus=2
+set noshowmode
+call matchadd('ColorColumn', '\%80v', 100)
+
+if has('linebreak')
+  set breakindent
+  let &showbreak = '↳ '
+  set cpo+=n
+end
+
 highlight LineNr ctermfg=DarkGrey
-highlight CursorLine cterm=NONE
-highlight ColorColumn ctermbg=7
+highlight ColorColumn ctermbg=DarkGrey
+
+" Search
+set hlsearch
+set showmatch
+set incsearch
 
 syntax on
 
@@ -34,9 +44,6 @@ syntax on
 " https://github.com/Gozala/.vim/blob/master/.vimrc
 set list
 set listchars=tab:▸\ ,eol:¬,trail:˺,nbsp:█
-
-" Remap semicolon to colon
-nnoremap ; :
 
 " Redefine navigation with ctrl key in certain modes
 nnoremap <C-h> <Left>
@@ -85,6 +92,17 @@ nnoremap <C-f> <PageDown>
 vnoremap <C-f> <PageDown>
 inoremap <C-f> <PageDown>
 
+" Soft wrapping movements
+nnoremap j gj
+vnoremap j gj
+
+nnoremap k gk
+vnoremap k gk
+
+" Block indent with visual mode
+vnoremap > >gv
+vnoremap < <gv
+
 set pastetoggle=<F3>
 
 " Lightline status line
@@ -110,25 +128,3 @@ let NERDTreeWinSize = 36
 
 " vim-markdown-preview
 let vim_markdown_preview_github=1
-
-let g:startify_custom_header = [
-      \     '                    .                    ',
-      \     '    ##############..... ##############   ',
-      \     '    ##############......##############   ',
-      \     '      ##########..........##########     ',
-      \     '      ##########........##########       ',
-      \     '      ##########.......##########        ',
-      \     '      ##########.....##########..        ',
-      \     '      ##########....##########.....      ',
-      \     '    ..##########..##########.........    ',
-      \     '  ....##########.#########.............  ',
-      \     '    ..################JJJ............    ',
-      \     '      ################.............      ',
-      \     '      ##############.JJJ.JJJJJJJJJJ      ',
-      \     '      ############...JJ...JJ..JJ  JJ     ',
-      \     '      ##########.....JJ...JJ..JJ  JJ     ',
-      \     '      ########......JJJ..JJJ JJJ JJJ     ',
-      \     '      ######    .........                ',
-      \     '                  .....                  ',
-      \     '                    .                    ',
-      \ ]
