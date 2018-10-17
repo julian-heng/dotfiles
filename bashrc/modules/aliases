@@ -85,7 +85,7 @@ alias dl="aria2c --dir=${HOME}/Downloads/"
 
 alias gp="git pull"
 alias gcl="git clone"
-alias gstat="git status --branch --short"
+alias gstat="git status --branch"
 alias gdiff="git diff"
 
 alias py2="python2"
