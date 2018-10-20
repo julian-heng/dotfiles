@@ -15,6 +15,7 @@ set autoindent
 set tabstop=4
 set shiftwidth=4
 set expandtab
+set conceallevel=0
 set path+=**
 autocmd BufRead scp://* :set bt=acwrite
 
@@ -132,3 +133,6 @@ let NERDTreeWinSize = 36
 
 " vim-markdown-preview
 let vim_markdown_preview_github=1
+
+" indentLine
+let g:indentLine_setConceal = 0
