@@ -125,7 +125,7 @@ alias lal="ls ${color_flag} ${ls_flag} -al"
 
 alias longfetch="neofetch -L; neofetch --off"
 
-if [[ ! "${distro}" =~ 'MacOS|FreeBSD' ]]; then
+if [[ ! "${distro}" =~ MacOS|FreeBSD ]]; then
     alias open="xdg-open"
 fi
 
