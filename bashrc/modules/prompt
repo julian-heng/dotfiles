@@ -166,7 +166,10 @@ prompter()
     ((exit != 0)) && \
         head="[${exit}]${head}"
 
-    userhost="${c1}${USER:-\\u}${reset}@${c1}${HOSTNAME:-\\w}${reset}"
+    user="${USER:-\\u}"
+    host="${HOSTNAME:-\\w}"
+    host="${host%%.*}"
+    userhost="${c1}${user}${reset}@${c1}${host}${reset}"
     dir="${c2}$(dir_prompt)${reset}"
     git="$(_git_prompt)"
 
