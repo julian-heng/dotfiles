@@ -24,15 +24,35 @@ SKHD_DEST := ${HOME}/.skhdrc
 TMUX_DEST := ${HOME}/.tmux.conf
 VIM_DEST := ${HOME}/.vim
 
+$(shell mkdir -p $(CONFIG_DIR))
+
+   ####################
+######## Functions ########
+   ####################
+
+define link
+	@if [ "$(MODE)" = "install" ]; then \
+		$(call remove_link,$(2),); \
+		ln -svf $(1) $(2); \
+	elif [ "$(MODE)" = "uninstall" ]; then \
+		$(call remove_link,$(2),-v); \
+	fi
+endef
+
+
+define remove_link
+	if [ -L $(1) ]; then \
+		rm -f $(2) $(1); \
+	fi
+endef
+
    ###############
 ######## Git ########
    ###############
 
-.PHONY: submodule_init
 submodule_init:
 	@git submodule update --init --recursive
 
-.PHONY: submodule_update
 submodule_update:
 	@git submodule update --remote --recursive
 
@@ -40,152 +60,78 @@ submodule_update:
 ######## Profiles ########
    ###################
 
-.PHONY: linux_headless
 linux_headless: bashrc_linux neofetch ranger tmux vim
-
-.PHONY: linux_lite
 linux_lite: bashrc_linux compton_noblur mpv neofetch ranger tmux vim
-
-.PHONY: linux
 linux: bashrc_linux compton_blur mpv neofetch ranger tmux vim
-
-.PHONY: mac
 mac: bashrc_macos mpv neofetch skhd ranger tmux vim
-
-.PHONY: windows
 windows: bashrc_common neofetch
 
    ##################
 ######## Bashrc ########
    ##################
 
-.PHONY: bashrc_linux
 bashrc_linux: bashrc_common
-	@if [ -L $(BASHRC_DEST)/.inputrc ]; then \
-		rm -f $(BASHRC_DEST)/.inputrc; \
-	fi
-ifeq ($(MODE), install)
-	@ln -svf $(BASHRC_DIR)/inputrc_linux $(BASHRC_DEST)/.inputrc
-endif
+	$(call link,$(BASHRC_DIR)/inputrc_linux,$(BASHRC_DEST)/.inputrc)
 
-.PHONY: bashrc_macos
 bashrc_macos: bashrc_common
-	@if [ -L $(BASHRC_DEST)/.inputrc ]; then \
-		rm -f $(BASHRC_DEST)/.inputrc; \
-	fi
-ifeq ($(MODE), install)
-	@ln -svf $(BASHRC_DIR)/inputrc_macos $(BASHRC_DEST)/.inputrc
-endif
+	$(call link,$(BASHRC_DIR)/inputrc_macos,$(BASHRC_DEST)/.inputrc)
 
-.PHONY: bashrc_common
 bashrc_common:
-	@if [ -L $(BASHRC_DEST)/.bash_profile ]; then \
-		rm -f $(BASHRC_DEST)/.bash_profile; \
-	fi
-	@if [ -L $(BASHRC_DEST)/.bashrc ]; then \
-		rm -f $(BASHRC_DEST)/.bashrc; \
-	fi
-ifeq ($(MODE), install)
-	@ln -svf $(BASHRC_DIR)/bash_profile $(BASHRC_DEST)/.bash_profile
-	@ln -svf $(BASHRC_DIR)/bashrc $(BASHRC_DEST)/.bashrc
-endif
+	$(call link,$(BASHRC_DIR)/bash_profile,$(BASHRC_DEST)/.bash_profile)
+	$(call link,$(BASHRC_DIR)/bashrc,$(BASHRC_DEST)/.bashrc)
 
    ###################
 ######## Compton ########
    ###################
 
-.PHONY: compton_blur
 compton_blur:
-	@if [ -L $(COMPTON_DEST) ]; then \
-		rm -f $(COMPTON_DEST); \
-	fi
-ifeq ($(MODE), install)
-	@ln -svf $(COMPTON_DIR)/blur.conf $(COMPTON_DEST)
-endif
+	$(call link,$(COMPTON_DIR)/blur.conf,$(COMPTON_DEST))
 
-.PHONY: compton_noblur
 compton_noblur:
-	@if [ -L $(COMPTON_DEST) ]; then \
-		rm -f $(COMPTON_DEST); \
-	fi
-ifeq ($(MODE), install)
-	@ln -svf $(COMPTON_DIR)/no-blur.conf $(COMPTON_DEST)
-endif
+	$(call link,$(COMPTON_DIR)/no-blur.conf,$(COMPTON_DEST))
 
    ###############
 ######## Mpv ########
    ###############
 
-.PHONY: mpv
 mpv:
-	@if [ -L $(MPV_DEST) ]; then \
-		rm -f $(MPV_DEST); \
-	fi
-ifeq ($(MODE), install)
-	@ln -svf $(MPV_DIR) $(MPV_DEST)
-endif
+	$(call link,$(MPV_DIR),$(MPV_DEST))
 
    ####################
 ######## Neofetch ########
    ####################
 
-.PHONY: neofetch
 neofetch:
-	@if [ -L $(NEOFETCH_DEST) ]; then \
-		rm -f $(NEOFETCH_DEST); \
-	fi
-ifeq ($(MODE), install)
-	@ln -svf $(NEOFETCH_DIR) $(NEOFETCH_DEST)
-endif
+	$(call link,$(NEOFETCH_DIR),$(NEOFETCH_DEST))
 
    ##################
 ######## Ranger ########
    ##################
 
-.PHONY: ranger
 ranger:
-	@if [ -L $(RANGER_DEST) ]; then \
-		rm -f $(RANGER_DEST); \
-	fi
-ifeq ($(MODE), install)
-	@ln -svf $(RANGER_DIR) $(RANGER_DEST)
-endif
+	$(call link,$(RANGER_DIR),$(RANGER_DEST))
 
    ################
 ######## Skhd ########
    ################
 
-.PHONY: skhd
 skhd:
-	@if [ -L $(SKHD_DEST) ]; then \
-		rm -f $(SKHD_DEST); \
-	fi
-ifeq ($(MODE), install)
-	@ln -svf $(SKHD_DIR) $(SKHD_DEST)
-endif
+	$(call link,$(SKHD_DIR),$(SKHD_DEST))
 
    ################
 ######## Tmux ########
    ################
 
-.PHONY: tmux
 tmux:
-	@if [ -L $(TMUX_DEST) ]; then \
-		rm -f $(TMUX_DEST); \
-	fi
-ifeq ($(MODE), install)
-	@ln -svf $(TMUX_DIR) $(TMUX_DEST)
-endif
+	$(call link,$(TMUX_DIR),$(TMUX_DEST))
 
    ###############
 ######## Vim ########
    ###############
 
-.PHONY: vim
 vim:
-	@if [ -L $(VIM_DEST) ]; then \
-		rm -f $(VIM_DEST); \
-	fi
-ifeq ($(MODE), install)
-	@ln -svf $(VIM_DIR) $(VIM_DEST)
-endif
+	$(call link,$(VIM_DIR),$(VIM_DEST))
+
+.PHONY: submodule_init submodule_update linux_headless linux_lite linux mac \
+		windows bashrc_linux bashrc_macos bashrc_common compton_blur \
+		compton_noblur mpv neofetch ranger skhd tmux vim
