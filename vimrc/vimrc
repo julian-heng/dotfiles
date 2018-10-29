@@ -133,6 +133,3 @@ let NERDTreeWinSize = 36
 
 " vim-markdown-preview
 let vim_markdown_preview_github=1
-
-" indentLine
-let g:indentLine_setConceal = 0
