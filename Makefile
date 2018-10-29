@@ -55,6 +55,12 @@ mac: bashrc_macos mpv neofetch skhd ranger tmux vim
 .PHONY: windows
 windows: bashrc_common neofetch
 
+.PHONY: check_dir
+check_dir:
+	@if [ ! -e "$(CONFIG_DIR)" ]; then \
+		mkdir "$(CONFIG_DIR)"; \
+	fi
+
    ##################
 ######## Bashrc ########
    ##################
@@ -95,7 +101,7 @@ endif
    ###################
 
 .PHONY: compton_blur
-compton_blur:
+compton_blur: check_dir
 	@if [ -L $(COMPTON_DEST) ]; then \
 		rm -f $(COMPTON_DEST); \
 	fi
@@ -104,7 +110,7 @@ ifeq ($(MODE), install)
 endif
 
 .PHONY: compton_noblur
-compton_noblur:
+compton_noblur: check_dir
 	@if [ -L $(COMPTON_DEST) ]; then \
 		rm -f $(COMPTON_DEST); \
 	fi
@@ -117,7 +123,7 @@ endif
    ###############
 
 .PHONY: mpv
-mpv:
+mpv: check_dir
 	@if [ -L $(MPV_DEST) ]; then \
 		rm -f $(MPV_DEST); \
 	fi
@@ -130,7 +136,7 @@ endif
    ####################
 
 .PHONY: neofetch
-neofetch:
+neofetch: check_dir
 	@if [ -L $(NEOFETCH_DEST) ]; then \
 		rm -f $(NEOFETCH_DEST); \
 	fi
@@ -143,7 +149,7 @@ endif
    ##################
 
 .PHONY: ranger
-ranger:
+ranger: check_dir
 	@if [ -L $(RANGER_DEST) ]; then \
 		rm -f $(RANGER_DEST); \
 	fi
