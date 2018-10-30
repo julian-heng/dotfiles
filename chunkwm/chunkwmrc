@@ -3,7 +3,7 @@
 # ====== Variables =============================
 
 gaps_top="8"
-gaps_bottom="8"
+gaps_bottom="36"
 gaps_left="8"
 gaps_right="8"
 gaps_inner="8"
@@ -55,6 +55,7 @@ chunkc set focused_border_color          "0x90${focused_border_color}"
 chunkc set focused_border_width          5
 chunkc set focused_border_radius         0
 chunkc set focused_border_skip_floating  1
+chunkc set focused_border_skip_monocle   1
 
 
 # ====== Load Plugins =========================
