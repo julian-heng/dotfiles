@@ -68,6 +68,7 @@ chunkc core::load tiling.so
 chunkc tiling::rule --owner Finder --name Copy --state float &
 chunkc tiling::rule --owner Finder --name Move --state float &
 chunkc tiling::rule --owner Finder --name Info --state float &
+chunkc tiling::rule --owner Finder --name Connect --state float &
 chunkc tiling::rule --owner \"App Store\" --state float &
 chunkc tiling::rule --owner \"System Preferences\" --state float &
 chunkc tiling::rule --owner \"Activity Monitor\" --state float &
@@ -77,6 +78,4 @@ chunkc tiling::rule --owner \"Dictionary\" --state float &
 chunkc tiling::rule --owner \"mpv\" --state float &
 chunkc tiling::rule --owner \"The Unarchiver\" --state float &
 chunkc tiling::rule --owner \"Transmission\" --state float &
-
-# Virtual machines apps
 chunkc tiling::rule --owner \"VirtualBox\" --name \"Oracle VM VirtualBox Manager\" --state float &
