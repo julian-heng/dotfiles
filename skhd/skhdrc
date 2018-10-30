@@ -53,10 +53,10 @@ shift + alt - 3 : chunkc tiling::window --send-to-desktop 3
 shift + alt - 4 : chunkc tiling::window --send-to-desktop 4
 
 # resize windows
-lctrl + alt - h : "${HOME}"/.dotfiles/scripts/mac/utils/resize.sh left
-lctrl + alt - j : "${HOME}"/.dotfiles/scripts/mac/utils/resize.sh down
-lctrl + alt - k : "${HOME}"/.dotfiles/scripts/mac/utils/resize.sh up
-lctrl + alt - l : "${HOME}"/.dotfiles/scripts/mac/utils/resize.sh right
+lctrl + alt - h : "${HOME}"/.dotfiles/scripts/mac/utils/resize.sh left 0.05
+lctrl + alt - j : "${HOME}"/.dotfiles/scripts/mac/utils/resize.sh down 0.05
+lctrl + alt - k : "${HOME}"/.dotfiles/scripts/mac/utils/resize.sh up 0.05
+lctrl + alt - l : "${HOME}"/.dotfiles/scripts/mac/utils/resize.sh right 0.05
 
 # equalize size of windows
 lctrl + alt - 0 : chunkc tiling::desktop --equalize
