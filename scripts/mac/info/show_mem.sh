@@ -61,11 +61,13 @@ get_mem_info()
     awk_script='
         /hw/ { total = $2 / (1024 ^ 2) }
         /wired/ { a = substr($4, 1, length($4) - 1) }
-        /vm/ { c = $4; d = $7 }
+        /active/ { b = substr($3, 1, length($3) - 1) }
+        /occupied/ { c = substr($5, 1, length($5) - 1) }
+        /vm/ { d = $4; e = $7 }
         END {
-            used = ((a + b) * 4) / 1024
+            used = ((a + b + c) * 4) / 1024
             printf "%0.0f %0.0f %0.0f %s %s", \
-                ((used / total) * 100), used, total, c, d
+                ((used / total) * 100), used, total, d, e
         }'
 
     read -r mem_percent \

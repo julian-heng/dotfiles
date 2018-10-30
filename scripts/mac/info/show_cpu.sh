@@ -96,7 +96,7 @@ get_uptime()
     days="$((seconds / 60 / 60 / 24))d "
     hours="$((seconds / 60 / 60 % 24))h "
     mins="$((seconds / 60 % 60))m "
-    secs="$(((seconds % 60) % 60))s "
+    secs="$(((seconds % 60) % 60))s"
 
     ((${days/d*} == 0)) && unset days
     ((${hours/h*} == 0)) && unset hours
