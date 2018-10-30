@@ -11,12 +11,15 @@ COMPTON_DIR := $(SCRIPT_DIR)/compton
 MPV_DIR := $(SCRIPT_DIR)/mpv
 NEOFETCH_DIR := $(SCRIPT_DIR)/neofetch
 RANGER_DIR := $(SCRIPT_DIR)/ranger
-SKHD_DIR := $(SCRIPT_DIR)/skhd
 TMUX_DIR := $(SCRIPT_DIR)/tmux/tmux.conf
 VIM_DIR := $(SCRIPT_DIR)/vimrc
 
+CHUNKWM_FILE := $(SCRIPT_DIR)/chunkwm/chunkwmrc
+SKHD_FILE := $(SCRIPT_DIR)/skhd/skhdrc
+
 BASHRC_DEST := ${HOME}
 COMPTON_DEST := $(CONFIG_DIR)/compton.conf
+CHUNKWM_DEST := ${HOME}/.chunkwmrc
 MPV_DEST := $(CONFIG_DIR)/mpv
 NEOFETCH_DEST := $(CONFIG_DIR)/neofetch
 RANGER_DEST := $(CONFIG_DIR)/ranger
@@ -63,7 +66,7 @@ submodule_update:
 linux_headless: bashrc_linux neofetch ranger tmux vim
 linux_lite: bashrc_linux compton_noblur mpv neofetch ranger tmux vim
 linux: bashrc_linux compton_blur mpv neofetch ranger tmux vim
-mac: bashrc_macos mpv neofetch skhd ranger tmux vim
+mac: bashrc_macos mpv neofetch chunkwm skhd ranger tmux vim
 windows: bashrc_common neofetch
 
    ##################
@@ -111,12 +114,19 @@ neofetch:
 ranger:
 	$(call link,$(RANGER_DIR),$(RANGER_DEST))
 
+   ###################
+######## Chunkwm ########
+   ###################
+
+chunkwm:
+	$(call link,$(CHUNKWM_FILE),$(CHUNKWM_DEST))
+
    ################
 ######## Skhd ########
    ################
 
 skhd:
-	$(call link,$(SKHD_DIR),$(SKHD_DEST))
+	$(call link,$(SKHD_FILE),$(SKHD_DEST))
 
    ################
 ######## Tmux ########
@@ -134,4 +144,4 @@ vim:
 
 .PHONY: submodule_init submodule_update linux_headless linux_lite linux mac \
 		windows bashrc_linux bashrc_macos bashrc_common compton_blur \
-		compton_noblur mpv neofetch ranger skhd tmux vim
+		compton_noblur mpv neofetch ranger chunkwm skhd tmux vim
