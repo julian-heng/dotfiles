@@ -1,34 +1,12 @@
 # opens iTerm2
-alt - return : \
-    ${HOME}/.dotfiles/scripts/mac/utils/open_iterm2.sh
+alt - return : "${HOME}"/.dotfiles/scripts/mac/utils/open_iterm2.sh
 
-# show cpu and mem stats
-fn + lalt - 1 : \
-    ${HOME}/.dotfiles/scripts/mac/info/show_cpu.sh
-fn + lalt - 2 : \
-    ${HOME}/.dotfiles/scripts/mac/info/show_mem.sh
-
-# show battery info
-fn + lalt - 3 : \
-    ${HOME}/.dotfiles/scripts/mac/info/show_bat.sh
-
-# show disk usage
-fn + lalt - 4 : \
-    ${HOME}/.dotfiles/scripts/mac/info/show_disk.sh
-
-# show current song info
-fn + lalt - 5 : \
-    ${HOME}/.dotfiles/scripts/mac/info/show_song.sh
-
-# show stats summary
-#fn + lctrl - 0 : \
-#    ${HOME}/.dotfiles/scripts/mac/info/show_summary.sh
-
-#fn + shift - 0 : \
-#    ${HOME}/.dotfiles/scripts/mac/info/show_summary.sh simple
-
-#fn + lctrl + shift - 0 : \
-#    ${HOME}/.dotfiles/scripts/mac/info/show_summary.sh all
+# Show system statistics
+fn + lalt - 1 : "${HOME}"/.dotfiles/scripts/mac/info/show_cpu.sh
+fn + lalt - 2 : "${HOME}"/.dotfiles/scripts/mac/info/show_mem.sh
+fn + lalt - 3 : "${HOME}"/.dotfiles/scripts/mac/info/show_bat.sh
+fn + lalt - 4 : "${HOME}"/.dotfiles/scripts/mac/info/show_disk.sh
+fn + lalt - 5 : "${HOME}"/.dotfiles/scripts/mac/info/show_song.sh
 
 # Navigation
 alt - h : chunkc tiling::window --focus west
@@ -53,19 +31,30 @@ shift + alt - 3 : chunkc tiling::window --send-to-desktop 3
 shift + alt - 4 : chunkc tiling::window --send-to-desktop 4
 
 # Resize windows
-lctrl + alt - h : "${HOME}"/.dotfiles/scripts/mac/utils/resize.sh left 0.05
-lctrl + alt - j : "${HOME}"/.dotfiles/scripts/mac/utils/resize.sh down 0.05
-lctrl + alt - k : "${HOME}"/.dotfiles/scripts/mac/utils/resize.sh up 0.05
-lctrl + alt - l : "${HOME}"/.dotfiles/scripts/mac/utils/resize.sh right 0.05
+lctrl + alt - h : \
+    chunkc tiling::window --use-temporary-ratio 0.05 --adjust-window-edge west; \
+    chunkc tiling::window --use-temporary-ratio -0.05 --adjust-window-edge east
+
+lctrl + alt - j : \
+    chunkc tiling::window --use-temporary-ratio 0.05 --adjust-window-edge south; \
+    chunkc tiling::window --use-temporary-ratio -0.05 --adjust-window-edge north
+
+lctrl + alt - k : \
+    chunkc tiling::window --use-temporary-ratio 0.05 --adjust-window-edge north; \
+    chunkc tiling::window --use-temporary-ratio -0.05 --adjust-window-edge south
+
+lctrl + alt - l : \
+    chunkc tiling::window --use-temporary-ratio 0.05 --adjust-window-edge east; \
+    chunkc tiling::window --use-temporary-ratio -0.05 --adjust-window-edge west
 
 # Equalize size of windows
 lctrl + alt - 0 : chunkc tiling::desktop --equalize
 
 # Enable / Disable gaps in current workspace
-lctrl + shift + alt - g : chunkc tiling::desktop --toggle offset
+lctrl + alt - g : chunkc tiling::desktop --toggle offset
 
 # Rotate windows clockwise and anticlockwise
-alt - r : chunkc tiling::desktop --rotate 90
+alt - r         : chunkc tiling::desktop --rotate 90
 shift + alt - r : chunkc tiling::desktop --rotate 270
 
 # Rotate on X and Y Axis
@@ -78,3 +67,16 @@ shift + lctrl + alt - h : chunkc tiling::window --use-insertion-point west
 shift + lctrl + alt - j : chunkc tiling::window --use-insertion-point south
 shift + lctrl + alt - k : chunkc tiling::window --use-insertion-point north
 shift + lctrl + alt - l : chunkc tiling::window --use-insertion-point east
+
+# Float / Unfloat window
+shift + alt - space : chunkc tiling::window --toggle float
+
+# Restart Chunkwm
+shift + lctrl + alt - r : \
+    /usr/bin/env osascript <<< \
+        "display notification \"Restarting Chunkwm\" with title \"Chunkwm\""; \
+    brew services restart chunkwm
+
+# Make window native fullscreen
+alt - f         : chunkc tiling::window --toggle fullscreen
+shift + alt - f : chunkc tiling::window --toggle native-fullscreen
