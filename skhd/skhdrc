@@ -36,7 +36,7 @@ alt - j : chunkc tiling::window --focus south
 alt - k : chunkc tiling::window --focus north
 alt - l : chunkc tiling::window --focus east
 
-# Moving
+# Moving windows
 shift + alt - h : chunkc tiling::window --warp west
 shift + alt - j : chunkc tiling::window --warp south
 shift + alt - k : chunkc tiling::window --warp north
@@ -52,14 +52,17 @@ shift + alt - 2 : chunkc tiling::window --send-to-desktop 2
 shift + alt - 3 : chunkc tiling::window --send-to-desktop 3
 shift + alt - 4 : chunkc tiling::window --send-to-desktop 4
 
-# resize windows
+# Resize windows
 lctrl + alt - h : "${HOME}"/.dotfiles/scripts/mac/utils/resize.sh left 0.05
 lctrl + alt - j : "${HOME}"/.dotfiles/scripts/mac/utils/resize.sh down 0.05
 lctrl + alt - k : "${HOME}"/.dotfiles/scripts/mac/utils/resize.sh up 0.05
 lctrl + alt - l : "${HOME}"/.dotfiles/scripts/mac/utils/resize.sh right 0.05
 
-# equalize size of windows
+# Equalize size of windows
 lctrl + alt - 0 : chunkc tiling::desktop --equalize
+
+# Enable / Disable gaps in current workspace
+lctrl + shift + alt - g : chunkc tiling::desktop --toggle offset
 
 # Rotate windows clockwise and anticlockwise
 alt - r : chunkc tiling::desktop --rotate 90
