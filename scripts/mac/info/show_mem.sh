@@ -60,10 +60,10 @@ get_mem_info()
 {
     awk_script='
         /hw/ { total = $2 / (1024 ^ 2) }
-        /wired/ { a = substr($4, 1, length($4) - 1) }
-        /active/ { b = substr($3, 1, length($3) - 1) }
-        /occupied/ { c = substr($5, 1, length($5) - 1) }
-        /vm/ { d = $4; e = $7 }
+        / wired/ { a = substr($4, 1, length($4) - 1) }
+        / active/ { b = substr($3, 1, length($3) - 1) }
+        / occupied/ { c = substr($5, 1, length($5) - 1) }
+        /vm/ { d = $7; e = $4 }
         END {
             used = ((a + b + c) * 4) / 1024
             printf "%0.0f %0.0f %0.0f %s %s", \
