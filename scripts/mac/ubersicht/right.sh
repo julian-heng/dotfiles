@@ -34,7 +34,7 @@ get_fan_temp()
         while read -r line; do
             case "${line}" in
                 "CPU"*)         temp="${line#*:}" ;;
-                "Fan "[0-9]*)   fan="${line#*:}" ;;
+                "Fan "[0-9]*)   fan="${line/'Fan '}" ;;
             esac
         done < <("${temp_path}" -f -c)
 
