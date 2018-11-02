@@ -86,6 +86,21 @@ get_cpu_usage()
     cpu_usage="$(trim "${cpu_usage}")"
 }
 
+get_fan_temp()
+{
+    type -p osx-cpu-temp 2>&1 > /dev/null && {
+        awk_script='
+            /CPU/ { a = $2 }
+            /Fan [0-9]/ { b = $2 }
+            END {
+                printf "%s %s", a, b
+            }'
+        read -r temp \
+                fan \
+                < <(awk "${awk_script}" <(osx-cpu-temp -f -c))
+    }
+}
+
 get_uptime()
 {
     boot="${cpu_info[3]/'{ sec = '}"
@@ -145,8 +160,7 @@ main()
     get_cpu
     get_load
     get_cpu_usage
-    #get_temp
-    #get_fan
+    get_fan_temp
     get_uptime
 
     title_parts+=("${cpu:-CPU}")
@@ -161,7 +175,7 @@ main()
         subtitle_parts+=("|" "${temp}")
 
     [[ "${fan}" ]] && \
-        subtitle_parts+=("|" "${fan}")
+        subtitle_parts+=("|" "${fan} RPM")
 
     [[ "${uptime}" ]] && \
         message_parts+=("Uptime:" "${uptime}")
