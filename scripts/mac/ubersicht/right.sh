@@ -15,6 +15,11 @@ trim()
     }
 }
 
+percent()
+{
+    printf "%s" "$((200 * $1 / $2 % 2 + 100 * $1 / $2))"
+}
+
 get_cpu_load()
 {
     load_avg="${sysctl_out[0]}"
@@ -26,30 +31,30 @@ get_fan_temp()
 {
     temp_path="/usr/local/bin/osx-cpu-temp"
     type -p "${temp_path}" 2>&1 > /dev/null && {
-        awk_script='
-            /CPU/ { a = $2 }
-            /Fan [0-9]/ { b = $2 }
-            END {
-                printf "%s %s", a, b
-            }'
-        read -r temp \
-                fan \
-                < <(awk "${awk_script}" <("${temp_path}" -f -c))
+        while read -r line; do
+            case "${line}" in
+                "CPU"*)         temp="${line#*:}" ;;
+                "Fan "[0-9]*)   fan="${line#*:}" ;;
+            esac
+        done < <("${temp_path}" -f -c)
+
+        fan="$(trim "${fan%-*}")"
+        printf -v temp "%.*f" "0" "${temp/'°C'}"
     }
 }
 
 get_mem_info()
 {
-    awk_script='
-        / wired/ { a = substr($4, 1, length($4) - 1) }
-        / active/ { b = substr($3, 1, length($3) - 1) }
-        / occupied/ { c = substr($5, 1, length($5) - 1) }
-        END {
-            used = ((a + b + c) * 4 * 1024)
-            printf "%0.1f", (used / total) * 100
-        }'
+    while IFS=":" read a b; do
+        case "$a" in
+            *" wired"*)     wired="${b//.}" ;;
+            *" active"*)    active="${b//.}" ;;
+            *" occupied"*)  occupied="${b//.}" ;;
+        esac
+    done < <(vm_stat)
 
-    mem_percent="$(awk -v total="$((sysctl_out[1]))" "${awk_script}" <(vm_stat))"
+    mem_used="$(((wired + active + occupied) * 4 * 1024))"
+    mem_percent="$(percent "${mem_used}" "${sysctl_out[1]}")"
 }
 
 get_disk()
@@ -57,28 +62,22 @@ get_disk()
     [[ ! "${disk}" ]] && \
         return 1
 
-    awk_script='
-        $0 ~ disk {
-            percent = ($3 / $2) * 100
-            printf "%0.1f", ($3 / $2) * 100
-            exit
-        }'
+    while read -r df_line && [[ ! "${df_line}" =~ ${disk} ]]; do
+        :
+    done < <(df -P -k)
 
-    disk_percent="$(awk -v disk=${disk} "${awk_script}" <(df -P -k))"
+    read -ra disk_info <<< "${df_line}"
+    disk_percent="$(percent "${disk_info[2]}" "${disk_info[1]}")"
     disk="${disk//\/dev\//}"
 }
 
 get_wifi()
 {
-    awk_script='
-        /SSID:/ { name = $2 }
-        END {
-            printf "%s", name
-        }'
+    while read -r a b && [[ "$a" != "SSID:" ]]; do
+        :
+    done < <(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport --getinfo)
 
-    wifi_name="$(awk -F":" "${awk_script}" \
-        <(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport --getinfo))"
-    wifi_name="$(trim "${wifi_name}")"
+    wifi_name="$b"
     [[ ! "${wifi_name}" ]] && \
         wifi_name="Not Connected"
 }
@@ -100,7 +99,6 @@ get_bat_info()
 
     [[ "${bat_time}" != "0:00" && "${bat_time}" != "(no" ]] && \
         bat_info+=" | ${bat_time}"
-
 }
 
 get_date_time()
@@ -119,6 +117,7 @@ main()
     )
 
     mapfile -t sysctl_out < <(sysctl -n "${sys_args[@]}")
+    mapfile -t bat_out < <(pmset -g batt)
 
     get_cpu_load
     get_fan_temp
@@ -132,7 +131,7 @@ main()
         cpu_str+=" | ${fan} RPM"
 
     [[ "${temp}" ]] && \
-        cpu_str+=" | ${temp}"
+        cpu_str+=" | ${temp}°C"
 
     cpu_str+=" | ${load_avg}"
 
