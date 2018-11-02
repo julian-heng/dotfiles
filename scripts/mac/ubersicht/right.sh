@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+options()
+{
+    : "${disk:=/dev/disk1s1}"
+}
+
 trim()
 {
     [[ "$*" ]] && {
@@ -47,6 +52,22 @@ get_mem_info()
     mem_percent="$(awk -v total="$((sysctl_out[1]))" "${awk_script}" <(vm_stat))"
 }
 
+get_disk()
+{
+    [[ ! "${disk}" ]] && \
+        return 1
+
+    awk_script='
+        $0 ~ disk {
+            percent = ($3 / $2) * 100
+            printf "%0.1f", ($3 / $2) * 100
+            exit
+        }'
+
+    disk_percent="$(awk -v disk=${disk} "${awk_script}" <(df -P -k))"
+    disk="${disk//\/dev\//}"
+}
+
 get_wifi()
 {
     awk_script='
@@ -90,6 +111,8 @@ get_date_time()
 
 main()
 {
+    options
+
     sys_args=(
         "vm.loadavg"
         "hw.memsize"
@@ -100,6 +123,7 @@ main()
     get_cpu_load
     get_fan_temp
     get_mem_info
+    get_disk
     get_wifi
     get_bat_info
     get_date_time
@@ -118,6 +142,7 @@ main()
     printf -v out "[ %s ] " \
         "${cpu_str}" \
         "Mem: ${mem_percent}%" \
+        "${disk:-Disk}: ${disk_percent}%" \
         "${wifi_name}" \
         "Bat: ${bat_info}" \
         "${date} | ${time}"
