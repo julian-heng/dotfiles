@@ -10,17 +10,9 @@ trim()
     }
 }
 
-trim_digits()
-{
-    case "${1##*.}" in
-        "00")   printf "%s" "${1/.*}" ;;
-        *)      printf "%s" "$1" ;;
-    esac
-}
-
 get_cpu_load()
 {
-    load_avg="$(sysctl -n vm.loadavg)"
+    load_avg="${sysctl_out[0]}"
     load_avg="${load_avg/'{ '}"
     load_avg="${load_avg/' }'}"
 }
@@ -44,21 +36,15 @@ get_fan_temp()
 get_mem_info()
 {
     awk_script='
-        /hw/ { total = $2 / (1024 ^ 3) }
-        /wired/ { a = substr($4, 1, length($4) - 1) }
-        /active/ { b = substr($3, 1, length($3) - 1) }
-        /occupied/ { c = substr($5, 1, length($5) - 1) }
+        / wired/ { a = substr($4, 1, length($4) - 1) }
+        / active/ { b = substr($3, 1, length($3) - 1) }
+        / occupied/ { c = substr($5, 1, length($5) - 1) }
         END {
-        used = ((a + b + c) * 4) / (1024 ^ 2)
-            printf "%0.2f %0.2f", used, total
+            used = ((a + b + c) * 4 * 1024)
+            printf "%0.1f", (used / total) * 100
         }'
 
-    read -r mem_used \
-            mem_total \
-            < <(awk "${awk_script}" < <(vm_stat; sysctl vm.swapusage hw.memsize))
-
-    mem_used="$(trim_digits "${mem_used}")"
-    mem_total="$(trim_digits "${mem_total}")"
+    mem_percent="$(awk -v total="$((sysctl_out[1]))" "${awk_script}" <(vm_stat))"
 }
 
 get_wifi()
@@ -104,6 +90,13 @@ get_date_time()
 
 main()
 {
+    sys_args=(
+        "vm.loadavg"
+        "hw.memsize"
+    )
+
+    mapfile -t sysctl_out < <(sysctl -n "${sys_args[@]}")
+
     get_cpu_load
     get_fan_temp
     get_mem_info
@@ -124,9 +117,9 @@ main()
 
     printf -v out "[ %s ] " \
         "${cpu_str}" \
-        "${mem_used} GiB | ${mem_total} GiB" \
+        "Mem: ${mem_percent}%" \
         "${wifi_name}" \
-        "${bat_info}" \
+        "Bat: ${bat_info}" \
         "${date} | ${time}"
 
     out="$(trim "${out#\/}")"
