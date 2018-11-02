@@ -81,8 +81,8 @@ get_song_info()
         album_cmd="album of current track as string"
 
         osa_script="tell application \"${app}\"
-                        ${track_cmd} & ":" & \
-                        ${artist_cmd} & ":" & \
+                        ${track_cmd} & \":\" & \
+                        ${artist_cmd} & \":\" & \
                         ${album_cmd}
                     end tell"
 
