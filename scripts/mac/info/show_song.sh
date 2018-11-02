@@ -64,7 +64,7 @@ check_app_state()
     fi
 
     [[ "${match}" != "true" ]] && \
-        exit 1
+        app_state="none"
 }
 
 get_song_info()
