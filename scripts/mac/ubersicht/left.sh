@@ -22,19 +22,12 @@ get_window()
     current_window="$("${chunkc_exec}" tiling::query --window id)"
 
     ((current_window != 0)) && {
-        awk_script='
-            /name/ { name = $2 }
-            /owner/ { owner = $2 }
-            END {
-                printf "%s,%s", name, owner
-            }'
-
-        current_window_info="$("${chunkc_exec}" tiling::query --window "${current_window}")"
-
-        IFS="," \
-        read -r window_name \
-                window_owner \
-                < <(awk -F":" "${awk_script}" <<< "${current_window_info}")
+        while IFS=":" read -r a b; do
+            case "$a" in
+                "name")     window_name="$b" ;;
+                "owner")    window_owner="$b" ;;
+            esac
+        done < <("${chunkc_exec}" tiling::query --window "${current_window}")
 
         window_name="$(trim "${window_name}")"
         window_owner="$(trim "${window_owner}")"
@@ -43,6 +36,9 @@ get_window()
 
 main()
 {
+    ! pgrep -x chunkwm 2>&1 > /dev/null && \
+        exit 1
+
     chunkc_exec="/usr/local/bin/chunkc"
 
     get_desktop
