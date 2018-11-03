@@ -84,8 +84,6 @@ get_bat_info()
         bat_time="Unknown"
     elif [[ "${bat_time}" == "0:00"* && "${bat_state}" == "AC" ]]; then
         bat_time="Fully Charged"
-    else
-        bat_time+=" remaining"
     fi
 }
 
@@ -97,6 +95,7 @@ Usage: ${0##*/} --option
     Options:
 
     [--stdout]      Print to stdout
+    [-r|--raw]      Print raw values delimited by commas
     [-h|--help]     Show this message
 "
 }
@@ -106,6 +105,7 @@ get_args()
     while (($# > 0)); do
         case "$1" in
             "--stdout")     stdout="true" ;;
+            "-r"|"--raw")   raw="true" ;;
             "-h"|"--help")  print_usage; exit ;;
         esac
         shift
@@ -118,13 +118,24 @@ main()
     get_args "$@"
     get_bat_info
 
+    [[ "${raw}" ]] && {
+        printf -v out "%s," \
+            "${bat_percent}" \
+            "${bat_time}" \
+            "${bat_condition}" \
+            "${bat_cycles}"
+        printf -v out "%s%s" "${out}" "${bat_state}"
+        printf "%s\\n" "${out}"
+        exit 0
+    }
+
     title_parts+=("Battery")
 
     [[ "${bat_percent}" ]] && \
         title_parts+=("(${bat_percent})")
 
     [[ "${bat_time}" ]] && \
-        subtitle_parts+=("|" "${bat_time}")
+        subtitle_parts+=("|" "${bat_time} remaining")
 
     [[ "${bat_condition}" ]] && \
         subtitle_parts+=("|" "${bat_condition}")
