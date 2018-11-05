@@ -102,6 +102,7 @@ Usage: ${0##*/} --option
     Options:
 
     [--stdout]      Print to stdout
+    [-r|--raw]      Print raw values delimited by commas
     [-h|--help]     Show this message
 "
 }
@@ -111,6 +112,7 @@ get_args()
     while (($# > 0)); do
         case "$1" in
             "--stdout")     stdout="true" ;;
+            "-r"|"--raw")   raw="true" ;;
             "-h"|"--help")  print_usage; exit ;;
         esac
         shift
@@ -147,6 +149,17 @@ main()
                 message_parts+=("${album}")
         ;;
     esac
+
+    [[ "${raw}" ]] && {
+        printf -v out "%s," \
+            "${app}" \
+            "${app_state}" \
+            "${artist}" \
+            "${album}"
+        printf -v out "%s%s" "${out}" "${track}"
+        printf "%s\\n" "${out}"
+        exit 0
+    }
 
     notify
 }

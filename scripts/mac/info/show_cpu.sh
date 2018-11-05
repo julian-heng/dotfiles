@@ -129,6 +129,7 @@ Usage: ${0##*/} --option
     Options:
 
     [--stdout]      Print to stdout
+    [-r|--raw]      Print raw values delimited by commas
     [-h|--help]     Show this message
 "
 }
@@ -138,6 +139,7 @@ get_args()
     while (($# > 0)); do
         case "$1" in
             "--stdout")     stdout="true" ;;
+            "-r"|"--raw")   raw="true" ;;
             "-h"|"--help")  print_usage; exit ;;
         esac
         shift
@@ -162,6 +164,18 @@ main()
     get_cpu_usage
     get_fan_temp
     get_uptime
+
+    [[ "${raw}" ]] && {
+        printf -v out "%s," \
+            "${cpu}" \
+            "${load_avg}" \
+            "${cpu_usage}%" \
+            "${temp}" \
+            "${fan} RPM"
+        printf -v out "%s%s" "${out}" "${uptime}"
+        printf "%s\\n" "${out}"
+        exit 0
+    }
 
     title_parts+=("${cpu:-CPU}")
 

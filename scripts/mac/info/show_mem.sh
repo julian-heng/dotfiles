@@ -66,7 +66,7 @@ get_mem_info()
         /vm/ { d = $7; e = $4 }
         END {
             used = ((a + b + c) * 4) / 1024
-            printf "%0.0f %0.0f %0.0f %s %s", \
+            printf "%f %f %f %s %s", \
                 ((used / total) * 100), used, total, d, e
         }'
 
@@ -76,6 +76,10 @@ get_mem_info()
             swap_used \
             swap_total \
             < <(awk "${awk_script}" < <(vm_stat; sysctl vm.swapusage hw.memsize))
+
+    printf -v mem_percent "%.*f" "0" "${mem_percent}"
+    printf -v mem_used "%.*f" "0" "${mem_used}"
+    printf -v mem_total "%.*f" "0" "${mem_total}"
 
     swap_used="$(trim_digits "${swap_used/M}")"
     swap_total="$(trim_digits "${swap_total/M}")"
@@ -89,6 +93,7 @@ Usage: ${0##*/} --option
     Options:
 
     [--stdout]      Print to stdout
+    [-r|--raw]      Print raw values delimited by commas
     [-h|--help]     Show this message
 "
 }
@@ -98,6 +103,7 @@ get_args()
     while (($# > 0)); do
         case "$1" in
             "--stdout")     stdout="true" ;;
+            "-r"|"--raw")   raw="true" ;;
             "-h"|"--help")  print_usage; exit ;;
         esac
         shift
@@ -109,6 +115,17 @@ main()
     ! check_apps && exit 1
     get_args "$@"
     get_mem_info
+
+    [[ "${raw}" ]] && {
+        printf -v out "%s," \
+            "${mem_percent}%" \
+            "${mem_used} MiB" \
+            "${mem_total} MiB" \
+            "${swap_used} MiB"
+        printf -v out "%s%s" "${out}" "${swap_total}"
+        printf "%s\\n" "${out}"
+        exit 0
+    }
 
     [[ "${mem_percent}" ]] && \
         title_parts+=("Memory" "(${mem_percent}%)")
