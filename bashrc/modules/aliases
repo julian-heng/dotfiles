@@ -3,18 +3,9 @@
 #############################
 # shellcheck disable=2139,2148,2154
 
-#vscp()
-#(
-#    IFS=":"\
-#    read -r server \
-#            file \
-#            <<< "$1"
-#    remote="scp://${server}${file}"
-#    vim "${remote}"
-#)
-
 upgit()
 {
+    local -f header
     local -a git_dirs
     local item
     local git_dir
@@ -41,8 +32,6 @@ upgit()
         git -C "${git_dir}" pull
         printf "\\n"
     done
-
-    unset header
 }
 
 gcll()
@@ -54,12 +43,10 @@ gcll()
     while (($# > 0)); do
         case "$1" in
             "http"*)
-                #printf "%s\\n" "$1"
                 repo_list+=("$1")
             ;;
 
             *)
-                #printf "%s\\n" "$1"
                 args+=("$1")
             ;;
         esac
@@ -71,25 +58,21 @@ gcll()
     done
 }
 
-man()
-{
-    MANWIDTH="$((${COLUMNS:-100} > 100 ? 100 : COLUMNS))" command man "$@"
-}
+alias cb='cd "$@" "${OLDPWD}"'
 
-cb()
-{
-    cd "$@" "${OLDPWD}"
-}
-
+alias man='MANWIDTH="$((${COLUMNS:-100} > 100 ? 100 : COLUMNS))" command man "$@"'
 alias dl="aria2c --dir=${HOME}/Downloads/"
 
 alias gp="git pull"
 alias gcl="git clone"
 alias gstat="git status --branch"
 alias gdiff="git diff"
+alias glog="git log --color --graph --abbrev-commit --decorate --format=format:'┌[%C(bold blue)%H%C(reset)]%C(auto)%d%C(reset)%n└──[%C(bold cyan)%aD%C(reset)]: %C(bold green)%ar%C(reset)%n%n%w(0,4,4)Author:  %an %C(dim white)<%ae>%C(reset)%n%w(0,4,4)Subject: %s%n%w(0,4,4)%+b' | less -r"
+alias glog2="git log --color --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)%ar%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)' | less -r"
+alias glog3="git log --color --graph | less -r"
 
-alias py2="python2"
-alias py3="python3"
+alias grep="grep --color=auto"
+
 alias 7zcomp="
     7z a -t7z \
          -m0=lzma2 \
@@ -103,41 +86,32 @@ alias 7zcomp="
 alias yt2mp3="
     youtube-dl  --output ${HOME}/Downloads/ \
                 -x \
-                --audio-format mp3\
+                --audio-format mp3 \
                 --audio-quality 0 \
                 -o '%(playlist_index)s %(title)s.%(ext)s' \
                 -v"
 
-case "${distro}" in
-    "MacOS"|"FreeBSD")
-        color_flag="-G"
-    ;;
-    *)
-        color_flag="--color"
-        ls_flag="--classify"
-    ;;
-esac
-
-alias ls="ls ${color_flag} ${ls_flag}"
-alias ll="ls ${color_flag} ${ls_flag} -l"
-alias la="ls ${color_flag} ${ls_flag} -a"
-alias lal="ls ${color_flag} ${ls_flag} -al"
-
 alias longfetch="neofetch -L; neofetch --off"
 
-if [[ ! "${distro}" =~ MacOS|FreeBSD ]]; then
-    alias open="xdg-open"
-fi
+case "${distro}" in
+    "MacOS"|"FreeBSD")
+        alias ls="ls -G"
+        alias ll="ls -G -l"
+        alias la="ls -G -a"
+        alias lal="ls -G -a -l"
+    ;;
+    *)
+        alias ls="ls --color --classify"
+        alias ll="ls --color --classify -l"
+        alias la="ls --color --classify -a"
+        alias lal="ls --color --classify -a -l"
+        alias open="xdg-open"
+    ;;
+esac
 
 case "${distro}" in
     "MacOS")
         alias update="brew -v update && brew -v upgrade"
-        alias cinst="brew cask install"
-        alias cuninst="brew cask uninstall"
-        alias cup="brew cask upgrade"
-        alias csearch="brew cask search"
-        alias cout="brew cask outdated"
-        alias cleanup="brew cleanup && brew cask cleanup"
     ;;
 
     "Ubuntu"*|"Debian"*)
