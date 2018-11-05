@@ -49,12 +49,14 @@ main()
     [[ "${window_owner}" ]] && {
         out+="| ${window_owner}"
 
-        [[ "${window_name}" ]] && \
+        [[ "${window_name}" && "${window_name}" != "${window_owner}" ]] && {
+            window_name="$(trim "${window_name//${window_owner}/}")"
             if ((${#window_owner} + ${#window_name} + 2 > max_length)); then
                 out+=": ${window_name:0:${max_length}}..."
             else
                 out+=": ${window_name}"
             fi
+        }
     }
 
     out="$(trim "${out} ]")"
