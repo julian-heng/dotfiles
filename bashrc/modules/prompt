@@ -26,9 +26,7 @@ prompter()
             ;;
 
             *"no branch"*)
-                branch="${1%%\(*}"
-                branch="${branch//#}"
-                branch="${branch//[[:space:]]}"
+                branch="$(git rev-parse --short HEAD)"
             ;;
 
             *)
@@ -73,34 +71,34 @@ prompter()
                         " ") ;;
                         *)          ((num_staged++)) ;;
                     esac
-                    status="${status:0:${#status}-1}"
+                    status="${status:0:${#status} - 1}"
                 done
             done < <(git status --porcelain --branch)
 
             git_prompt="-[${c2}${_git_branch}${reset}"
 
             [[ "${_git_behind}" ]] && \
-                git_prompt="${git_prompt}${fb[7]}↓${_git_behind}${reset}"
+                git_prompt+="${fb[7]}↓${_git_behind}${reset}"
 
             [[ "${_git_ahead}" ]] && \
-                git_prompt="${git_prompt}${fb[7]}↑${_git_ahead}${reset}"
+                git_prompt+="${fb[7]}↑${_git_ahead}${reset}"
 
             ((num_conflicts > 0)) && \
-                _git_status="${_git_status}${f[1]}✖${num_conflicts}${reset}"
+                _git_status+="${f[1]}✖${num_conflicts}${reset}"
 
             ((num_changed > 0)) && \
-                _git_status="${_git_status}${f[4]}✚${num_changed}${reset}"
+                _git_status+="${f[4]}✚${num_changed}${reset}"
 
             ((num_staged > 0)) && \
-                _git_status="${_git_status}${f[6]}●${num_staged}${reset}"
+                _git_status+="${f[6]}●${num_staged}${reset}"
 
             ((num_untracked > 0)) && \
-                _git_status="${_git_status}${bold}…${num_untracked}${reset}"
+                _git_status+="${bold}…${num_untracked}${reset}"
 
             [[ "${_git_status}" ]] && \
-                git_prompt="${git_prompt}|${_git_status}"
+                git_prompt+="|${_git_status}"
 
-            git_prompt="${git_prompt}]"
+            git_prompt+="]"
         }
 
         printf "%s" "${git_prompt}"
