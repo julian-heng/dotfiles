@@ -19,9 +19,9 @@ trim()
 
 notify()
 {
-    title="${title_parts[*]}"
-    subtitle="${subtitle_parts[*]}"
-    message="${message_parts[*]}"
+    title="$(trim "${title_parts[*]}")"
+    subtitle="$(trim "${subtitle_parts[*]}")"
+    message="$(trim "${message_parts[*]}")"
 
     [[ "${title:0:1}" == "|" ]] && \
         title="${title##'| '}"

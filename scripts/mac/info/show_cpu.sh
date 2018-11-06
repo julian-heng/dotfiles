@@ -19,9 +19,9 @@ trim()
 
 notify()
 {
-    title="${title_parts[*]}"
-    subtitle="${subtitle_parts[*]}"
-    message="${message_parts[*]}"
+    title="$(trim "${title_parts[*]}")"
+    subtitle="$(trim "${subtitle_parts[*]}")"
+    message="$(trim "${message_parts[*]}")"
 
     [[ "${title:0:1}" == "|" ]] && \
         title="${title##'| '}"
@@ -68,9 +68,8 @@ get_cpu()
 
 get_load()
 {
-    load_avg="${cpu_info[2]}"
-    load_avg="${load_avg/'{ '}"
-    load_avg="${load_avg/' }'}"
+    read -r _ a b c _ <<< "${cpu_info[2]}"
+    load_avg="$a $b $c"
 }
 
 get_cpu_usage()
@@ -78,26 +77,27 @@ get_cpu_usage()
     awk_script='
         { sum += $3 }
         END {
-            printf "%0.0f", sum / cores
+            printf "%f", sum / cores
         }'
     cpu_usage="$(awk -v cores="${cpu_info[1]:-1}" \
                      -v sum="0" \
                      "${awk_script}" <(ps aux))"
-    cpu_usage="$(trim "${cpu_usage}")"
+    printf -v cpu_usage "%.*f" "1" "${cpu_usage}"
 }
 
 get_fan_temp()
 {
     type -p osx-cpu-temp 2>&1 > /dev/null && {
-        awk_script='
-            /CPU/ { a = $2 }
-            /Fan [0-9]/ { b = $2 }
-            END {
-                printf "%s %s", a, b
-            }'
-        read -r temp \
-                fan \
-                < <(awk "${awk_script}" <(osx-cpu-temp -f -c))
+        while read -r line; do
+            case "${line}" in
+                "CPU"*)         temp="${line#*:}" ;;
+                "Fan "[0-9]*)   fan="${line/'Fan '}" ;;
+            esac
+        done < <(osx-cpu-temp -f -c)
+
+        printf -v temp "%.*f" "1" "${temp/'°C'}"
+        fan="${fan/*at }"
+        fan="${fan/ RPM*}"
     }
 }
 
@@ -169,9 +169,10 @@ main()
             "${cpu}" \
             "${load_avg}" \
             "${cpu_usage}%" \
-            "${temp}" \
+            "${temp}°C" \
             "${fan} RPM"
         printf -v out "%s%s" "${out}" "${uptime}"
+        out="$(trim "${out}")"
         printf "%s\\n" "${out}"
         exit 0
     }
@@ -185,7 +186,7 @@ main()
         subtitle_parts+=("|" "${cpu_usage}%")
 
     [[ "${temp}" ]] && \
-        subtitle_parts+=("|" "${temp}")
+        subtitle_parts+=("|" "${temp}°C")
 
     [[ "${fan}" ]] && \
         subtitle_parts+=("|" "${fan} RPM")

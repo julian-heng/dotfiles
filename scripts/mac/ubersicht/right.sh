@@ -38,8 +38,10 @@ get_fan_temp()
             esac
         done < <("${temp_path}" -f -c)
 
-        fan="$(trim "${fan%-*}")"
         printf -v temp "%.*f" "0" "${temp/'°C'}"
+        fan="${fan/*at}"
+        fan="${fan/RPM*}"
+        fan="$(trim "${fan}")"
     }
 }
 
