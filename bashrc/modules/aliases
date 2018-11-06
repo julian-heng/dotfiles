@@ -5,7 +5,7 @@
 
 upgit()
 {
-    local -f header
+    local -f header > /dev/null 2>&1
     local -a git_dirs
     local item
     local git_dir
@@ -16,11 +16,7 @@ upgit()
         printf "%s\\n" "${line}" "$1" "${line}"
     }
 
-    if [[ "$1" ]]; then
-        dir="${1%/}"
-    else
-        dir="${PWD}"
-    fi
+    [[ "$1" ]] && dir="${1%/}" || dir="${PWD}"
 
     for item in "${dir}/"*; do
         { [[ -d "${item}/.git" ]] || git -C "${item}" rev-parse --git-dir > /dev/null 2>&1; } && \
@@ -58,20 +54,92 @@ gcll()
     done
 }
 
-alias cb='cd "$@" "${OLDPWD}"'
+gdiff()
+{
+    local -a args
 
-alias man='MANWIDTH="$((${COLUMNS:-100} > 100 ? 100 : COLUMNS))" command man "$@"'
+    args=("--color=always" "$@")
+
+    if (($(wc -l < <(git --no-pager diff "${args[@]}")) > LINES)); then
+        less -RK < <(git --no-pager diff "${args[@]}")
+    else
+        less -RFXK < <(git --no-pager diff "${args[@]}")
+    fi
+}
+
+glog()
+{
+    local -a format
+    local -a args
+
+    format=(
+        "┌[%C(bold blue)%H%C(reset)]%C(auto)%d%C(reset)%n"
+        "└──[%C(bold cyan)%aD%C(reset)]: %C(bold green)%ar%C(reset)%n%n"
+        "%w(0,4,4)Author:  %an %C(dim white)<%ae>%C(reset)%n"
+        "%w(0,4,4)Subject: %s%n"
+        "%w(0,4,4)%+b"
+    )
+
+    IFS="" format_str="${format[*]}"
+    args=("--color=always" "--format=format:${format_str}" "$@")
+
+    if (($(wc -l < <(git --no-pager log "${args[@]}")) > LINES)); then
+        less -R < <(git --no-pager log "${args[@]}")
+    else
+        less -RFX < <(git --no-pager log "${args[@]}")
+    fi
+}
+
+glog2()
+{
+    local -a format
+    local -a args
+
+    format=(
+        "%C(bold blue)%h%C(reset) (%C(bold green)%ar%C(reset))%x09| "
+        "%C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)"
+    )
+
+    IFS="" format_str="${format[*]}"
+    args=("--color=always" "--format=format:${format_str}" "$@")
+
+    if (($(wc -l < <(git --no-pager log "${args[@]}")) > LINES)); then
+        less -R < <(git --no-pager log "${args[@]}")
+    else
+        less -RFX < <(git --no-pager log "${args[@]}")
+    fi
+}
+
+glog3()
+{
+    local -a args
+
+    args=("--color=always" "--graph" "$@")
+
+    if (($(wc -l < <(git --no-pager log "${args[@]}")) > LINES)); then
+        less -R < <(git --no-pager log "${args[@]}")
+    else
+        less -RFX < <(git --no-pager log "${args[@]}")
+    fi
+}
+
+cb()
+{
+    cd "$@" "${OLDPWD}" || exit
+}
+
+man()
+{
+    MANWIDTH="$((${COLUMNS:-100} > 100 ? 100 : COLUMNS))" command man "$@"
+}
+
 alias dl="aria2c --dir=${HOME}/Downloads/"
 
 alias gp="git pull"
 alias gcl="git clone"
 alias gstat="git status --branch"
-alias gdiff="git diff"
-alias glog="git log --color --graph --abbrev-commit --decorate --format=format:'┌[%C(bold blue)%H%C(reset)]%C(auto)%d%C(reset)%n└──[%C(bold cyan)%aD%C(reset)]: %C(bold green)%ar%C(reset)%n%n%w(0,4,4)Author:  %an %C(dim white)<%ae>%C(reset)%n%w(0,4,4)Subject: %s%n%w(0,4,4)%+b' | less -r"
-alias glog2="git log --color --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)%ar%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)' | less -r"
-alias glog3="git log --color --graph | less -r"
 
-alias grep="grep --color=auto"
+alias grep="grep --color=always"
 
 alias 7zcomp="
     7z a -t7z \
@@ -93,6 +161,8 @@ alias yt2mp3="
 
 alias longfetch="neofetch -L; neofetch --off"
 
+alias l="ls"
+
 case "${distro}" in
     "MacOS"|"FreeBSD")
         alias ls="ls -G"
@@ -100,6 +170,7 @@ case "${distro}" in
         alias la="ls -G -a"
         alias lal="ls -G -a -l"
     ;;
+
     *)
         alias ls="ls --color --classify"
         alias ll="ls --color --classify -l"
@@ -110,14 +181,8 @@ case "${distro}" in
 esac
 
 case "${distro}" in
-    "MacOS")
-        alias update="brew -v update && brew -v upgrade"
-    ;;
-
-    "Ubuntu"*|"Debian"*)
-        alias update="sudo apt update && sudo apt upgrade"
-    ;;
-
+    "MacOS") alias update="brew -v update && brew -v upgrade" ;;
+    "Ubuntu"*|"Debian"*) alias update="sudo apt update && sudo apt upgrade" ;;
     "Antergos"*|"Arch"*)
         if type -p yay > /dev/null; then
             alias update="yay"
@@ -136,19 +201,9 @@ case "${distro}" in
         fi
     ;;
 
-    "VoidLinux")
-        alias update="sudo xbps-install -Su"
-    ;;
-
-    "FreeBSD")
-        alias update="sudo pkg update && sudo pkg upgrade"
-    ;;
-
-    "Windows")
-        alias update="choco upgrade all"
-    ;;
-
-    "")
-        printf "%s\\n" "${fb[1]}Error:${reset} Cannot detect distro, 'update' alias not set" >&2
-    ;;
+    "VoidLinux") alias update="sudo xbps-install -Su" ;;
+    "FreeBSD") alias update="sudo pkg update && sudo pkg upgrade" ;;
+    "Windows") alias update="choco upgrade all" ;;
+    "") printf "%s\\n" "${fb[1]}Error:${reset} Cannot detect distro, 'update' alias not set" >&2 ;;
+    *) printf "%s\\n" "${fb[1]}Error:${reset} Unknown distro, 'update' alias not set" >&2 ;;
 esac
