@@ -7,14 +7,6 @@ check_apps()
     fi
 }
 
-trim_digits()
-{
-    case "${1##*.}" in
-        "00")   printf "%s" "${1/.*}" ;;
-        *)      printf "%s" "$1" ;;
-    esac
-}
-
 notify()
 {
     title="${title_parts[*]}"
@@ -81,8 +73,11 @@ get_mem_info()
     printf -v mem_used "%.*f" "0" "${mem_used}"
     printf -v mem_total "%.*f" "0" "${mem_total}"
 
-    swap_used="$(trim_digits "${swap_used/M}")"
-    swap_total="$(trim_digits "${swap_total/M}")"
+    swap_used="${swap_used/M}"
+    swap_used="${swap_used%%.00}"
+
+    swap_total="${swap_total/M}"
+    swap_total="${swap_total%%.00}"
 }
 
 print_usage()
