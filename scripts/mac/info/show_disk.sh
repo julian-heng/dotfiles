@@ -126,7 +126,7 @@ get_disk_info()
         /Volume Total Space/ { e = $9 / (2 * (1024 ^ 2)) }
         /Volume Used Space/ { f = $9 / (2 * (1024 ^ 2)) }
         END {
-            printf "%s %s %s %s %0.2f %0.2f %0.2f", \
+            printf "%s %s %s %s %f %f %f", \
                 a, b, c, d, \
                 e, f, ((f / e) * 100)
         }'
@@ -143,6 +143,10 @@ get_disk_info()
     disk_name="${disk_name//:/ }"
     disk_part="${disk_part//:/ }"
     disk_mount="${disk_mount//:/ }"
+
+    printf -v disk_capacity "%.*f" "2" "${disk_capacity}"
+    printf -v disk_used "%.*f" "2" "${disk_used}"
+    printf -v disk_percent "%.*f" "2" "${disk_percent}"
 }
 
 print_usage()
