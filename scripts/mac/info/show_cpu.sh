@@ -105,8 +105,7 @@ get_uptime()
 {
     boot="${cpu_info[3]/'{ sec = '}"
     boot="${boot/,*}"
-    printf -v now "%(%s)T" "-1"
-    seconds="$((now - boot))"
+    seconds="$(($(printf "%(%s)T" "-1") - boot))"
 
     days="$((seconds / 60 / 60 / 24))d "
     hours="$((seconds / 60 / 60 % 24))h "
