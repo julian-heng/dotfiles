@@ -61,9 +61,9 @@ gdiff()
     args=("--color=always" "$@")
 
     if (($(wc -l < <(git --no-pager diff "${args[@]}")) > LINES)); then
-        less -RK < <(git --no-pager diff "${args[@]}")
+        less -RSK < <(git --no-pager diff "${args[@]}")
     else
-        less -RFXK < <(git --no-pager diff "${args[@]}")
+        less -RSFXK < <(git --no-pager diff "${args[@]}")
     fi
 }
 
@@ -77,16 +77,18 @@ glog()
         "└──[%C(bold cyan)%aD%C(reset)]: %C(bold green)%ar%C(reset)%n%n"
         "%w(0,4,4)Author:  %an %C(dim white)<%ae>%C(reset)%n"
         "%w(0,4,4)Subject: %s%n"
-        "%w(0,4,4)%+b"
+        "%w(0,4,4)%+b%n"
     )
 
     IFS="" format_str="${format[*]}"
     args=("--color=always" "--format=format:${format_str}" "$@")
 
-    if (($(wc -l < <(git --no-pager log "${args[@]}")) > LINES)); then
-        less -R < <(git --no-pager log "${args[@]}")
+    git_out="$(git --no-pager log "${args[@]}" | awk 'NF > 0 {blank=0} NF == 0 {blank++} blank < 2')"
+
+    if (($(wc -l <<< "${git_out}") > LINES)); then
+        less -RS <<< "${git_out}"
     else
-        less -RFX < <(git --no-pager log "${args[@]}")
+        less -RSFX <<< "${git_out}"
     fi
 }
 
@@ -103,10 +105,12 @@ glog2()
     IFS="" format_str="${format[*]}"
     args=("--color=always" "--format=format:${format_str}" "$@")
 
-    if (($(wc -l < <(git --no-pager log "${args[@]}")) > LINES)); then
-        less -R < <(git --no-pager log "${args[@]}")
+    git_out="$(git --no-pager log "${args[@]}")"
+
+    if (($(wc -l <<< "${git_out}") > LINES)); then
+        less -RS <<< "${git_out}"
     else
-        less -RFX < <(git --no-pager log "${args[@]}")
+        less -RSFX <<< "${git_out}"
     fi
 }
 
@@ -116,10 +120,12 @@ glog3()
 
     args=("--color=always" "--graph" "$@")
 
-    if (($(wc -l < <(git --no-pager log "${args[@]}")) > LINES)); then
-        less -R < <(git --no-pager log "${args[@]}")
+    git_out="$(git --no-pager log "${args[@]}")"
+
+    if (($(wc -l <<< "${git_out}") > LINES)); then
+        less -RS <<< "${git_out}"
     else
-        less -RFX < <(git --no-pager log "${args[@]}")
+        less -RSFX <<< "${git_out}"
     fi
 }
 
