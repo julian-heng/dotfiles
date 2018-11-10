@@ -183,20 +183,10 @@ get_plugins()
 
 get_repo_author()
 {
-    { \
-        [[ -d "$1/.git" ]] || \
-        git -C "$1" rev-parse --git-dir > /dev/null 2>&1; } && {
-            mapfile -t first_commit < <(
-                git -C "$1" rev-list --max-parents=0 HEAD
-            )
-
-            mapfile -t git_log < <(git -C "$1" log "${first_commit[0]}")
-            author="${git_log[1]}"
-            author="${author//Author: }"
-            author="${author%%<*}"
-            author="${author/<}"
-            author="$(trim "${author}")"
-            printf "%s" "${author}"
+    { [[ -d "$1/.git" ]] || git -C "$1" rev-parse --git-dir > /dev/null 2>&1; } && {
+        mapfile -t first_commit < <(git -C "$1" rev-list --max-parents=0 HEAD)
+        author="$(git -C "$1" --no-pager log --format=format:%an "${first_commit[0]}")"
+        printf "%s" "${author}"
     }
 }
 
@@ -233,17 +223,9 @@ print_plugins()
     for i in "${plugins[@]}"; do
         IFS=$'\n' read -d "" -r name author manager <<< "${i//,/$'\n'}"
 
-        name_length="${#name}"
-        ((name_length >= ${name_padding:=0})) && \
-            name_padding="${name_length}"
-
-        manager_length="${#manager}"
-        ((manager_length >= ${manager_padding:=0})) && \
-            manager_padding="${manager_length}"
-
-        author_length="${#author}"
-        ((author_length >= ${author_padding:=0})) && \
-            author_padding="${author_length}"
+        ((name_padding = ${#name} >= ${name_padding:=0} ? ${#name} : ${name_padding}))
+        ((manager_padding = ${#manager} >= ${manager_padding:=0} ? ${#manager} : ${manager_padding}))
+        ((author_padding = ${#author} >= ${author_padding:=0} ? ${#author} : ${author_padding}))
 
         name_arr+=("${name}")
         manager_arr+=("${manager}")
