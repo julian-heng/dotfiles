@@ -134,9 +134,7 @@ print_padding()
             max_filename="${name}"
         }
 
-        line_length="${#count}"
-        ((line_length >= ${padding:=0})) && \
-            padding="${#count}"
+        ((padding = ${#count} >= ${padding:=0} ? ${#count} : ${padding}))
 
         count_arr+=("${count}")
         name_arr+=("${name}")
@@ -151,12 +149,24 @@ print_padding()
 
     ((${#arr[@]} != 1)) && {
         [[ "${display_total}" == "true" ]] && \
-            printf "\\n%s\\n" "Total no. of lines: ${total_count}"
+            if [[ "${character}" == "true" ]]; then
+                printf "\\n%s\\n" "Total no. of characters: ${total_count}"
+            elif [[ "${word}" == "true" ]]; then
+                printf "\\n%s\\n" "Total no. of words: ${total_count}"
+            else
+                printf "\\n%s\\n" "Total no. of lines: ${total_count}"
+            fi
 
         [[ "${display_top}" == "true" ]] && {
             printf "%s\\n" "Longest file:"
             printf "%-4s%s\\n" "" "${max_filename}"
-            printf "%-4s%s\\n" "" "${max_count} lines"
+            if [[ "${character}" == "true" ]]; then
+               printf "%-4s%s\\n" "" "${max_count} characters"
+            elif [[ "${word}" == "true" ]]; then
+               printf "%-4s%s\\n" "" "${max_count} words"
+            else
+               printf "%-4s%s\\n" "" "${max_count} lines"
+            fi
         }
 
         printf "\\n"
@@ -265,6 +275,7 @@ get_args()
             "-t"|"--total")         display_total="true" ;;
             "-f"|"--full-path")     display_full="true" ;;
             "-e"|"--exclude")
+                e_flag="true"
                 shift
                 for i in "$@"; do
                     case "$1" in
@@ -287,7 +298,12 @@ get_args()
                     file_list+=("${1%/}")
             ;;
         esac
-        shift
+
+        if [[ "${e_flag}" == "true" ]]; then
+            e_flag="false"
+        else
+            shift
+        fi
     done
 
     [[ ! "${file_list[*]}" || -d "${file_list[*]}" ]] && {
