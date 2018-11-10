@@ -81,7 +81,7 @@ glog()
     )
 
     IFS="" format_str="${format[*]}"
-    args=("--color=always" "--format=format:${format_str}" "$@")
+    args=("--color=always" "--graph" "--format=format:${format_str}" "$@")
 
     git_out="$(git --no-pager log "${args[@]}" | awk 'NF > 0 {blank=0} NF == 0 {blank++} blank < 2')"
 
@@ -115,6 +115,28 @@ glog2()
 }
 
 glog3()
+{
+    local -a format
+    local -a args
+
+    format=(
+        "%C(bold blue)%h%C(reset) %C(bold yellow)%ar%C(reset) | "
+        "%C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)"
+    )
+
+    IFS="" format_str="${format[*]}"
+    args=("--color=always" "--graph" "--format=format:${format_str}" "$@")
+
+    git_out="$(git --no-pager log "${args[@]}")"
+
+    if (($(wc -l <<< "${git_out}") > LINES)); then
+        less -RS <<< "${git_out}"
+    else
+        less -RSFX <<< "${git_out}"
+    fi
+}
+
+glog4()
 {
     local -a args
 
