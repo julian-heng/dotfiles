@@ -70,7 +70,7 @@ download()
     [[ ! "${source_dir}" ]] && \
         source_dir="${PWD}/${download_url##*/}"
 
-    [[ "${download}" != "false" ]] && {
+    if [[ "${download}" != "false" ]]; then
         printf "%s\\n" "Downloading from \"${download_url}\" to \"${source_dir}\""
         if curl "${download_url}" -o "${source_dir}"; then
             tar -xf "${source_dir}"
@@ -79,7 +79,9 @@ download()
             printf "%s\\n" "Error: Download failed"
             exit 1
         fi
-    }
+    else
+        source_dir="${source_dir/'.tar.gz'}"
+    fi
 }
 
 copy_config()
