@@ -1,5 +1,19 @@
 #!/usr/bin/env bash
 
+get_full_path()
+(
+    target="$1"
+    filename="${target##*/}"
+
+    [[ "${filename}" == "${target}" ]] && \
+        target="./${target}"
+    target="${target%/*}"
+    cd "${target}" || exit
+    full_path="${PWD}/${filename}"
+
+    printf "%s" "${full_path}"
+)
+
 check_apps()
 {
     app_list=("sudo" "make" "pkg-config" "gcc" "curl" "patch")
@@ -20,15 +34,6 @@ check_apps()
         done
         exit 1
     }
-}
-
-check_git_repo_url()
-{
-    if [[ "$(git -C "$1" config --get remote.origin.url)" == "$2" ]]; then
-        return 0
-    else
-        return 1
-    fi
 }
 
 confirm_dependencies()
@@ -55,33 +60,28 @@ Enter yes or no: "
     done
 }
 
-clone()
+download()
 {
-    dir="${HOME}/Git"
-    printf "%s" "Checking for ${dir}..."
+    [[ "${source_dir}" && ! -e "${source_dir}/st.c" ]] && {
+        printf "%s\\n" "\"${source_dir}\" does not contain st source files"
+        download="true"
+    }
 
-    if [[ ! -e "${dir}" || ! -d "${dir}" ]]; then
-        printf "%s\\n" "Does not exist, cloning to ${HOME}"
-        dir="${HOME}"
+    [[ ! "${source_dir}" ]] && \
+        source_dir="${PWD}/${download_url##*/}"
+
+    if [[ "${download}" != "false" ]]; then
+        printf "%s\\n" "Downloading from \"${download_url}\" to \"${source_dir}\""
+        if curl "${download_url}" -o "${source_dir}"; then
+            tar -xf "${source_dir}"
+            source_dir="${source_dir/'.tar.gz'}"
+        else
+            printf "%s\\n" "Error: Download failed"
+            exit 1
+        fi
     else
-        printf "%s\\n" "OK"
+        source_dir="${source_dir/'.tar.gz'}"
     fi
-
-    if [[ ! -e "${dir}/st" ]]; then
-        clone_dir="${dir}/st"
-        printf "%s\\n" "Cloning \"git://git.suckless.org/st\" to ${clone_dir}"
-    elif check_git_repo_url "${dir}/st" "git://git.suckless.org/st"; then
-        clone="${clone:-false}"
-        clone_dir="${dir}/st"
-        printf "%s\\n" "Git repo for st already exist"
-    else
-        clone="${clone:-true}"
-        printf -v clone_dir "%s%(%d-%m-%Y-%T)T" "${dir}/st-" "-1"
-        printf "%s\\n" "Directory is not empty, using ${clone_dir}"
-    fi
-
-    [[ "${clone}" != "false" ]] && \
-        git clone git://git.suckless.org/st "${clone_dir}"
 }
 
 copy_config()
@@ -89,13 +89,13 @@ copy_config()
     [[ "${copy}" == "false" ]] && \
         return 0
 
-    [[ -e "${clone_dir}/config.h" ]] && {
+    [[ -e "${source_dir}/config.h" ]] && {
         printf "%s\\n" "Warning: Config file already exist. Backing up to config.h.bootstrap"
-        mv "${clone_dir}/config.h" "${clone_dir}/config.h.bootstrap"
+        mv "${source_dir}/config.h" "${source_dir}/config.h.bootstrap"
     }
 
     printf "%s\\n" "Copying config file"
-    cp "${BASH_SOURCE%/*}/config.h" "${clone_dir}/config.h"
+    cp "${BASH_SOURCE%/*}/config.h" "${source_dir}/config.h"
 }
 
 apply_patches()
@@ -103,11 +103,13 @@ apply_patches()
     [[ "${patch}" == "false" ]] && \
         return 0
 
-    cd "${clone_dir}" || exit 1
+    cd "${source_dir}" || exit 1
 
     for url in "${urls[@]}"; do
-        printf "%s\\n" "Getting ${url}"
-        patches+=("$(curl -L "${url}" 2> /dev/null)")
+        [[ "${url}" ]] && {
+            printf "%s\\n" "Getting ${url}"
+            patches+=("$(curl -L "${url}" 2> /dev/null)")
+        }
     done
 
     for patch in "${patches[@]}"; do
@@ -120,7 +122,7 @@ make_and_install()
     [[ "${install}" == "false" ]] && \
         return 0
 
-    cd "${clone_dir}" || exit 1
+    cd "${source_dir}" || exit 1
     make
     sudo make install
     mkdir -p "${HOME}/.local/share/applications"
@@ -147,19 +149,23 @@ Usage: ${0##*/} -o --option
 
     Options:
 
-    [-scl|--skip-clone]     Skip cloning the st git repo
-    [-sc|--skip-copy]       Skip copying config file
-    [-sp|--skip-patch]      Skip patching
-    [-si|--skip-install]    Skip installing st
-    [-p|--show-patches]     Show patches to be applied
-    [-h|--help]             Show this message
+    [-sd|--skip-download]       Skip downloading st source files
+    [-sc|--skip-copy]           Skip copying config file
+    [-sp|--skip-patch \"num\"]    Skip patching by selected indexes
+                                If no indexes are given, the skip all patches
+    [-si|--skip-install]        Skip installing st
+    [-d|--source-dir \"dir\"]     Use \"dir\" for st source files
+                                Implies --skip-download
+    [-p|--show-patches]         Show patches to be applied
+    [-h|--help]                 Show this message
 "
 }
 
 show_patches()
 {
+    index="-1"
     for url in "${urls[@]}"; do
-        printf "%s\\n" "${url}"
+        printf "%s\\n" "[$((++index))] ${url}"
     done
 }
 
@@ -167,15 +173,39 @@ get_args()
 {
     while (($# > 0)); do
         case "$1" in
-            "-scl"|"--skip-clone")          clone="false" ;;
+            "-sd"|"--skip-download")        download="false" ;;
             "-scd"|"--skip-dependencies")   dependency_check="false" ;;
             "-sc"|"--skip-copy")            copy="false" ;;
-            "-sp"|"--skip-patch")           patch="false" ;;
+            "-sp"|"--skip-patch")
+                p_flag="true"
+                shift
+                for i in "$@"; do
+                    case "$1" in
+                        "-"*)   break ;;
+                        *)      skip_patch+=("$1"); shift ;;
+                    esac
+                done
+
+                [[ ! "${skip_patch[*]}" ]] && \
+                    patch="false"
+            ;;
+
             "-si"|"--skip-install")         install="false" ;;
+            "-d"|"--source-dir")
+                source_dir="$(get_full_path "$2")"
+                download="false"
+                shift
+            ;;
+
             "-p"|"--show-patches")          show_patches; exit 0 ;;
             "-h"|"--help")                  show_usage; exit 0 ;;
         esac
-        shift
+
+        if [[ "${p_flag}" == "true" ]]; then
+            p_flag="false"
+        else
+            shift
+        fi
     done
 }
 
@@ -188,10 +218,19 @@ main()
         "https://st.suckless.org/patches/scrollback/st-scrollback-mouse-altscreen-0.8.diff"
     )
 
+    download_url="https://dl.suckless.org/st/st-0.8.1.tar.gz"
+
     get_args "$@"
+
+    [[ "${skip_patch[*]}" ]] && \
+        for index in "${skip_patch[@]}"; do
+            [[ "${urls[${index}]}" ]] && \
+                urls[${index}]=""
+        done
+
     check_apps
     confirm_dependencies && {
-        clone
+        download
         copy_config
         apply_patches
         make_and_install
