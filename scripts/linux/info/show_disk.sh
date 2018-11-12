@@ -90,28 +90,16 @@ get_search()
 
 get_root()
 {
-    root="$(awk -F',|:' '/"\/"\}/ { printf "%s", $2}' \
-        <(printf "%s\\n" "${lsblk_out[@]}"))"
-    root="$(trim "${root}")"
+    while read -r line; do
+        [[ "${line}" =~ 'MOUNTPOINT="/"' ]] && \
+            eval "${line}"
+    done < <(printf "%s\\n" "${lsblk_out[@]}")
+    root="$(trim "${KNAME}")"
     printf "%s" "${root}"
 }
 
 get_disk_info()
 {
-    lsblk_script='
-        $0 ~ disk {
-            device = $2
-            name = $4
-            if (name == "null")
-                name = $6
-            part = $8
-            mount = $10
-        }
-        END {
-            printf "%s,%s,%s,%s", \
-                device, name, part, mount
-        }'
-
     df_script='
         $0 ~ disk {
             used = $3
@@ -126,15 +114,19 @@ get_disk_info()
                 used, total, percent
         }'
 
-    IFS="," \
-    read -r disk_device \
-            disk_name \
-            disk_part \
-            disk_mount \
-            < <(awk -F',|: |}' \
-                    -v disk="${search}" \
-                    "${lsblk_script}" \
-                    <(printf "%s\\n" "${lsblk_out[@]}"))
+    match="false"
+
+    while read -r line && [[ "${match}" != "true" ]]; do
+        [[ "${line}" =~ ${search} ]] && {
+            eval "${line}"
+
+            disk_device="${KNAME}"
+            disk_name="${LABEL:-${PARTLABEL}}"
+            disk_part="${FSTYPE}"
+            disk_mount="${MOUNTPOINT}"
+            match="true"
+        }
+    done < <(printf "%s\\n" "${lsblk_out[@]}")
 
     read -r disk_used \
             disk_capacity \
@@ -142,11 +134,6 @@ get_disk_info()
             < <(awk -v disk="${search}" \
                         "${df_script}" \
                         < <(printf "%s\\n" "${df_out[@]}"))
-
-    disk_device="$(trim "${disk_device}")"
-    disk_name="$(trim "${disk_name}")"
-    disk_part="$(trim "${disk_part}")"
-    disk_mount="$(trim "${disk_mount}")"
 }
 
 print_usage()
@@ -191,7 +178,7 @@ main()
         "--output"
         "KNAME,LABEL,PARTLABEL,FSTYPE,MOUNTPOINT"
         "--paths"
-        "--json"
+        "--pair"
     )
 
     mapfile -t df_out < <(df -P --block-size=1)
