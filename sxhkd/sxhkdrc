@@ -1,26 +1,53 @@
+# Opens terminal
 alt + Return
     st
 
+# Move / Navigate windows
 alt + {_,shift + }{h,j,k,l}
     bspc node -{f,s} {west,south,north,east}
 
-alt + {_,shift + }{Left,Down,Up,Right}
-    bspc node -{f,s} {west,south,north,east}
+# Move focus container to workspace
+alt + {_,shift + }{1-9,0}
+    bspc {desktop -f,node -d} '^{1-9,10}'
 
-alt + control + {h,j,k,l}
-    bspc node -z {left -20 0,bottom 0 20,top 0 -20,right 20 0}
+# Resize windows
+alt + control + h
+    bspc node -z left 20 0; \
+    bspc node -z right -20 0
 
-alt + shift + control + {h,j,k,l}
-    bspc node -z {right -20 0,top 0 20,bottom 0 -20,left 20 0}
+alt + control + j
+    bspc node -z top 0 -20; \
+    bspc node -z bottom 0 20
 
-alt + shift + Escape
-    pkill -USR1 -x sxhkd
+alt + control + k
+    bspc node -z top 0 20; \
+    bspc node -z bottom 0 -20
 
-super + alt + Escape
-    bspc quit
+alt + control + l
+    bspc node -z left -20 0; \
+    bspc node -z right 20 0
 
+
+# Equalize size of windows
+alt + shift + e
+    bspc node @/ --equalize
+
+# Rotate windows clockwise and anticlockwise
+alt + {_,shift + } + r
+    bspc node @/ --circulate {backward,forward}
+
+# Rotate on X and Y axis
+alt + shift + {x,y}
+    bspc node @/ --flip {horizontal,vertical}
+
+# Close / Kill windows
 alt + {_,shift + } w
     bspc node -{c,k}
 
-alt + {_,shift + }{1-9,0}
-    bspc {desktop -f,node -d} '^{1-9,10}'
+# Restart sxhkd
+alt + shift + Escape
+    pkill -USR1 -x sxhkd
+
+# Exit bspwm
+alt + shift + q
+    bspc quit
