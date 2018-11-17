@@ -38,13 +38,8 @@ gcll()
 
     while (($# > 0)); do
         case "$1" in
-            "http"*)
-                repo_list+=("$1")
-            ;;
-
-            *)
-                args+=("$1")
-            ;;
+            "http"*) repo_list+=("$1") ;;
+            *) args+=("$1") ;;
         esac
         shift
     done
