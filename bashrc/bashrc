@@ -21,13 +21,11 @@ get_distro()
         ;;
 
         "Linux"|"linux"*)
-            if type -p lsb_release > /dev/null; then
-                distro="$(lsb_release -si)"
-            elif [[ -f "/etc/lsb-release" ]]; then
+            if [[ -f "/etc/lsb-release" ]]; then
                 distro="$(awk '/DISTRIB_ID/ {print $1}' /etc/lsb-release)"
-                distro="${_/DISTRIB_ID=/}"
+                distro="${distro/DISTRIB_ID=/}"
             elif [[ -f "/etc/os-release" ]]; then
-                distro="$(awk -F "=" '/NAME/ {print $2; exit}' /etc/os-release)"
+                distro="$(awk -F "=" '/^NAME/ {print $2; exit}' /etc/os-release)"
                 distro="${distro/NAME=/}"
                 distro="${distro//\"/}"
             fi
@@ -90,13 +88,12 @@ main()
         "${module_dir}/prompt"
     )
 
-    ! type -p __load_completion > /dev/null && {
+    ! type -p __load_completion > /dev/null && \
         if [[ -f "/usr/local/share/bash-completion/bash_completion" ]]; then
             modules+=("/usr/local/share/bash-completion/bash_completion")
         elif [[ -f "/usr/share/bash-completion/bash_completion" ]]; then
             modules+=("/usr/share/bash-completion/bash_completion")
         fi
-    }
 
     for i in "${modules[@]}"; do
         secure_source "${i}"
