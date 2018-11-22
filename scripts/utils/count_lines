@@ -45,18 +45,24 @@ _count_lines()
         mapfile -t line < "${file_path}"
     fi
 
-    if [[ "${character}" == "true" ]]; then
-        raw_file="$(< "${file_path}")"
-        char_count="${#raw_file}"
-        out="${char_count}"
-    elif [[ "${word}" == "true" ]]; then
-        words=(${line[@]})
-        word_count="${#words[@]}"
-        out="${word_count}"
-    else
-        line_count="${#line[@]}"
-        out="${line_count}"
-    fi
+    case "true" in
+        "${character}")
+            raw_file="$(< "${file_path}")"
+            char_count="${#raw_file}"
+            out="${char_count}"
+        ;;
+
+        "${word}")
+            words=(${line[@]})
+            word_count="${#words[@]}"
+            out="${word_count}"
+        ;;
+
+        *)
+            line_count="${#line[@]}"
+            out="${line_count}"
+        ;;
+    esac
 
     [[ "${display_full}" == "true" ]] && \
         file_path="$(get_full_path "${file_path}")"
@@ -149,24 +155,20 @@ print_padding()
 
     ((${#arr[@]} != 1)) && {
         [[ "${display_total}" == "true" ]] && \
-            if [[ "${character}" == "true" ]]; then
-                printf "\\n%s\\n" "Total no. of characters: ${total_count}"
-            elif [[ "${word}" == "true" ]]; then
-                printf "\\n%s\\n" "Total no. of words: ${total_count}"
-            else
-                printf "\\n%s\\n" "Total no. of lines: ${total_count}"
-            fi
+            case "true" in
+                "${character}") printf "\\n%s\\n" "Total no. of characters: ${total_count}" ;;
+                "${word}") printf "\\n%s\\n" "Total no. of words: ${total_count}" ;;
+                *) printf "\\n%s\\n" "Total no. of lines: ${total_count}" ;;
+            esac
 
         [[ "${display_top}" == "true" ]] && {
             printf "%s\\n" "Longest file:"
             printf "%-4s%s\\n" "" "${max_filename}"
-            if [[ "${character}" == "true" ]]; then
-               printf "%-4s%s\\n" "" "${max_count} characters"
-            elif [[ "${word}" == "true" ]]; then
-               printf "%-4s%s\\n" "" "${max_count} words"
-            else
-               printf "%-4s%s\\n" "" "${max_count} lines"
-            fi
+            case "true" in
+                "${character}") printf "%-4s%s\\n" "" "${max_count} characters" ;;
+                "${word}") printf "%-4s%s\\n" "" "${max_count} words" ;;
+                *) printf "%-4s%s\\n" "" "${max_count} lines" ;;
+            esac
         }
 
         printf "\\n"
