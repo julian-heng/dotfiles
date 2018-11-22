@@ -21,7 +21,7 @@ get_window()
 {
     current_window="$("${chunkc_exec}" tiling::query --window id)"
 
-    ((current_window != 0)) && {
+    ((current_window != 0)) && \
         while IFS=":" read -r a b; do
             case "$a" in
                 "name")     window_name="$b" ;;
@@ -29,9 +29,8 @@ get_window()
             esac
         done < <("${chunkc_exec}" tiling::query --window "${current_window}")
 
-        window_name="$(trim "${window_name}")"
-        window_owner="$(trim "${window_owner}")"
-    }
+    window_name="$(trim "${window_name}")"
+    window_owner="$(trim "${window_owner}")"
 }
 
 main()
@@ -63,4 +62,5 @@ main()
     printf "%s" "${out}"
 }
 
-main
+[[ "${BASH_SOURCE}" == "$0" ]] && \
+    main

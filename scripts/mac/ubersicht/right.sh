@@ -30,7 +30,7 @@ get_cpu_load()
 get_fan_temp()
 {
     temp_path="/usr/local/bin/osx-cpu-temp"
-    type -p "${temp_path}" 2>&1 > /dev/null && {
+    type -p "${temp_path}" 2>&1 > /dev/null && \
         while read -r line; do
             case "${line}" in
                 "CPU"*)         temp="${line#*:}" ;;
@@ -38,11 +38,10 @@ get_fan_temp()
             esac
         done < <("${temp_path}" -f -c)
 
-        printf -v temp "%.*f" "0" "${temp/'°C'}"
-        fan="${fan/*at}"
-        fan="${fan/RPM*}"
-        fan="$(trim "${fan}")"
-    }
+    printf -v temp "%.*f" "0" "${temp/'°C'}"
+    fan="${fan/*at}"
+    fan="${fan/RPM*}"
+    fan="$(trim "${fan}")"
 }
 
 get_mem_info()
@@ -70,7 +69,7 @@ get_disk()
 
     read -ra disk_info <<< "${df_line}"
     disk_percent="$(percent "${disk_info[2]}" "${disk_info[1]}")"
-    disk="${disk//\/dev\//}"
+    disk="${disk//'/dev/'/}"
 }
 
 get_wifi()
@@ -86,15 +85,10 @@ get_wifi()
 
 get_bat_info()
 {
-    awk_script='
-        /id=/ { percent = $3; time = $5 }
-        END {
-            printf "%s %s", percent, time
-        }'
-
-    read -r bat_percent \
-            bat_time \
-            < <(awk "${awk_script}" <(pmset -g batt))
+    while IFS="" read -r line; do
+        [[ "${line}" =~ 'id' ]] && \
+            read _ _ bat_percent _ bat_time _ <<< "${line}"
+    done < <(printf "%s\\n" "${bat_out[@]}")
 
     bat_percent="${bat_percent//%;/}"
     bat_info="${bat_percent}%"
@@ -152,4 +146,5 @@ main()
     printf "%s" "${out}"
 }
 
-main
+[[ "${BASH_SOURCE}" == "$0" ]] && \
+    main
