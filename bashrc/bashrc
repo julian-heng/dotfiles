@@ -86,6 +86,7 @@ main()
         "${module_dir}/aliases"
         "${module_dir}/env_var"
         "${module_dir}/prompt"
+        "${module_dir}/command_not_found"
     )
 
     ! type -p __load_completion > /dev/null && \
