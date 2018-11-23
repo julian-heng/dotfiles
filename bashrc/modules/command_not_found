@@ -33,21 +33,15 @@ command_not_found_handle()
 
             while IFS="" read -r line; do
                 case "${line}" in
-                    "Load"*) ;;
-                    *"*"*) ;;
-                    "Last metadata"*) ;;
-                    "Repo"*) ;;
-                    "Matched from"*) ;;
-                    "Provide"*) ;;
-                    "No matches"*) ;;
-                    "") ;;
+                    "Load"*|*"*"*|"Last metadata"*|\
+                    "Repo"*|"Matched from"*|"Provide"*|"") ;;
                     *) pkgs+=("${line%%:*}") ;;
                 esac
             done < <(
                     if [[ "${package_manager}" =~ dnf ]]; then
-                        dnf whatprovides -- "${cmd}"
+                        dnf whatprovides -- "${cmd}" 2> /dev/null
                     else
-                        yum provides -- "${cmd}"
+                        yum provides -- "${cmd}" 2> /dev/null
                     fi
                 )
         ;;
