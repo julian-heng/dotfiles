@@ -17,13 +17,38 @@ command_not_found_handle()
             if ! type -p pkgfile > /dev/null 2>&1; then
                 mapfile -t pkgs < <(pkgfile "${cmd}")
             else
-                while read -r line; do
+                while IFS="" read -r line; do
                     [[ ! "${line}" =~ ^'    ' ]] && \
                         pkgs+=("${line%% *}")
                 done < <(pacman -Fs -- "${cmd}")
             fi
         ;;
-        "Fedora"|"CentOS"*) ;;
+
+        "Fedora"|"CentOS"*)
+            if type -p dnf > /dev/null 2>&1; then
+                package_manager="sudo dnf install"
+            else
+                package_manager="sudo yum install"
+            fi
+
+            while IFS="" read -r line; do
+                case "${line}" in
+                    "Last metadata"*) ;;
+                    "Repo"*) ;;
+                    "Matched from"*) ;;
+                    "Provide"*) ;;
+                    "") ;;
+                    *) pkgs+=("${line%%:*}") ;;
+                esac
+            done < <(
+                    if [[ "${package_manager}" =~ dnf ]]; then
+                        dnf whatprovides -- "${cmd}"
+                    else
+                        yum provides -- "${cmus}"
+                    fi
+                )
+        ;;
+
         "VoidLinux") ;;
         "Gentoo") ;;
         "FreeBSD") ;;
