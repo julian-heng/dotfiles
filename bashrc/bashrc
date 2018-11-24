@@ -86,7 +86,6 @@ main()
         "${module_dir}/aliases"
         "${module_dir}/env_var"
         "${module_dir}/prompt"
-        "${module_dir}/command_not_found"
     )
 
     ! type -p __load_completion > /dev/null && \
@@ -95,6 +94,11 @@ main()
         elif [[ -f "/usr/share/bash-completion/bash_completion" ]]; then
             modules+=("/usr/share/bash-completion/bash_completion")
         fi
+
+    ! type -p command_not_found_handle > /dev/null && \
+        [[ -f "${module_dir}/command_not_found" ]] && \
+            modules+=("${module_dir}/command_not_found")
+
 
     for i in "${modules[@]}"; do
         secure_source "${i}"
