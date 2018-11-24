@@ -14,7 +14,7 @@ command_not_found_handle()
         "Ubuntu"*|"Debian"*|"Raspbian"*) ;;
         "Antergos"*|"Arch"*)
             package_manager="sudo pacman -S"
-            if ! type -p pkgfile > /dev/null 2>&1; then
+            if type -p pkgfile > /dev/null 2>&1; then
                 mapfile -t pkgs < <(pkgfile "${cmd}")
             else
                 while IFS="" read -r line; do
