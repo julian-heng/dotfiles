@@ -10,7 +10,6 @@ command_not_found_handle()
     printf "bash: %s: command not found\\n" "${cmd}" 1>&2
 
     case "${distro}" in
-        "MacOS") ;;
         "Ubuntu"*|"Debian"*|"Raspbian"*) ;;
         "Antergos"*|"Arch"*)
             package_manager="sudo pacman -S"
