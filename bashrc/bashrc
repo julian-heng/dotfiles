@@ -106,7 +106,6 @@ main()
         [[ -f "${module_dir}/command_not_found" ]] && \
             modules+=("${module_dir}/command_not_found")
 
-
     for i in "${modules[@]}"; do
         secure_source "${i}"
     done
