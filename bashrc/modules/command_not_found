@@ -10,7 +10,12 @@ command_not_found_handle()
     printf "bash: %s: command not found\\n" "${cmd}" 1>&2
 
     case "${distro}" in
-        "Ubuntu"*|"Debian"*|"Raspbian"*) ;;
+        "Ubuntu"*|"Debian"*|"Raspbian"*)
+            package_manager="sudo apt install"
+            type -p apt-file > /dev/null 2>&1 && \
+                mapfile -t pkgs < <(apt-file --package-only search -- "bin/${cmd}")
+        ;;
+
         "Antergos"*|"Arch"*)
             package_manager="sudo pacman -S"
             if type -p pkgfile > /dev/null 2>&1; then
