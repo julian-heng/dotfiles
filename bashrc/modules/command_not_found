@@ -49,10 +49,6 @@ command_not_found_handle()
                     fi
                 )
         ;;
-
-        "VoidLinux") ;;
-        "Gentoo") ;;
-        "FreeBSD") ;;
     esac
 
     [[ "${pkgs[*]}" ]] && {
