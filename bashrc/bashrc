@@ -22,12 +22,17 @@ get_distro()
 
         "Linux"|"linux"*)
             if [[ -f "/etc/lsb-release" ]]; then
-                distro="$(awk '/DISTRIB_ID/ {print $1}' /etc/lsb-release)"
-                distro="${distro/DISTRIB_ID=/}"
+                while read -r line && [[ ! "${distro}" ]]; do
+                    [[ "${line}" =~ 'DISTRIB_ID' ]] && \
+                        distro="${line/'DISTRIB_ID='}"
+                done < /etc/lsb-release
             elif [[ -f "/etc/os-release" ]]; then
-                distro="$(awk -F "=" '/^NAME/ {print $2; exit}' /etc/os-release)"
-                distro="${distro/NAME=/}"
-                distro="${distro//\"/}"
+                while read -r line && [[ ! "${distro}" ]]; do
+                    [[ "${line}" =~ ^'NAME' ]] && {
+                        distro="${line/'NAME='}"
+                        distro="${distro//\"}"
+                    }
+                done < /etc/os-release
             fi
         ;;
 
@@ -68,7 +73,9 @@ get_full_path()
 get_module_dir()
 {
     if [[ "${distro}" != "Windows" ]]; then
-        module_dir="$(awk -F' -> ' '{printf "%s", $2}' <(ls -l "${BASH_SOURCE[0]}"))"
+        module_dir="$(ls -l "${BASH_SOURCE[0]}")"
+        module_dir="${module_dir##*->}"
+        module_dir="${module_dir//[[:space:]]}"
         module_dir="${module_dir%/*}/modules"
     else
         module_dir="${HOME}/.dotfiles/bashrc/modules"
