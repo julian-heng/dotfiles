@@ -90,11 +90,11 @@ get_search()
 
 get_root()
 {
-    while read -r line; do
+    while read -r line && [[ ! "${root}" ]]; do
         [[ "${line}" =~ 'MOUNTPOINT="/"' ]] && \
-            eval "${line}"
+            read -r root _ <<< "${line}"
     done < <(printf "%s\\n" "${lsblk_out[@]}")
-    root="$(trim "${KNAME}")"
+    root="$(trim "${root/'KNAME='}")"
     printf "%s" "${root}"
 }
 
@@ -118,12 +118,19 @@ get_disk_info()
 
     while read -r line && [[ "${match}" != "true" ]]; do
         [[ "${line}" =~ ${search} ]] && {
-            eval "${line}"
+            read -r disk_device \
+                    disk_label \
+                    disk_partlabel \
+                    disk_part \
+                    disk_mount <<< "${line}"
 
-            disk_device="${KNAME}"
-            disk_name="${LABEL:-${PARTLABEL}}"
-            disk_part="${FSTYPE}"
-            disk_mount="${MOUNTPOINT}"
+            disk_device="$(trim "${disk_device##*=}")"
+            disk_label="$(trim "${disk_label##*=}")"
+            disk_partlabel="$(trim "${disk_partlabel##*=}")"
+            disk_part="$(trim "${disk_part##*=}")"
+            disk_mount="$(trim "${disk_mount##*=}")"
+
+            disk_name="${disk_label:-${disk_partlabel}}"
             match="true"
         }
     done < <(printf "%s\\n" "${lsblk_out[@]}")
@@ -163,8 +170,8 @@ get_args()
         case "$1" in
             "--stdout")     stdout="true" ;;
             "-r"|"--raw")   raw="true" ;;
-            "-d"|"--disk")  type="disk"; search="$2" ;;
-            "-m"|"--mount") type="mount"; search="$2" ;;
+            "-d"|"--disk")  type="disk"; search="${2%/}" ;;
+            "-m"|"--mount") type="mount"; search="${2%/}" ;;
             "-h"|"--help")  print_usage; exit ;;
         esac
         shift
