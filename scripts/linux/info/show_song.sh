@@ -77,6 +77,7 @@ print_usage()
     Options:
 
     [--stdout]              Print to stdout
+    [-r|--raw]              Print raw values delimited by commas
     [-h|--help]             Show this message
 
     If notify-send is not installed, then the script will
@@ -89,6 +90,7 @@ get_args()
     while (($# > 0)); do
         case "$1" in
             "--stdout") stdout="true" ;;
+            "-r"|"--raw") raw="true" ;;
             "-h"|"--help") print_usage; exit ;;
         esac
         shift
@@ -125,6 +127,15 @@ main()
                 message_parts+=("${album}")
         ;;
     esac
+
+    [[ "${raw}" ]] && {
+        printf -v out "%s," \
+            "${artist:-none}" \
+            "${album:-none}"
+        printf -v out "%s%s" "${out}" "${track:-none}"
+        printf "%s\\n" "${out}"
+        exit 0
+    }
 
     notify
 }

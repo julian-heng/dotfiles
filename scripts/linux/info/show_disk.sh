@@ -144,6 +144,7 @@ Usage: ${0##*/} --option --option \"value\"
     Options:
 
     [--stdout]              Print to stdout
+    [-r|--raw]              Print raw values delimited by commas
     [-d|--disk]             Show information for selected disk
                             Defaults to $(get_root)
     [-m|--mount]            Show information for a mounted disk
@@ -161,6 +162,7 @@ get_args()
     while (($# > 0)); do
         case "$1" in
             "--stdout")     stdout="true" ;;
+            "-r"|"--raw")   raw="true" ;;
             "-d"|"--disk")  type="disk"; search="$2" ;;
             "-m"|"--mount") type="mount"; search="$2" ;;
             "-h"|"--help")  print_usage; exit ;;
@@ -195,6 +197,19 @@ main()
     [[ "${disk_device}" == "" \
     || "${disk_capacity}" == "0.00" \
     ]] && exit 1
+
+    [[ "${raw}" ]] && {
+        printf -v out "%s," \
+            "${disk_name}" \
+            "${disk_mount}" \
+            "${disk_used} GiB" \
+            "${disk_capacity} GiB" \
+            "${disk_percent}%" \
+            "${disk_device}"
+        printf -v out "%s%s" "${out}" "${disk_part}"
+        printf "%s\\n" "${out}"
+        exit 0
+    }
 
     [[ "${disk_name}" ]] && \
         title_parts+=("${disk_name}")

@@ -217,6 +217,7 @@ Usage: ${0##*/} --option --option \"value\"
     Options:
 
     [--stdout]              Print to stdout
+    [-r|--raw]              Print raw values delimited by commas
     [-h|--help]             Show this message
 
     If notify-send is not installed, then the script will
@@ -229,6 +230,7 @@ get_args()
     while (($# > 0)); do
         case "$1" in
             "--stdout") stdout="true" ;;
+            "-r"|"--raw") raw="true" ;;
             "-h"|"--help") print_usage; exit ;;
         esac
         shift
@@ -242,6 +244,20 @@ main()
 {
     get_args "$@"
     get_bat_info
+
+    [[ "${raw}" ]] && {
+        printf -v out "%s," \
+            "${bat_percent}%" \
+            "${bat_time}" \
+            "${bat_condition}%" \
+            "${bat_temp}°C" \
+            "${bat_cycles} Cycles" \
+            "${bat_status^}" \
+            "${bat_current} mAh"
+        printf -v out "%s%s" "${out}" "${bat_power}"
+        printf "%s\\n" "${out}"
+        exit 0
+    }
 
     title_parts+=("Battery")
     [[ "${bat_percent}" ]] && \

@@ -206,6 +206,7 @@ Usage: ${0##*/} --option --option \"value\"
     Options:
 
     [--stdout]              Print to stdout
+    [-r|--raw]              Print raw values delimited by commas
     [-s|--speed-type]       Use [current] or [max]imum cpu frequency
                             Default is current
     [-h|--help]             Show this message
@@ -220,6 +221,7 @@ get_args()
     while (($# > 0)); do
         case "$1" in
             "--stdout")             stdout="true" ;;
+            "-r"|"--raw")           raw="true" ;;
             "-s"|"--speed-type")    speed_type="$2"; shift ;;
             "-h"|"--help")          print_usage; exit ;;
         esac
@@ -243,6 +245,17 @@ main()
     get_temp
     get_fan
     get_uptime
+
+    [[ "${raw}" ]] && {
+        printf -v out "%s," \
+            "${cpu}" \
+            "${cpu_usage}%" \
+            "${temp}" \
+            "${fan}"
+        printf -v out "%s%s" "${out}" "${uptime}"
+        printf "%s\\n" "${out}"
+        exit 0
+    }
 
     title_parts+=("${cpu:-CPU}")
 

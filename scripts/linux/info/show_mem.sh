@@ -82,6 +82,7 @@ Usage: ${0##*/} --option --option \"value\"
     Options:
 
     [--stdout]              Print to stdout
+    [-r|--raw]              Print raw values delimited by commas
     [-h|--help]             Show this message
 
     If notify-send is not installed, then the script will
@@ -94,6 +95,7 @@ get_args()
     while (($# > 0)); do
         case "$1" in
             "--stdout") stdout="true" ;;
+            "-r"|"--raw") raw="true" ;;
             "-h"|"--help") print_usage; exit ;;
         esac
         shift
@@ -107,6 +109,17 @@ main()
 {
     get_args "$@"
     get_mem_info
+
+    [[ "${raw}" ]] && {
+        printf -v out "%s," \
+            "${mem_percent}%" \
+            "${mem_used} MiB" \
+            "${mem_total} MiB" \
+            "${swap_used} MiB"
+        printf -v out "%s%s" "${out}" "${swap_total} MiB"
+        printf "%s\\n" "${out}"
+        exit 0
+    }
 
     [[ "${mem_percent}" ]] && \
         title_parts+=("Memory" "(${mem_percent}%)")
