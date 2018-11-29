@@ -24,7 +24,7 @@ notify()
     [[ "${message:-1:1}" == "|" ]] && \
         message="${message%%' |'}"
 
-    if [[ "${stdout}" ]]; then
+    if [[ "${out_mode}" == "stdout" ]] || ! type -p notify-send > /dev/null 2>&1; then
         [[ "${title}" ]] && \
             display+=("${title}")
         [[ "${subtitle}" ]] && \
@@ -94,15 +94,12 @@ get_args()
 {
     while (($# > 0)); do
         case "$1" in
-            "--stdout") stdout="true" ;;
-            "-r"|"--raw") raw="true" ;;
-            "-h"|"--help") print_usage; exit ;;
+            "--stdout")     out_mode="stdout" ;;
+            "-r"|"--raw")   out_mode="raw" ;;
+            "-h"|"--help")  print_usage; exit ;;
         esac
         shift
     done
-
-    ! type -p notify-send > /dev/null && \
-        stdout="true"
 }
 
 main()
@@ -110,33 +107,36 @@ main()
     get_args "$@"
     get_mem_info
 
-    [[ "${raw}" ]] && {
-        printf -v out "%s," \
-            "${mem_percent}%" \
-            "${mem_used} MiB" \
-            "${mem_total} MiB" \
-            "${swap_used} MiB"
-        printf -v out "%s%s" "${out}" "${swap_total} MiB"
-        printf "%s\\n" "${out}"
-        exit 0
-    }
+    case "${out_mode}" in
+        "stdout"|"")
+            [[ "${mem_percent}" ]] && \
+                title_parts+=("Memory" "(${mem_percent}%)")
 
-    [[ "${mem_percent}" ]] && \
-        title_parts+=("Memory" "(${mem_percent}%)")
+            [[ "${mem_used}" ]] && \
+                subtitle_parts+=("${mem_used}" "MiB")
 
-    [[ "${mem_used}" ]] && \
-        subtitle_parts+=("${mem_used}" "MiB")
+            [[ "${mem_total}" ]] && \
+                subtitle_parts+=("|" "${mem_total}" "MiB")
 
-    [[ "${mem_total}" ]] && \
-        subtitle_parts+=("|" "${mem_total}" "MiB")
+            [[ "${swap_used}" ]] && \
+                message_parts+=("Swap:" "${swap_used}" "MiB")
 
-    [[ "${swap_used}" ]] && \
-        message_parts+=("Swap:" "${swap_used}" "MiB")
+            [[ "${swap_total}" ]] && \
+                message_parts+=("|" "${swap_total}" "MiB")
 
-    [[ "${swap_total}" ]] && \
-        message_parts+=("|" "${swap_total}" "MiB")
+            notify
+        ;;
 
-    notify
+        "raw")
+            printf -v out "%s," \
+                "${mem_percent}%" \
+                "${mem_used} MiB" \
+                "${mem_total} MiB" \
+                "${swap_used} MiB"
+            printf -v out "%s%s" "${out}" "${swap_total} MiB"
+            printf "%s\\n" "${out}"
+        ;;
+    esac
 }
 
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && \
