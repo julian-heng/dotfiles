@@ -19,6 +19,12 @@ print_line()
     local pat="$5"
     local i j
 
+    ((length_x = length_x == 0 ? length_x + 1 : length_x))
+    ((length_y = length_y == 0 ? length_y + 1 : length_y))
+
+    ((start_x += ${x_offset:-0}))
+    ((start_y += ${y_offset:-0}))
+
     printf "\\e[%d;%dH" "${start_x}" "${start_y}"
 
     for ((i = 0; i < length_y; i++)); do
