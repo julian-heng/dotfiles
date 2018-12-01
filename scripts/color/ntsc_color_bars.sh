@@ -8,12 +8,14 @@ init_colors()
     reset=$'\e[0m'
 }
 
-print_bar()
+print_line()
 {
     local start_x="$1"
     local start_y="$2"
-    local length_x="$3"
-    local length_y="$4"
+    local end_x="$3"
+    local end_y="$4"
+    local length_x="$((end_x - start_x))"
+    local length_y="$((end_y - start_y))"
     local col="$5"
     local i j
 
@@ -51,15 +53,29 @@ main()
     )
 
     for ((i = 0; i < 7; i++)); do
-        print_bar "$((2 + (i * 4)))" "1" "4" "8" "${set1[$i]}"
+        start_x="$((2 + (i * 4)))"
+        start_y="1"
+        end_x="$((start_x + 4))"
+        end_y="$((start_y + 8))"
+        print_line "${start_x}" "${start_y}" "${end_x}" "${end_y}" "${set1[$i]}"
     done
 
     for ((i = 0; i < 7; i++)); do
-        print_bar "$((2 + (i * 4)))" "9" "4" "1" "${set2[$i]}"
+        start_x="$((2 + (i * 4)))"
+        start_y="9"
+        end_x="$((start_x + 4))"
+        end_y="$((start_y + 1))"
+
+        print_line "${start_x}" "${start_y}" "${end_x}" "${end_y}" "${set2[$i]}"
     done
 
     for ((i = 0; i < 4; i++)); do
-        print_bar "$((2 + (i * 5)))" "10" "5" "2" "${set3[$i]}"
+        start_x="$((2 + (i * 5)))"
+        start_y="10"
+        end_x="$((start_x + 5))"
+        end_y="$((start_y + 2))"
+
+        print_line "${start_x}" "${start_y}" "${end_x}" "${end_y}" "${set3[$i]}"
     done
 
     printf "%s\\n\\n" "${reset}"
