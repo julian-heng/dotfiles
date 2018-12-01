@@ -59,38 +59,32 @@ main()
     )
 
     for ((i = 0; i < ${#set1[@]}; i++)); do
-        start_x="$((2 + (i * 4)))"
-        start_y="1"
-        end_x="$((start_x + 4))"
-        end_y="$((start_y + 8))"
-        print_line "${start_x}" "${start_y}" "${end_x}" "${end_y}" "${set1[$i]}█"
+        (
+            x_offset="$((2 + (i * 4)))"
+            print_line "1" "1" "5" "9" "${set1[$i]}█"
+        ) &
     done
 
     for ((i = 0; i < ${#set2[@]}; i++)); do
-        start_x="$((2 + (i * 4)))"
-        start_y="9"
-        end_x="$((start_x + 4))"
-        end_y="$((start_y + 1))"
-
-        print_line "${start_x}" "${start_y}" "${end_x}" "${end_y}" "${set2[$i]}█"
+        (
+            x_offset="$((2 + (i * 4)))"
+            print_line "1" "9" "5" "10" "${set2[$i]}█"
+        ) &
     done
 
     for ((i = 0; i < ${#set3[@]}; i++)); do
-        start_x="$((2 + (i * 5)))"
-        start_y="10"
-        end_x="$((start_x + 5))"
-        end_y="$((start_y + 2))"
-
-        print_line "${start_x}" "${start_y}" "${end_x}" "${end_y}" "${set3[$i]}█"
+        (
+            x_offset="$((2 + (i * 5)))"
+            print_line "1" "10" "6" "12" "${set3[$i]}█"
+        ) &
     done
 
-    start_x="$((start_x + 5))"
-    start_y="10"
-    end_x="$((start_x + 13))"
-    end_y="$((start_y + 2))"
+    (
+        x_offset="$((2 + (i * 5)))"
+        print_line "1" "10" "14" "12" "${f[0]}█"
+    ) &
 
-    print_line "${start_x}" "${start_y}" "${end_x}" "${end_y}" "${f[0]}█"
-
+    wait
     printf "%s\\n\\n" "${reset}"
 }
 
