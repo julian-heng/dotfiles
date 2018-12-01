@@ -8,7 +8,7 @@ init_colors()
     reset=$'\e[0m'
 }
 
-print_line()
+print_box()
 {
     local start_x="$1"
     local start_y="$2"
@@ -71,21 +71,21 @@ main()
 
     for ((i = 0; i < ${#set1[@]}; i++)); do
         x_offset="$((2 + (i * 4)))"
-        print_line "1" "1" "5" "9" "${set1[$i]}█"
+        print_box "1" "1" "5" "9" "${set1[$i]}█"
     done
 
     for ((i = 0; i < ${#set2[@]}; i++)); do
         x_offset="$((2 + (i * 4)))"
-        print_line "1" "9" "5" "10" "${set2[$i]}█"
+        print_box "1" "9" "5" "10" "${set2[$i]}█"
     done
 
     for ((i = 0; i < ${#set3[@]}; i++)); do
         x_offset="$((2 + (i * 5)))"
-        print_line "1" "10" "6" "12" "${set3[$i]}█"
+        print_box "1" "10" "6" "12" "${set3[$i]}█"
     done
 
     x_offset="$((2 + (i * 5)))"
-    print_line "1" "10" "14" "12" "${f[0]}█"
+    print_box "1" "10" "14" "12" "${f[0]}█"
 
     printf "%s\\n\\n" "${reset}"
 }

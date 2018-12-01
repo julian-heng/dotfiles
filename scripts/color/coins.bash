@@ -8,7 +8,7 @@ init_colors()
     reset=$'\e[0m'
 }
 
-print_line()
+print_box()
 {
     local start_x="$1"
     local start_y="$2"
@@ -65,22 +65,22 @@ main()
     (
         x_offset="$((i * 14))"
 
-        print_line "5" "3" "12" "12" "${f[$i]}█"
-        print_line "4" "4" "13" "11" "${f[$i]}█"
-        print_line "13" "6" "13" "9" "${f[$i]}█"
-        print_line "7" "12" "10" "12" "${f[$i]}█"
+        print_box "5" "3" "12" "12" "${f[$i]}█"
+        print_box "4" "4" "13" "11" "${f[$i]}█"
+        print_box "13" "6" "13" "9" "${f[$i]}█"
+        print_box "7" "12" "10" "12" "${f[$i]}█"
 
-        print_line "10" "4" "10" "11" "${f[0]}█"
-        print_line "7" "10" "10" "10" "${f[0]}█"
+        print_box "10" "4" "10" "11" "${f[0]}█"
+        print_box "7" "10" "10" "10" "${f[0]}█"
 
-        print_line "7" "2" "10" "2" "${f[7]}█"
-        print_line "5" "3" "7" "3" "${f[7]}█"
-        print_line "4" "4" "5" "4" "${f[7]}█"
-        print_line "7" "4" "10" "4" "${f[7]}█"
-        print_line "3" "5" "3" "9" "${f[7]}█"
-        print_line "7" "4" "7" "10" "${f[7]}█"
-        print_line "4" "9" "4" "11" "${f[7]}█"
-        print_line "5" "11" "5" "11" "${f[7]}█"
+        print_box "7" "2" "10" "2" "${f[7]}█"
+        print_box "5" "3" "7" "3" "${f[7]}█"
+        print_box "4" "4" "5" "4" "${f[7]}█"
+        print_box "7" "4" "10" "4" "${f[7]}█"
+        print_box "3" "5" "3" "9" "${f[7]}█"
+        print_box "7" "4" "7" "10" "${f[7]}█"
+        print_box "4" "9" "4" "11" "${f[7]}█"
+        print_box "5" "11" "5" "11" "${f[7]}█"
     )
 
     for ((i = 0; i < ${#f[@]}; i++)); do
