@@ -34,7 +34,7 @@ notify()
     [[ "${message:-1:1}" == "|" ]] && \
         message="${message%%' |'}"
 
-    if [[ "${stdout}" ]]; then
+    if [[ "${out_mode}" == "stdout" ]] || ! type -p notify-send > /dev/null 2>&1; then
         [[ "${title}" ]] && \
             display+=("${title}")
         [[ "${subtitle}" ]] && \
@@ -168,17 +168,14 @@ get_args()
 {
     while (($# > 0)); do
         case "$1" in
-            "--stdout")     stdout="true" ;;
-            "-r"|"--raw")   raw="true" ;;
+            "--stdout")     out_mode="stdout" ;;
+            "-r"|"--raw")   out_mode="raw" ;;
             "-d"|"--disk")  type="disk"; search="${2%/}" ;;
             "-m"|"--mount") type="mount"; search="${2%/}" ;;
             "-h"|"--help")  print_usage; exit ;;
         esac
         shift
     done
-
-    ! type -p notify-send > /dev/null && \
-        stdout="true"
 }
 
 main()
@@ -205,41 +202,44 @@ main()
     || "${disk_capacity}" == "0.00" \
     ]] && exit 1
 
-    [[ "${raw}" ]] && {
-        printf -v out "%s," \
-            "${disk_name}" \
-            "${disk_mount}" \
-            "${disk_used} GiB" \
-            "${disk_capacity} GiB" \
-            "${disk_percent}%" \
-            "${disk_device}"
-        printf -v out "%s%s" "${out}" "${disk_part}"
-        printf "%s\\n" "${out}"
-        exit 0
-    }
+    case "${out_mode}" in
+        "stdout"|"")
+            [[ "${disk_name}" ]] && \
+                title_parts+=("${disk_name}")
 
-    [[ "${disk_name}" ]] && \
-        title_parts+=("${disk_name}")
+            [[ "${disk_mount}" ]] && \
+                title_parts+=("(${disk_mount})")
 
-    [[ "${disk_mount}" ]] && \
-        title_parts+=("(${disk_mount})")
+            [[ "${disk_used}" ]] && \
+                subtitle_parts+=("${disk_used}" "GiB")
 
-    [[ "${disk_used}" ]] && \
-        subtitle_parts+=("${disk_used}" "GiB")
+            [[ "${disk_capacity}" ]] && \
+                subtitle_parts+=("|" "${disk_capacity}" "GiB")
 
-    [[ "${disk_capacity}" ]] && \
-        subtitle_parts+=("|" "${disk_capacity}" "GiB")
+            [[ "${disk_percent}" ]] && \
+                subtitle_parts+=("(${disk_percent}%)")
 
-    [[ "${disk_percent}" ]] && \
-        subtitle_parts+=("(${disk_percent}%)")
+            [[ "${disk_device}" ]] && \
+                message_parts+=("${disk_device}")
 
-    [[ "${disk_device}" ]] && \
-        message_parts+=("${disk_device}")
+            [[ "${disk_part}" ]] && \
+                message_parts+=("|" "${disk_part}")
 
-    [[ "${disk_part}" ]] && \
-        message_parts+=("|" "${disk_part}")
+            notify
+        ;;
 
-    notify
+        "raw")
+            printf -v out "%s," \
+                "${disk_name}" \
+                "${disk_mount}" \
+                "${disk_used} GiB" \
+                "${disk_capacity} GiB" \
+                "${disk_percent}%" \
+                "${disk_device}"
+            printf -v out "%s%s" "${out}" "${disk_part}"
+            printf "%s\\n" "${out}"
+        ;;
+    esac
 }
 
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && \

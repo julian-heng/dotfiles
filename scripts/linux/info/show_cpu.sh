@@ -34,7 +34,7 @@ notify()
     [[ "${message:-1:1}" == "|" ]] && \
         message="${message%%' |'}"
 
-    if [[ "${stdout}" ]]; then
+    if [[ "${out_mode}" == "stdout" ]] || ! type -p notify-send > /dev/null 2>&1; then
         [[ "${title}" ]] && \
             display+=("${title}")
         [[ "${subtitle}" ]] && \
@@ -220,16 +220,13 @@ get_args()
 {
     while (($# > 0)); do
         case "$1" in
-            "--stdout")             stdout="true" ;;
-            "-r"|"--raw")           raw="true" ;;
+            "--stdout")             out_mode="stdout" ;;
+            "-r"|"--raw")           out_mode="raw" ;;
             "-s"|"--speed-type")    speed_type="$2"; shift ;;
             "-h"|"--help")          print_usage; exit ;;
         esac
         shift
     done
-
-    ! type -p notify-send > /dev/null && \
-        stdout="true"
 }
 
 main()
@@ -246,35 +243,38 @@ main()
     get_fan
     get_uptime
 
-    [[ "${raw}" ]] && {
-        printf -v out "%s," \
-            "${cpu}" \
-            "${cpu_usage}%" \
-            "${temp}" \
-            "${fan}"
-        printf -v out "%s%s" "${out}" "${uptime}"
-        printf "%s\\n" "${out}"
-        exit 0
-    }
+    case "${out_mode}" in
+        "stdout"|"")
+            title_parts+=("${cpu:-CPU}")
 
-    title_parts+=("${cpu:-CPU}")
+            [[ "${load_avg}" ]] && \
+                subtitle_parts+=("Load avg:" "${load_avg}")
 
-    [[ "${load_avg}" ]] && \
-        subtitle_parts+=("Load avg:" "${load_avg}")
+            [[ "${cpu_usage}" ]] && \
+                subtitle_parts+=("|" "${cpu_usage}%")
 
-    [[ "${cpu_usage}" ]] && \
-        subtitle_parts+=("|" "${cpu_usage}%")
+            [[ "${temp}" ]] && \
+                subtitle_parts+=("|" "${temp}")
 
-    [[ "${temp}" ]] && \
-        subtitle_parts+=("|" "${temp}")
+            [[ "${fan}" ]] && \
+                subtitle_parts+=("|" "${fan}")
 
-    [[ "${fan}" ]] && \
-        subtitle_parts+=("|" "${fan}")
+            [[ "${uptime}" ]] && \
+                message_parts+=("Uptime:" "${uptime}")
 
-    [[ "${uptime}" ]] && \
-        message_parts+=("Uptime:" "${uptime}")
+            notify
+        ;;
 
-    notify
+        "raw")
+            printf -v out "%s," \
+                "${cpu}" \
+                "${cpu_usage}%" \
+                "${temp}" \
+                "${fan}"
+            printf -v out "%s%s" "${out}" "${uptime}"
+            printf "%s\\n" "${out}"
+        ;;
+    esac
 }
 
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && \

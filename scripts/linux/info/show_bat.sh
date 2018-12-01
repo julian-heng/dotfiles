@@ -34,7 +34,7 @@ notify()
     [[ "${message:-1:1}" == "|" ]] && \
         message="${message%%' |'}"
 
-    if [[ "${stdout}" ]]; then
+    if [[ "${out_mode}" == "stdout" ]] || ! type -p notify-send > /dev/null 2>&1; then
         [[ "${title}" ]] && \
             display+=("${title}")
         [[ "${subtitle}" ]] && \
@@ -229,15 +229,12 @@ get_args()
 {
     while (($# > 0)); do
         case "$1" in
-            "--stdout") stdout="true" ;;
-            "-r"|"--raw") raw="true" ;;
-            "-h"|"--help") print_usage; exit ;;
+            "--stdout")     out_mode="stdout" ;;
+            "-r"|"--raw")   out_mode="raw" ;;
+            "-h"|"--help")  print_usage; exit ;;
         esac
         shift
     done
-
-    ! type -p notify-send > /dev/null && \
-        stdout="true"
 }
 
 main()
@@ -245,46 +242,49 @@ main()
     get_args "$@"
     get_bat_info
 
-    [[ "${raw}" ]] && {
-        printf -v out "%s," \
-            "${bat_percent}%" \
-            "${bat_time}" \
-            "${bat_condition}%" \
-            "${bat_temp}°C" \
-            "${bat_cycles} Cycles" \
-            "${bat_status^}" \
-            "${bat_current} mAh"
-        printf -v out "%s%s" "${out}" "${bat_power}"
-        printf "%s\\n" "${out}"
-        exit 0
-    }
+    case "${out_mode}" in
+        "stdout"|"")
+            title_parts+=("Battery")
+            [[ "${bat_percent}" ]] && \
+                title_parts+=("(${bat_percent}%)")
 
-    title_parts+=("Battery")
-    [[ "${bat_percent}" ]] && \
-        title_parts+=("(${bat_percent}%)")
+            [[ ! "${bat_status}" =~ (Full|idle) && "${bat_time}" ]] && \
+                subtitle_parts+=("${bat_time}")
 
-    [[ ! "${bat_status}" =~ (Full|idle) && "${bat_time}" ]] && \
-        subtitle_parts+=("${bat_time}")
+            [[ "${bat_condition}" ]] && \
+                subtitle_parts+=("|" "Condition: ${bat_condition}%")
 
-    [[ "${bat_condition}" ]] && \
-        subtitle_parts+=("|" "Condition: ${bat_condition}%")
+            [[ "${bat_temp}" ]] && \
+                subtitle_parts+=("|" "${bat_temp}°C")
 
-    [[ "${bat_temp}" ]] && \
-        subtitle_parts+=("|" "${bat_temp}°C")
+            [[ "${bat_cycles}" ]] && \
+                subtitle_parts+=("|" "${bat_cycles} Cycles")
 
-    [[ "${bat_cycles}" ]] && \
-        subtitle_parts+=("|" "${bat_cycles} Cycles")
+            [[ "${bat_status}" ]] && \
+                message_parts+=("${bat_status^}")
 
-    [[ "${bat_status}" ]] && \
-        message_parts+=("${bat_status^}")
+            [[ "${bat_current}" ]] && \
+                message_parts+=("|" "${bat_current} mAh")
 
-    [[ "${bat_current}" ]] && \
-        message_parts+=("|" "${bat_current} mAh")
+            [[ "${bat_power}" ]] && \
+                message_parts+=("|" "${bat_power} Watts")
 
-    [[ "${bat_power}" ]] && \
-        message_parts+=("|" "${bat_power} Watts")
+            notify
+        ;;
 
-    notify
+        "raw")
+            printf -v out "%s," \
+                "${bat_percent}%" \
+                "${bat_time}" \
+                "${bat_condition}%" \
+                "${bat_temp}°C" \
+                "${bat_cycles} Cycles" \
+                "${bat_status^}" \
+                "${bat_current} mAh"
+            printf -v out "%s%s" "${out}" "${bat_power}"
+            printf "%s\\n" "${out}"
+        ;;
+    esac
 }
 
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && \

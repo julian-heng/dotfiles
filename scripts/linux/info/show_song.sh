@@ -24,7 +24,7 @@ notify()
     [[ "${message:-1:1}" == "|" ]] && \
         message="${message%%' |'}"
 
-    if [[ "${stdout}" ]]; then
+    if [[ "${out_mode}" == "stdout" ]] || ! type -p notify-send > /dev/null 2>&1; then
         [[ "${title}" ]] && \
             display+=("${title}")
         [[ "${subtitle}" ]] && \
@@ -89,15 +89,12 @@ get_args()
 {
     while (($# > 0)); do
         case "$1" in
-            "--stdout") stdout="true" ;;
-            "-r"|"--raw") raw="true" ;;
-            "-h"|"--help") print_usage; exit ;;
+            "--stdout")     out_mode="stdout" ;;
+            "-r"|"--raw")   out_mode="raw" ;;
+            "-h"|"--help")  print_usage; exit ;;
         esac
         shift
     done
-
-    ! type -p notify-send > /dev/null && \
-        stdout="true"
 }
 
 main()
@@ -128,16 +125,19 @@ main()
         ;;
     esac
 
-    [[ "${raw}" ]] && {
-        printf -v out "%s," \
-            "${artist:-none}" \
-            "${album:-none}"
-        printf -v out "%s%s" "${out}" "${track:-none}"
-        printf "%s\\n" "${out}"
-        exit 0
-    }
+    case "${out_mode}" in
+        "stdout"|"")
+            notify
+        ;;
 
-    notify
+        "raw")
+            printf -v out "%s," \
+                "${artist:-none}" \
+                "${album:-none}"
+            printf -v out "%s%s" "${out}" "${track:-none}"
+            printf "%s\\n" "${out}"
+        ;;
+    esac
 }
 
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && \
