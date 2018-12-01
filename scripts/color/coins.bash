@@ -41,6 +41,8 @@ print_line()
     for ((i = 0; i < length_y; i++)); do
         for ((j = 0; j < length_x; j++)); do
             printf "\\e[%d;%dH%s" "$((start_y + i))" "$((start_x + j))" "${pat}"
+            [[ "${slow}" == "true" ]] && \
+                sleep "${s_speed:-0.1}"
         done
     done
 }
@@ -50,6 +52,13 @@ get_args()
     while (($# > 0)); do
         case "$1" in
             "-s"|"--serial") serial="true" ;;
+            "-ss"|"--slow")
+                slow="true"
+                [[ "$2" =~ ^[0-9]+([.][0-9]+)?$ ]] && {
+                    s_speed="$2"
+                    shift
+                }
+            ;;
         esac
         shift
     done
