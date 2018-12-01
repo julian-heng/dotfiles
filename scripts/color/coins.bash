@@ -81,7 +81,7 @@ main()
         print_line "7" "4" "7" "10" "${f[7]}█"
         print_line "4" "9" "4" "11" "${f[7]}█"
         print_line "5" "11" "5" "11" "${f[7]}█"
-        )
+    )
 
     for ((i = 0; i < ${#f[@]}; i++)); do
         if [[ "${serial}" == "true" ]]; then
