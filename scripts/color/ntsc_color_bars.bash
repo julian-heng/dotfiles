@@ -14,8 +14,19 @@ print_line()
     local start_y="$2"
     local end_x="$3"
     local end_y="$4"
-    local length_x="$((end_x - start_x))"
-    local length_y="$((end_y - start_y))"
+
+    if [[ "${end_x}" =~ '+' ]]; then
+        local length_x="${end_x//'+'}"
+    else
+        local length_x="$((end_x - start_x))"
+    fi
+
+    if [[ "${end_y}" =~ '+' ]]; then
+        local length_y="${end_y//'+'}"
+    else
+        local length_y="$((end_y - start_y))"
+    fi
+
     local pat="$5"
     local i j
 
