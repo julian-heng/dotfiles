@@ -60,7 +60,7 @@ main()
         print_line "5" "11" "5" "11" "${f[7]}█"
     done
 
-    printf "%s\\n\\n\\n\\n" "${reset}"
+    printf "%s\\n\\n\\n" "${reset}"
 }
 
 main
