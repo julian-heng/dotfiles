@@ -36,7 +36,7 @@ print_box()
     ((start_x += ${x_offset:-0}))
     ((start_y += ${y_offset:-0}))
 
-    printf "\\e[%d;%dH" "${start_x}" "${start_y}"
+    printf "\\e[%d;%dH" "${start_y}" "${start_x}"
 
     for ((i = 0; i < length_y; i++)); do
         for ((j = 0; j < length_x; j++)); do
