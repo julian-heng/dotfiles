@@ -9,8 +9,13 @@ class colors:
 def print_box(x1, y1, x2, y2, x_off, y_off, col, pat):
     length_x = abs(x2 - x1)
     length_y = abs(y2 - y1)
-    length_x = length_x if length_x != 0 else length_x + 1
-    length_y = length_y if length_y != 0 else length_y + 1
+    length_x += 1 if length_x == 0 else 0
+    length_y += 1 if length_y == 0 else 0
+
+    if x2 < x1:
+        x1, x2 = x2, x1
+    if y2 < y1:
+        y1, y2 = y2, y1
 
     x1 += x_off
     y1 += y_off
