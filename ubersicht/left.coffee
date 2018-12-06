@@ -10,5 +10,5 @@ style: """
   color: #c5c8c6
   font: 14px inconsolata
   left: 12px
-  bottom: 5px
+  bottom: 2.5px
 """
