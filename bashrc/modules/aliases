@@ -156,6 +156,31 @@ man()
     MANWIDTH="$((${COLUMNS:-100} > 100 ? 100 : COLUMNS))" command man "$@"
 }
 
+mpv-loop()
+{
+    (($# > 2)) && \
+        if (($# > 3)); then
+            mpv "$1" --start "$2" \
+                     --ab-loop-a "$2" \
+                     --ab-loop-b "$3" \
+                     --audio-pitch-correction=no \
+                     --af-add=scaletempo=speed=both \
+                     --speed="$4" \
+                     "${@:4}"
+        else
+            mpv "$1" --start "$2" --ab-loop-a "$2" --ab-loop-b "$3" "${@:3}"
+        fi
+}
+
+mpv-speed()
+{
+    (($# > 1)) && \
+        mpv "$1" --audio-pitch-correction=no \
+                 --af-add=scaletempo=speed=both \
+                 --speed="$2" \
+                 "${@:2}"
+}
+
 alias dl="aria2c --dir=${HOME}/Downloads/"
 
 alias gp="git pull"
