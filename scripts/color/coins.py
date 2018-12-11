@@ -2,8 +2,8 @@
 
 class colors:
     def __init__(self):
-        self.fg = [ "\033[3{}m".format(i) for i in range(8)]
-        self.bg = [ "\033[4{}m".format(i) for i in range(8)]
+        self.fg = [ "\033[3{}m".format(i) for i in range(8) ]
+        self.bg = [ "\033[4{}m".format(i) for i in range(8) ]
         self.reset = "\033[0m"
 
 def print_box(x1, y1, x2, y2, x_off, y_off, col, pat):
