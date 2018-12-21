@@ -117,4 +117,4 @@ main()
     unset main
 }
 
-main
+[[ "$-" == *"i"* ]] && main
