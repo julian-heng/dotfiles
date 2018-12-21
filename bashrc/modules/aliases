@@ -148,7 +148,7 @@ glog4()
 
 cb()
 {
-    cd "$@" "${OLDPWD}" || exit
+    cd "$@" "${OLDPWD}" || return
 }
 
 man()
@@ -184,6 +184,8 @@ mpv-speed()
 alias dl="aria2c --dir=${HOME}/Downloads/"
 
 alias gp="git pull"
+alias gpp="git push"
+alias grm="git rm"
 alias gcl="git clone"
 alias gstat="git status --branch"
 
@@ -253,6 +255,7 @@ case "${distro}" in
     "Gentoo")
         alias update='
             printf "%s\\n" "Do it yourself"
+            printf "%s\\n" "=============="
             printf "%s\\n" "# emerge --sync"
             printf "%s\\n" "# emerge-webrsync"
             printf "%s\\n" "# emerge --update --changed-use --deep --ask --with-bdeps=y @world"
