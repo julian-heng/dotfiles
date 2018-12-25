@@ -1,0 +1,178 @@
+#!/usr/bin/env bash
+
+check_apps()
+{
+    if ! type -p curl > /dev/null 2>&1; then
+        err "Curl is not installed"
+    fi
+}
+
+init_colors()
+{
+    faint=$'\e[2m'
+    bold=$'\e[1m'
+    reset=$'\e[0m'
+
+    for i in {0..7}; do
+        printf -v "f[$i]" "%s" $'\e[3'"$i"'m'
+        printf -v "b[$i]" "%s" $'\e[4'"$i"'m'
+        printf -v "fb[$i]" "%s" $'\e[1m\e[3'"$i"'m'
+        printf -v "bb[$i]" "%s" $'\e[1m\e[4'"$i"'m'
+    done
+}
+
+trim()
+{
+    [[ "$*" ]] && {
+        set -f
+        set -- $*
+        printf "%s" "$*"
+        set +f
+    }
+}
+
+strip_tag()
+{
+    str="$1"
+    str="${str#*>}"
+    str="${str%<*}"
+    printf "%s" "${str}"
+}
+
+err()
+{
+    printf "Error: %s\\n" "$*" >&2
+}
+
+format_title()
+{
+    return_match()
+    {
+        while (($# > 0)); do
+            [[ "$1" =~ ${regex} ]] && \
+                printf "%s\\n" "${BASH_REMATCH}"
+            shift
+        done
+    }
+
+    local title="$1"
+    local regex='\$[0-9.]+'
+
+    [[ "${title}" =~ ${regex} ]] && \
+        while read -r match; do
+            title="${title//${match}/${fb[2]}${match}${reset}${bold}}"
+        done < <(return_match ${title})
+
+    printf "%s" "${title}"
+}
+
+display_deal()
+{
+    : "${url:="https://www.ozbargain.com.au"}"
+    printf "%s\\r" "Loading deals from ${url}/$1..."
+    mapfile -t xml < <(curl -L "${url}/$1/feed" 2> /dev/null)
+    header="Showing deals from ${url}/$1"
+    printf "\\e[2K%s\\n" "${header}"
+    eval printf "%0.s=" "{1..${#header}}"
+    printf "\\n\\n"
+
+    count="1"
+    i="0"
+    while ((i < ${#xml[@]})); do
+        case "${xml[$i]}" in
+            "<item>")
+                until [[ "${xml[$i]}" == "</item>" ]]; do
+                    case "${xml[$i]}" in
+                        *"<title>"*)
+                            title="$(strip_tag "${xml[$i]}")"
+                            title="${title//'&quot;'/'"'}"
+                            title="$(trim "${title}")"
+                        ;;
+
+                        *"<link>"*)
+                            page_link="$(strip_tag "${xml[$i]}")"
+                        ;;
+
+                        *"<description>"*)
+                            desc="${xml[$i]}"
+                        ;;
+
+                        *"<ozb:meta"*)
+                            vars=(${xml[$i]})
+                            for var in "${vars[@]}"; do
+                                IFS="=" read -r var_name var_value <<< "${var}"
+                                var_value="${var_value//\"}"
+                                case "${var_name}" in
+                                    "comment-count") num_comments="${var_value}" ;;
+                                    "click-count") clicks="${var_value}" ;;
+                                    "expiry") expiry="${var_value}" ;;
+                                    "votes-pos") votes_pos="${var_value}" ;;
+                                    "votes-neg") votes_neg="${var_value}" ;;
+                                    "url") deal_link="${var_value}" ;;
+                                esac
+                            done
+                        ;;
+
+                        *"<pubDate>"*)
+                            date_posted="$(strip_tag "${xml[$i]}")"
+                        ;;
+
+                        *"<dc:creator>"*)
+                            author="$(strip_tag "${xml[$i]}")"
+                        ;;
+                    esac
+                    ((i++))
+                done
+
+                printf "${bold}%s. %s${reset}\\n" "$((count++))" "$(format_title "${title}")"
+                printf "Posted By ${fb[4]}%s${reset} " "${author}"
+                printf "on ${fb[4]}%s${reset} " "${date_posted}"
+                printf "[${f[2]}%s↑${reset}|${f[1]}%s↓${reset}] " \
+                                                    "${votes_pos}" \
+                                                    "${votes_neg}"
+                printf "${faint}- %s Clicks${reset} - " "${clicks}"
+                printf "%s Comments\\n" "${num_comments}"
+                [[ "${expiry}" ]] && \
+                    printf "Expires on ${fb[4]}%s${reset}\\n" "${expiry}"
+                printf "\\n"
+                printf "  - %s\\n" "${deal_link}" "${page_link}"
+                printf "\\n"
+            ;;
+        esac
+        ((i++))
+    done
+}
+
+get_args()
+{
+    (($# == 0)) && {
+        err "No arguments passed"
+        exit 1
+    }
+
+    while (($# > 0)); do
+        case "$1" in
+            "tag/"*) tags+=("${1//'tag/'}") ;;
+            "cat/"*) categories+=("${1//'cat/'}") ;;
+            "-t"|"--tag") tags+=("$2"); shift ;;
+            "-c"|"--category") categories+=("$2"); shift ;;
+        esac
+        shift
+    done
+}
+
+main()
+{
+    init_colors
+    get_args "$@"
+
+    for tag in "${tags[@]}"; do
+        display_deal "tag/${tag}"
+    done
+
+    for category in "${categories[@]}"; do
+        display_deal "cat/${category}"
+    done
+}
+
+check_apps && main "$@"
