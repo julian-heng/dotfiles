@@ -31,11 +31,45 @@ trim()
     }
 }
 
+return_match()
+{
+    local regex="$1"
+    shift
+
+    while (($# > 0)); do
+        [[ "$1" =~ ${regex} ]] && \
+            printf "%s\\n" "${BASH_REMATCH}"
+        shift
+    done
+}
+
 strip_tag()
 {
     str="$1"
     str="${str#*>}"
     str="${str%<*}"
+    printf "%s" "${str}"
+}
+
+replace_symbols()
+{
+    str="$1"
+
+    while [[ "${str}" != "${_str}" ]]; do
+        _str="${str}"
+        case "${_str}" in
+            *"&quot;"*) str="${str//'&quot;'/'"'}" ;;
+            *"&amp;"*) str="${str//'&amp;'/\&}" ;;
+            *"&#"[0-9][0-9][0-9]";"*)
+                while read -r match; do
+                    replace="${match/'&#'}"
+                    replace="${replace/';'}"
+                    replace="${replace#"${replace%%[!0]*}"}"
+                    str="${str//${match}/$(printf "\x$(printf "%x" "${replace}")")}"
+                done < <(return_match "&#[0-9][0-9][0-9];" ${str})
+            ;;
+        esac
+    done
     printf "%s" "${str}"
 }
 
@@ -46,22 +80,13 @@ err()
 
 format_title()
 {
-    return_match()
-    {
-        while (($# > 0)); do
-            [[ "$1" =~ ${regex} ]] && \
-                printf "%s\\n" "${BASH_REMATCH}"
-            shift
-        done
-    }
-
     local title="$1"
-    local regex='\$[0-9.]+'
+    local regex='\$[0-9.,]+'
 
     [[ "${title}" =~ ${regex} ]] && \
         while read -r match; do
             title="${title//${match}/${fb[2]}${match}${reset}${bold}}"
-        done < <(return_match ${title})
+        done < <(return_match "${regex}" ${title})
 
     printf "%s" "${title}"
 }
@@ -85,7 +110,7 @@ display_deal()
                     case "${xml[$i]}" in
                         *"<title>"*)
                             title="$(strip_tag "${xml[$i]}")"
-                            title="${title//'&quot;'/'"'}"
+                            title="$(replace_symbols "${title}")"
                             title="$(trim "${title}")"
                         ;;
 
