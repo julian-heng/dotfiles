@@ -93,77 +93,72 @@ format_title()
 
 display_deal()
 {
-    : "${url:="https://www.ozbargain.com.au"}"
+    url="https://www.ozbargain.com.au"
     printf "%s\\r" "Loading deals from ${url}/$1..."
     mapfile -t xml < <(curl -L "${url}/$1/feed" 2> /dev/null)
-    header="Showing deals from ${url}/$1"
-    printf "\\e[2K%s\\n" "${header}"
-    eval printf "%0.s=" "{1..${#header}}"
-    printf "\\n\\n"
 
     count="1"
     i="0"
     while ((i < ${#xml[@]})); do
-        case "${xml[$i]}" in
-            "<item>")
-                until [[ "${xml[$i]}" == "</item>" ]]; do
-                    case "${xml[$i]}" in
-                        *"<title>"*)
-                            title="$(strip_tag "${xml[$i]}")"
-                            title="$(replace_symbols "${title}")"
-                            title="$(trim "${title}")"
-                        ;;
+        [[ "${xml[$i]}" =~ "<item>" ]] && {
+            until [[ "${xml[$i]}" == "</item>" ]]; do
+                case "${xml[$i]}" in
+                    *"<title>"*)
+                        title="$(strip_tag "${xml[$i]}")"
+                        title="$(replace_symbols "${title}")"
+                        title="$(trim "${title}")"
+                    ;;
 
-                        *"<link>"*)
-                            page_link="$(strip_tag "${xml[$i]}")"
-                        ;;
+                    *"<link>"*)
+                        page_link="$(strip_tag "${xml[$i]}")"
+                    ;;
 
-                        *"<description>"*)
-                            desc="${xml[$i]}"
-                        ;;
+                    *"<description>"*)
+                        desc="${xml[$i]}"
+                    ;;
 
-                        *"<ozb:meta"*)
-                            vars=(${xml[$i]})
-                            for var in "${vars[@]}"; do
-                                IFS="=" read -r var_name var_value <<< "${var}"
-                                var_value="${var_value//\"}"
-                                case "${var_name}" in
-                                    "comment-count") num_comments="${var_value}" ;;
-                                    "click-count") clicks="${var_value}" ;;
-                                    "expiry") expiry="${var_value}" ;;
-                                    "votes-pos") votes_pos="${var_value}" ;;
-                                    "votes-neg") votes_neg="${var_value}" ;;
-                                    "url") deal_link="${var_value}" ;;
-                                esac
-                            done
-                        ;;
+                    *"<ozb:meta"*)
+                        vars=(${xml[$i]})
+                        for var in "${vars[@]}"; do
+                            IFS="=" read -r var_name var_value <<< "${var}"
+                            var_value="${var_value//\"}"
+                            case "${var_name}" in
+                                "comment-count") num_comments="${var_value}" ;;
+                                "click-count") clicks="${var_value}" ;;
+                                "expiry") expiry="${var_value}" ;;
+                                "votes-pos") votes_pos="${var_value}" ;;
+                                "votes-neg") votes_neg="${var_value}" ;;
+                                "url") deal_link="${var_value}" ;;
+                            esac
+                        done
+                    ;;
 
-                        *"<pubDate>"*)
-                            date_posted="$(strip_tag "${xml[$i]}")"
-                        ;;
+                    *"<pubDate>"*)
+                        date_posted="$(strip_tag "${xml[$i]}")"
+                    ;;
 
-                        *"<dc:creator>"*)
-                            author="$(strip_tag "${xml[$i]}")"
-                        ;;
-                    esac
-                    ((i++))
-                done
+                    *"<dc:creator>"*)
+                        author="$(strip_tag "${xml[$i]}")"
+                    ;;
+                esac
+                ((i++))
+            done
 
-                printf "${bold}%s. %s${reset}\\n" "$((count++))" "$(format_title "${title}")"
-                printf "Posted By ${fb[4]}%s${reset} " "${author}"
-                printf "on ${fb[4]}%s${reset} " "${date_posted}"
-                printf "[${f[2]}%s↑${reset}|${f[1]}%s↓${reset}] " \
-                                                    "${votes_pos}" \
-                                                    "${votes_neg}"
-                printf "${faint}- %s Clicks${reset} - " "${clicks}"
-                printf "%s Comments\\n" "${num_comments}"
-                [[ "${expiry}" ]] && \
-                    printf "Expires on ${fb[4]}%s${reset}\\n" "${expiry}"
-                printf "\\n"
-                printf "  - %s\\n" "${deal_link}" "${page_link}"
-                printf "\\n"
-            ;;
-        esac
+            printf "\\e[2K"
+            printf "${bold}%s. %s${reset}\\n" "$((count++))" "$(format_title "${title}")"
+            printf "Posted By ${fb[4]}%s${reset} " "${author}"
+            printf "on ${fb[4]}%s${reset} " "${date_posted}"
+            printf "[${f[2]}%s↑${reset}|${f[1]}%s↓${reset}] " \
+                                                "${votes_pos}" \
+                                                "${votes_neg}"
+            printf "${faint}- %s Clicks${reset} - " "${clicks}"
+            printf "%s Comments\\n" "${num_comments}"
+            [[ "${expiry}" ]] && \
+                printf "Expires on ${fb[4]}%s${reset}\\n" "${expiry}"
+            printf "\\n"
+            printf "  - %s\\n" "${deal_link}" "${page_link}"
+            printf "\\n"
+        }
         ((i++))
     done
 }
