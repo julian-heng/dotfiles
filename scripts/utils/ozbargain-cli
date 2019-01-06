@@ -81,7 +81,7 @@ err()
 format_title()
 {
     local title="$1"
-    local regex='\$[0-9.,]+'
+    local regex='\$([0-9]+|[0-9]+.[0-9][0-9]|[0-9]+,[0-9]+)'
 
     [[ "${title}" =~ ${regex} ]] && \
         while read -r match; do
@@ -151,8 +151,8 @@ display_deal()
             printf "[${f[2]}%s↑${reset}|${f[1]}%s↓${reset}] " \
                                                 "${votes_pos}" \
                                                 "${votes_neg}"
-            printf "${faint}- %s Clicks${reset} - " "${clicks}"
-            printf "%s Comments\\n" "${num_comments}"
+            printf "${faint}- %s Clicks - " "${clicks}"
+            printf "%s Comments${reset}\\n" "${num_comments}"
             [[ "${expiry}" ]] && \
                 printf "Expires on ${fb[4]}%s${reset}\\n" "${expiry}"
             printf "\\n"
