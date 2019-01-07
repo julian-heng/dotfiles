@@ -34,11 +34,13 @@ trim()
 return_match()
 {
     local regex="$1"
-    shift
+    local i="-1"
+    local -a words
+    read -ra words <<< "$2"
 
-    while (($# > 0)); do
-        [[ "$1" =~ ${regex} ]] && \
-            printf "%s\\n" "${BASH_REMATCH}"
+    while ((++i < ${#words[@]})); do
+        [[ "${words[$i]}" =~ ${regex} ]] && \
+            printf "%s\\n" "${BASH_REMATCH[0]}"
         shift
     done
 }
@@ -58,7 +60,7 @@ replace_symbols()
     while [[ "${str}" != "${_str}" ]]; do
         _str="${str}"
         case "${_str}" in
-            *"&quot;"*) str="${str//'&quot;'/'"'}" ;;
+            *"&quot;"*) str="${str//'&quot;'/\"}" ;;
             *"&amp;"*) str="${str//'&amp;'/\&}" ;;
             *"&#"[0-9][0-9][0-9]";"*)
                 while read -r match; do
@@ -66,7 +68,7 @@ replace_symbols()
                     replace="${replace/';'}"
                     replace="${replace#"${replace%%[!0]*}"}"
                     str="${str//${match}/$(printf "\x$(printf "%x" "${replace}")")}"
-                done < <(return_match "&#[0-9][0-9][0-9];" ${str})
+                done < <(return_match "&#[0-9][0-9][0-9];" "${str}")
             ;;
         esac
     done
@@ -86,7 +88,7 @@ format_title()
     [[ "${title}" =~ ${regex} ]] && \
         while read -r match; do
             title="${title//${match}/${fb[2]}${match}${reset}${bold}}"
-        done < <(return_match "${regex}" ${title})
+        done < <(return_match "${regex}" "${title}")
 
     printf "%s" "${title}"
 }
@@ -95,7 +97,9 @@ display_deal()
 {
     url="https://www.ozbargain.com.au"
     printf "%s\\r" "Loading deals from ${url}/$1..."
-    mapfile -t xml < <(curl -L "${url}/$1/feed" 2> /dev/null)
+
+    raw_xml="$(curl -L "${url}/$1/feed" 2> /dev/null)"
+    mapfile -t xml < <(printf "%s" "${raw_xml}")
 
     count="1"
     i="0"
@@ -118,7 +122,7 @@ display_deal()
                     ;;
 
                     *"<ozb:meta"*)
-                        vars=(${xml[$i]})
+                        read -ra vars <<< "${xml[$i]}"
                         for var in "${vars[@]}"; do
                             IFS="=" read -r var_name var_value <<< "${var}"
                             var_value="${var_value//\"}"
