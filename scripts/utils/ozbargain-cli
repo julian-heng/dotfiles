@@ -103,7 +103,7 @@ display_deal()
 
     count="1"
     i="0"
-    while ((i < ${#xml[@]})); do
+    while ((i < ${#xml[@]} && count <= ${num_show:=10})); do
         [[ "${xml[$i]}" =~ "<item>" ]] && {
             until [[ "${xml[$i]}" == "</item>" ]]; do
                 case "${xml[$i]}" in
@@ -167,6 +167,20 @@ display_deal()
     done
 }
 
+show_usage()
+{
+    printf "%s\\n" "
+Usage: ${0##*/} -o option --option \"value\"
+
+    Options:
+
+    [-t|--tag \"name\"]           Search for tags
+    [-c|--category \"name\"]      Search for categories
+    [-n|--count \"num\"]          Show \"num\" amount
+    [-h|--help]                 Show this message
+"
+}
+
 get_args()
 {
     (($# == 0)) && {
@@ -178,8 +192,11 @@ get_args()
         case "$1" in
             "tag/"*) tags+=("${1//'tag/'}") ;;
             "cat/"*) categories+=("${1//'cat/'}") ;;
-            "-t"|"--tag") tags+=("$2"); shift ;;
-            "-c"|"--category") categories+=("$2"); shift ;;
+            "-t"|"--tag") [[ "$2" ]] && { tags+=("$2"); shift; } ;;
+            "-c"|"--category") [[ "$2" ]] && { categories+=("$2"); shift; } ;;
+            "-n"|"--count") [[ $2 ]] && (($2 > 0)) && { num_show="$2"; shift; } ;;
+            "-h"|"--help") show_usage; exit ;;
+            *) err "Unknown Argument: $1"; exit 1 ;;
         esac
         shift
     done
