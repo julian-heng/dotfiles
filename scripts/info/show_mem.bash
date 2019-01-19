@@ -18,7 +18,6 @@ print_stdout()
 
 notify()
 {
-
     title="${title_parts[*]}"
     subtitle="${subtitle_parts[*]}"
     message="${message_parts[*]}"
