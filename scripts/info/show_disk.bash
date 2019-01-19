@@ -161,10 +161,19 @@ get_disk_info()
 {
     case "${os}" in
         "MacOS")
+            while IFS=":" read -r a b; do
+                case "$a" in
+                    *"Device Node"*) disk_device="$(trim "$b")" ;;
+                    *"Volume Name"*) disk_name="$(trim "$b")" ;;
+                    *"File System Personality"*) disk_part="$(trim "$b")" ;;
+                    *"Mount Point"*) disk_mount="$(trim "$b")" ;;
+                esac
+            done < <(diskutil info "${search}")
         ;;
 
         "Linux")
             match="false"
+
             while read -r line && [[ "${match}" != "true" ]]; do
                 [[ "${line}" =~ ${search} ]] && {
                     read -r disk_device _ \
@@ -179,23 +188,24 @@ get_disk_info()
                     disk_part="$(trim "${disk_part##*=}")"
                     disk_mount="$(trim "${disk_mount##*=}")"
 
-                    disk_name="${disk_label:-${disk_partlabel:-Disk}}"
+                    disk_name="${disk_label:-${disk_partlabel}}"
                     match="true"
                 }
             done < <(printf "%s\\n" "${lsblk_out[@]}")
-
-            match="false"
-            while read -r line && [[ "${match}" != "true" ]]; do
-                [[ "${line}" =~ ${search} ]] && {
-                    read -r _ disk_capacity disk_used _ <<< "${line}"
-                }
-            done < <(printf "%s\\n" "${df_out[@]}")
-
-            printf -v disk_percent "%.*f" "2" "$(percent "${disk_used}" "${disk_capacity}")"
-            printf -v disk_used "%.*f" "2" "$(div "${disk_used}" "$((1024 ** 2))")"
-            printf -v disk_capacity "%.*f" "2" "$(div "${disk_capacity}" "$((1024 ** 2))")"
         ;;
     esac
+
+    match="false"
+    while read -r line && [[ "${match}" != "true" ]]; do
+        [[ "${line}" =~ ${search} ]] && {
+            read -r _ disk_capacity disk_used _ <<< "${line}"
+            match="true"
+        }
+    done < <(printf "%s\\n" "${df_out[@]}")
+
+    printf -v disk_percent "%.*f" "2" "$(percent "${disk_used}" "${disk_capacity}")"
+    printf -v disk_used "%.*f" "2" "$(div "${disk_used}" "$((1024 ** 2))")"
+    printf -v disk_capacity "%.*f" "2" "$(div "${disk_capacity}" "$((1024 ** 2))")"
 }
 
 get_args()
@@ -225,6 +235,8 @@ main()
     fi
 
     [[ ! "${disk_device}" \
+    || ! "${disk_used}" \
+    || ! "${disk_capacity}" \
     || "${disk_capacity}" == "0.00" \
     ]] && exit 1
 
@@ -242,7 +254,7 @@ main()
         ;;
 
         *)
-            [[ "${disk_name}" ]] && title_parts+=("${disk_name}")
+            title_parts+=("${disk_name:-Disk}")
             [[ "${disk_mount}" ]] && title_parts+=("(${disk_mount})")
             [[ "${disk_used}" ]] && subtitle_parts+=("${disk_used}" "GiB")
             [[ "${disk_capacity}" ]] && subtitle_parts+=("|" "${disk_capacity}" "GiB")
