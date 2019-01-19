@@ -134,8 +134,11 @@ main()
     [[ "${bat_percent}" ]] && \
         title_parts+=("(${bat_percent})")
 
-    [[ "${bat_time}" ]] && \
-        subtitle_parts+=("|" "${bat_time} remaining")
+    [[ "${bat_time}" ]] && {
+        subtitle_parts+=("|" "${bat_time}")
+        [[ ! "${bat_time}" =~ (Fully Charged|Unknown) ]] && \
+            subtitle_parts+=("remaining")
+    }
 
     [[ "${bat_condition}" ]] && \
         subtitle_parts+=("|" "${bat_condition}")
