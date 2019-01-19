@@ -26,20 +26,23 @@ notify()
     [[ "${title:0:1}" == "|" ]] && \
         title="${title##'| '}"
 
-    [[ "${title:-1:1}" == "|" ]] && \
+    [[ "${title:(-1):1}" == "|" ]] && \
         title="${title%%' |'}"
 
     [[ "${subtitle:0:1}" == "|" ]] && \
         subtitle="${subtitle##'| '}"
 
-    [[ "${subtitle:-1:1}" == "|" ]] && \
+    [[ "${subtitle:(-1):1}" == "|" ]] && \
         subtitle="${subtitle%%' |'}"
 
     [[ "${message:0:1}" == "|" ]] && \
         message="${message##'| '}"
 
-    [[ "${message:-1:1}" == "|" ]] && \
+    [[ "${message:(-1):1}" == "|" ]] && \
         message="${message%%' |'}"
+
+    [[ "${title:0:1}" == "|" ]] && \
+        title="${title##'| '}"
 
     if [[ "${out}" == "stdout" ]]; then
         print_stdout
