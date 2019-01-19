@@ -77,7 +77,7 @@ trim()
     [[ "$*" ]] && {
         set -f
         set -- $*
-        printf "%s" "$*"
+        printf "%s" "${*//\"}"
         set +f
     }
 }
