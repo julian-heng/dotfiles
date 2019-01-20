@@ -228,7 +228,7 @@ get_temp()
                 temp="$(($(< "${temp_file}") / 1000))"
         ;;
     esac
-    cpu_info["temp"]="${temp}°C"
+    [[ "${temp}" ]] && cpu_info["temp"]="${temp}°C"
 }
 
 get_fan()
@@ -261,7 +261,7 @@ get_fan()
                 done
         ;;
     esac
-    cpu_info["fan"]="${fan} RPM"
+    [[ "${fan}" ]] && cpu_info["fan"]="${fan} RPM"
 }
 
 get_uptime()
