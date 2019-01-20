@@ -110,6 +110,8 @@ get_mem()
 {
     case "${os}" in
         "MacOS")
+            pow="2"
+            mem_total=$(sysctl -n hw.memsize)
             while IFS=":" read -r a b; do
                 case "$a" in
                     *" wired"*|*" active"*|*" occupied"*)
@@ -117,19 +119,10 @@ get_mem()
                     ;;
                 esac
             done < <(vm_stat)
-
-            mem_total=$(sysctl -n hw.memsize)
-            read -r _ _ swap_total _ _ swap_used _ < <(sysctl -n vm.swapusage)
-
-            ((mem_used *= 4096))
-            printf -v mem_percent "%.*f" "0" "$(percent "${mem_used}" "${mem_total}")"
-            printf -v mem_total "%.*f" "0" "$(div "${mem_total}" "$((1024 ** 2))")"
-            printf -v mem_used "%.*f" "0" "$(div "${mem_used}" "$((1024 ** 2))")"
-            printf -v swap_total "%.*f" "0" "${swap_total/M}"
-            printf -v swap_used "%.*f" "0" "${swap_used/M}"
         ;;
 
         "Linux")
+            pow="1"
             while read -r a b _; do
                 case "${a/:}" in
                     "MemTotal") mem_total="$b"; mem_used="$b" ;;
@@ -137,26 +130,59 @@ get_mem()
                     "MemFree"|"Buffers"|"Cached"|"SReclaimable")
                         ((mem_used -= b))
                     ;;
+                esac
+            done < /proc/meminfo
+        ;;
+    esac
+
+    printf -v mem_percent "%.*f" "0" "$(percent "${mem_used}" "${mem_total}")"
+    printf -v mem_total "%.*f" "0" "$(div "${mem_total}" "$((1024 ** pow))")"
+    printf -v mem_used "%.*f" "0" "$(div "${mem_used}" "$((1024 ** pow))")"
+
+    mem_info["mem_percent"]="${mem_percent}%"
+    mem_info["mem_total"]="${mem_total} MiB"
+    mem_info["mem_used"]="${mem_used} MiB"
+}
+
+get_swap()
+{
+    case "${os}" in
+        "MacOS")
+            pow="0"
+            read -r _ _ swap_total _ _ swap_used _ < <(sysctl -n vm.swapusage)
+            swap_total="${swap_total/M}"
+            swap_used="${swap_used/M}"
+        ;;
+
+        "Linux")
+            pow="1"
+            while read -r a b _; do
+                case "${a/:}" in
                     "SwapTotal") swap_total="$b" ;;
                     "SwapFree") ((swap_used = swap_total - b)) ;;
                 esac
             done < /proc/meminfo
-
-            printf -v mem_percent "%.*f" "0" "$(percent "${mem_used}" "${mem_total}")"
-            printf -v mem_total "%.*f" "0" "$(div "${mem_total}" 1024)"
-            printf -v mem_used "%.*f" "0" "$(div "${mem_used}" 1024)"
-            printf -v swap_total "%.*f" "0" "$(div "${swap_total}" 1024)"
-            printf -v swap_used "%.*f" "0" "$(div "${swap_used}" 1024)"
         ;;
     esac
+
+    printf -v swap_total "%.*f" "0" "$(div "${swap_total}" "$((1024 ** pow))")"
+    printf -v swap_used "%.*f" "0" "$(div "${swap_used}" "$((1024 ** pow))")"
+    printf -v swap_percent "%.*f" "0" "$(percent "${swap_used}" "${swap_total}")"
+
+    mem_info["swap_percent"]="${swap_percent}%"
+    mem_info["swap_total"]="${swap_total} MiB"
+    mem_info["swap_used"]="${swap_used} MiB"
 }
 
 get_args()
 {
     while (($# > 0)); do
         case "$1" in
-            "--stdout") out="stdout" ;;
-            "-r"|"--raw") out="raw" ;;
+            "--stdout") [[ ! "${out}" ]] && out="stdout" ;;
+            "-r"|"--raw") [[ ! "${out}" ]] && out="raw" ;;
+            *)
+                [[ ! "${out}" ]] && out="string"
+                func+=("$1")
         esac
         shift
     done
@@ -164,27 +190,49 @@ get_args()
 
 main()
 {
+    declare -A mem_info
     get_args "$@"
     get_os
+
+    [[ ! "${func[*]}" ]] && \
+        func=(
+            "mem_percent" "mem_total"
+            "mem_used" "swap_total"
+            "swap_used"
+        )
+
     get_mem
+    get_swap
 
     case "${out}" in
         "raw")
-            printf -v raw "%s," \
-                "${mem_percent}%" \
-                "${mem_used} MiB" \
-                "${mem_total} MiB" \
-                "${swap_used} MiB"
-            printf -v raw "%s%s" "${raw}" "${swap_total} MiB"
+            raw="${mem_info[${func[0]}]}"
+            for function in "${func[@]}"; do
+                raw="${raw},${mem_info[${function}]}"
+            done
             printf "%s\\n" "${raw}"
         ;;
 
+        "string")
+            for function in "${func[@]}"; do
+                [[ "${mem_info[${function}]}" ]] && \
+                    printf "%s\\n" "${mem_info[${function}]}"
+            done
+        ;;
+
         *)
-            [[ "${mem_percent}" ]] && title_parts+=("Memory" "(${mem_percent}%)")
-            [[ "${mem_used}" ]] && subtitle_parts+=("${mem_used}" "MiB")
-            [[ "${mem_total}" ]] && subtitle_parts+=("|" "${mem_total}" "MiB")
-            [[ "${swap_used}" ]] && message_parts+=("Swap:" "${swap_used}" "MiB")
-            [[ "${swap_total}" ]] && message_parts+=("|" "${swap_total}" "MiB")
+            [[ "${mem_info["mem_percent"]}" ]] && \
+                title_parts+=("Memory" "(${mem_info["mem_percent"]})")
+
+            [[ "${mem_info["mem_used"]}" ]] && \
+                subtitle_parts+=("${mem_info["mem_used"]}")
+            [[ "${mem_info["mem_total"]}" ]] && \
+                subtitle_parts+=("|" "${mem_info["mem_total"]}")
+
+            [[ "${mem_info["swap_used"]}" ]] && \
+                message_parts+=("Swap:" "${mem_info["swap_used"]}")
+            [[ "${mem_info["swap_total"]}" ]] && \
+                message_parts+=("|" "${mem_info["swap_total"]}")
 
             notify
         ;;
