@@ -208,7 +208,7 @@ main()
     case "${out}" in
         "raw")
             raw="${mem_info[${func[0]}]}"
-            for function in "${func[@]}"; do
+            for function in "${func[@]:1}"; do
                 raw="${raw},${mem_info[${function}]}"
             done
             printf "%s\\n" "${raw}"
