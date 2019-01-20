@@ -119,6 +119,7 @@ get_mem()
                     ;;
                 esac
             done < <(vm_stat)
+            ((mem_used *= 4096))
         ;;
 
         "Linux")
