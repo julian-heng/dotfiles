@@ -226,8 +226,22 @@ get_args()
         case "$1" in
             "--stdout") [[ ! "${out}" ]] && out="stdout" ;;
             "-r"|"--raw") [[ ! "${out}" ]] && out="raw" ;;
-            "-d"|"--disk") [[ "$2" ]] && { type="disk"; search="${2%/}"; } ;;
-            "-m"|"--mount") [[ "$2" ]] && { type="mount"; search="${2%/}"; } ;;
+            "-d"|"--disk")
+                [[ "$2" ]] && {
+                    type="disk"
+                    search="${2%/}"
+                    shift
+                }
+            ;;
+
+            "-m"|"--mount")
+                [[ "$2" ]] && {
+                    type="mount"
+                    search="${2%/}"
+                    shift
+                }
+            ;;
+
             "-f"|"--format") [[ "$2" ]] && { str_format="$2"; shift; } ;;
             *)
                 [[ ! "${out}" ]] && out="string"
