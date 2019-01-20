@@ -300,6 +300,7 @@ get_args()
         case "$1" in
             "--stdout") [[ ! "${out}" ]] && out="stdout" ;;
             "-r"|"--raw") [[ ! "${out}" ]] && out="raw" ;;
+            "-f"|"--format") [[ "$2" ]] && { str_format="$2"; shift; } ;;
             *)
                 [[ ! "${out}" ]] && out="string"
                 func+=("$1")
@@ -337,10 +338,19 @@ main()
         ;;
 
         "string")
-            for function in "${func[@]}"; do
-                [[ "${cpu_info[${function}]}" ]] && \
-                    printf "%s\\n" "${cpu_info[${function}]}"
-            done
+            if [[ "${str_format}" ]]; then
+                out="${str_format}"
+                for function in "${func[@]}"; do
+                    [[ "${cpu_info[${function}]}" ]] && \
+                        out="${out/'{}'/${cpu_info[${function}]}}"
+                done
+                printf "%s" "${out}"
+            else
+                for function in "${func[@]}"; do
+                    [[ "${cpu_info[${function}]}" ]] && \
+                        printf "%s\\n" "${cpu_info[${function}]}"
+                done
+            fi
         ;;
 
         *)

@@ -228,6 +228,7 @@ get_args()
             "-r"|"--raw") [[ ! "${out}" ]] && out="raw" ;;
             "-d"|"--disk") [[ "$2" ]] && { type="disk"; search="${2%/}"; } ;;
             "-m"|"--mount") [[ "$2" ]] && { type="mount"; search="${2%/}"; } ;;
+            "-f"|"--format") [[ "$2" ]] && { str_format="$2"; shift; } ;;
             *)
                 [[ ! "${out}" ]] && out="string"
                 func+=("$1")
@@ -272,10 +273,19 @@ main()
         ;;
 
         "string")
-            for function in "${func[@]}"; do
-                [[ "${disk_info[${function}]}" ]] && \
-                    printf "%s\\n" "${disk_info[${function}]}"
-            done
+            if [[ "${str_format}" ]]; then
+                out="${str_format}"
+                for function in "${func[@]}"; do
+                    [[ "${disk_info[${function}]}" ]] && \
+                        out="${out/'{}'/${disk_info[${function}]}}"
+                done
+                printf "%s" "${out}"
+            else
+                for function in "${func[@]}"; do
+                    [[ "${disk_info[${function}]}" ]] && \
+                        printf "%s\\n" "${disk_info[${function}]}"
+                done
+            fi
         ;;
 
         *)
