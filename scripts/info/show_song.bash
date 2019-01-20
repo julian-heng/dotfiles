@@ -145,6 +145,52 @@ get_song()
     song_info["album"]="${album}"
 }
 
+print_usage()
+{
+    printf "%s\\n" "
+Usage: ${0##*/} info_name --option --option [value] ...
+
+Options:
+    --stdout            Print to stdout
+    -r, --raw           Print in csv form
+    -h, --help          Show this message
+
+Info:
+    info_name           Print the output of func_name
+
+Valid Names:
+    app
+    app_state
+    artist
+    track
+    album
+
+Output:
+    -f, --format \"str\"    Print info_name in a formatted string
+                          Used in conjuction with info_name
+
+Syntax:
+    {}  Output of info_name
+
+Examples:
+    Print all information as a notification:
+    \$ ${0##*/}
+
+    Print to standard out:
+    \$ ${0##*/} --stdout
+
+    Print playing track
+    \$ ${0##*/} track
+
+    Print current music player and state
+    \$ ${0##*/} --format '{} | {}' app app_state
+
+Misc:
+    If notify-send if not installed, then the script will
+    print to standard output.
+"
+}
+
 get_args()
 {
     while (($# > 0)); do
@@ -152,6 +198,7 @@ get_args()
             "--stdout") [[ ! "${out}" ]] && out="stdout" ;;
             "-r"|"--raw") [[ ! "${out}" ]] && out="raw" ;;
             "-f"|"--format") [[ "$2" ]] && { str_format="$2"; shift; } ;;
+            "-h"|"--help") print_usage; exit ;;
             *)
                 [[ ! "${out}" ]] && out="string"
                 func+=("$1")

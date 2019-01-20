@@ -220,6 +220,54 @@ get_disk_info()
     disk_info["disk_part"]="${disk_part}"
 }
 
+print_usage()
+{
+    printf "%s\\n" "
+Usage: ${0##*/} info_name --option --option [value] ...
+
+Options:
+    --stdout            Print to stdout
+    -r, --raw           Print in csv form
+    -h, --help          Show this message
+
+Info:
+    info_name           Print the output of func_name
+
+Valid Names:
+    disk_name
+    disk_mount
+    disk_used
+    disk_capacity
+    disk_percent
+    disk_device
+    disk_part
+
+Output:
+    -f, --format \"str\"    Print info_name in a formatted string
+                          Used in conjuction with info_name
+
+Syntax:
+    {}  Output of info_name
+
+Examples:
+    Print all information as a notification:
+    \$ ${0##*/}
+
+    Print to standard out:
+    \$ ${0##*/} --stdout
+
+    Print disk device and mount
+    \$ ${0##*/} disk_device disk_mount
+
+    Print disk usage with a format string
+    \$ ${0##*/} --format '{} | {}' disk_used disk_capacity
+
+Misc:
+    If notify-send if not installed, then the script will
+    print to standard output.
+"
+}
+
 get_args()
 {
     while (($# > 0)); do
@@ -243,6 +291,7 @@ get_args()
             ;;
 
             "-f"|"--format") [[ "$2" ]] && { str_format="$2"; shift; } ;;
+            "-h"|"--help") print_usage; exit ;;
             *)
                 [[ ! "${out}" ]] && out="string"
                 func+=("$1")
