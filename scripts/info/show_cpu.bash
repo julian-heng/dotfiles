@@ -121,6 +121,8 @@ get_cores()
             done < /proc/cpuinfo
         ;;
     esac
+
+    cpu_info["cores"]="${cores}"
 }
 
 get_cpu()
@@ -149,6 +151,8 @@ get_cpu()
         ;;
     esac
 
+    [[ ! "${cores}" ]] && get_cores
+
     cpu="${cpu//*:}"
     cpu="${cpu//:}"
     cpu="${cpu//CPU}"
@@ -163,6 +167,7 @@ get_cpu()
     fi
 
     cpu="$(trim "${cpu}")"
+    cpu_info["cpu"]="${cpu}"
 }
 
 get_load()
@@ -178,6 +183,7 @@ get_load()
     esac
 
     load_avg="$a $b $c"
+    cpu_info["load"]="${load_avg}"
 }
 
 get_cpu_usage()
@@ -191,23 +197,20 @@ get_cpu_usage()
     cpu_usage="$(awk -v cores="${cores:-1}" \
                      -v sum="0" "${awk_script}" <(ps aux))"
     printf -v cpu_usage "%.*f" "1" "${cpu_usage}"
+    cpu_info["cpu_usage"]="${cpu_usage}%"
 }
 
-get_fan_temp()
+get_temp()
 {
     case "${os}" in
         "MacOS")
             type -p osx-cpu-temp 2>&1 > /dev/null && {
                 while read -r line; do
-                    case "${line}" in
-                        "CPU"*) temp="${line#*:}" ;;
-                        "Fan "[0-9]*) fan="${line/'Fan '}" ;;
-                    esac
+                    [[ "${line}" =~ 'CPU' ]] && \
+                        temp="${line#*:}"
                 done < <(osx-cpu-temp -f -c)
 
                 printf -v temp "%.*f" "1" "${temp/'°C'}"
-                fan="${fan/*at }"
-                fan="${fan/ RPM*}"
             }
         ;;
 
@@ -224,7 +227,27 @@ get_fan_temp()
 
             [[ "${temp_file}" ]] && \
                 temp="$(($(< "${temp_file}") / 1000))"
+        ;;
+    esac
+    cpu_info["temp"]="${temp}°C"
+}
 
+get_fan()
+{
+    case "${os}" in
+        "MacOS")
+            type -p osx-cpu-temp 2>&1 > /dev/null && {
+                while read -r line; do
+                    [[ "${line}" =~ 'Fan '[0-9] ]] && \
+                        fan="${line/'Fan '}"
+                done < <(osx-cpu-temp -f -c)
+
+                fan="${fan/*at }"
+                fan="${fan/ RPM*}"
+            }
+        ;;
+
+        "Linux")
             shopt -s globstar
             for file in "/sys/devices/platform/"**/*; do
                 [[ "${file}" =~ 'fan1_input'$ ]] && \
@@ -239,6 +262,7 @@ get_fan_temp()
                 done
         ;;
     esac
+    cpu_info["fan"]="${fan} RPM"
 }
 
 get_uptime()
@@ -268,14 +292,19 @@ get_uptime()
     ((${secs/s*} == 0)) && unset secs
 
     uptime="${days}${hours}${mins}${secs}"
+    cpu_info["uptime"]="${uptime}"
 }
 
 get_args()
 {
     while (($# > 0)); do
         case "$1" in
-            "--stdout") out="stdout" ;;
-            "-r"|"--raw") out="raw" ;;
+            "--stdout") [[ ! "${out}" ]] && out="stdout" ;;
+            "-r"|"--raw") [[ ! "${out}" ]] && out="raw" ;;
+            *)
+                [[ ! "${out}" ]] && out="string"
+                func+=("$1")
+            ;;
         esac
         shift
     done
@@ -283,35 +312,52 @@ get_args()
 
 main()
 {
+    declare -A cpu_info
     get_args "$@"
     get_os
 
-    get_cores
-    get_cpu
-    get_load
-    get_cpu_usage
-    get_fan_temp
-    get_uptime
+    [[ ! "${func[*]}" ]] && \
+        func=(
+            "cores" "cpu" "load"
+            "cpu_usage" "fan" "temp"
+            "uptime"
+        )
+
+    for function in "${func[@]}"; do
+        [[ "$(type -t "get_${function}")" == "function" ]] && \
+            "get_${function}"
+    done
 
     case "${out}" in
         "raw")
-            printf -v raw "%s," \
-                "${cpu}" \
-                "${load_avg}" \
-                "${cpu_usage}%" \
-                "${temp}°C" \
-                "${fan} RPM"
-            printf -v raw "%s%s" "${raw}" "${uptime}"
+            raw="${cpu_info[${func[0]}]}"
+            for function in "${func[@]:1}"; do
+                raw="${raw},${cpu_info[${function}]}"
+            done
             printf "%s\\n" "${raw}"
         ;;
 
+        "string")
+            for function in "${func[@]}"; do
+                [[ "${cpu_info[${function}]}" ]] && \
+                    printf "%s\\n" "${cpu_info[${function}]}"
+            done
+        ;;
+
         *)
-            title_parts+=("${cpu:-CPU}")
-            [[ "${load_avg}" ]] && subtitle_parts+=("Load avg:" "${load_avg}")
-            [[ "${cpu_usage}" ]] && subtitle_parts+=("|" "${cpu_usage}%")
-            [[ "${temp}" ]] && subtitle_parts+=("|" "${temp}°C")
-            [[ "${fan}" ]] && subtitle_parts+=("|" "${fan} RPM")
-            [[ "${uptime}" ]] && message_parts+=("Uptime:" "${uptime}")
+            title_parts+=("${cpu_info["cpu"]:-CPU}")
+
+            [[ "${cpu_info["load"]}" ]] && \
+                subtitle_parts+=("Load avg:" "${cpu_info["load"]}")
+            [[ "${cpu_info["cpu_usage"]}" ]] && \
+                subtitle_parts+=("|" "${cpu_info["cpu_usage"]}")
+            [[ "${cpu_info["temp"]}" ]] && \
+                subtitle_parts+=("|" "${cpu_info["temp"]}")
+            [[ "${cpu_info["fan"]}" ]] && \
+                subtitle_parts+=("|" "${cpu_info["fan"]}")
+
+            [[ "${cpu_info["uptime"]}" ]] && \
+                message_parts+=("Uptime:" "${cpu_info["uptime"]}")
 
             notify
         ;;
