@@ -110,10 +110,11 @@ get_prog_out()
 {
     case "${os}" in
         "MacOS")
-            mapfile -t df_out < <(df -P -k)
+            df_flags=("-P" "-k")
         ;;
 
         "Linux")
+            df_flags=("-P")
             lsblk_flags=(
                 "--output"
                 "KNAME,NAME,LABEL,PARTLABEL,FSTYPE,MOUNTPOINT"
@@ -121,10 +122,13 @@ get_prog_out()
                 "--pair"
             )
 
-            mapfile -t df_out < <(df -P)
-            mapfile -t lsblk_out < <(lsblk "${lsblk_flags[@]}")
         ;;
     esac
+
+    [[ "${df_flags[*]}" ]] && \
+        mapfile -t df_out < <(df "${df_flags[@]}")
+    [[ "${lsblk_flags[*]}" ]] && \
+        mapfile -t lsblk_out < <(lsblk "${lsblk_flags[@]}")
 }
 
 get_search()
@@ -206,16 +210,27 @@ get_disk_info()
     printf -v disk_percent "%.*f" "2" "$(percent "${disk_used}" "${disk_capacity}")"
     printf -v disk_used "%.*f" "2" "$(div "${disk_used}" "$((1024 ** 2))")"
     printf -v disk_capacity "%.*f" "2" "$(div "${disk_capacity}" "$((1024 ** 2))")"
+
+    disk_info["disk_name"]="${disk_name}"
+    disk_info["disk_mount"]="${disk_mount}"
+    disk_info["disk_used"]="${disk_used} GiB"
+    disk_info["disk_capacity"]="${disk_capacity} GiB"
+    disk_info["disk_percent"]="${disk_percent}%"
+    disk_info["disk_device"]="${disk_device}"
+    disk_info["disk_part"]="${disk_part}"
 }
 
 get_args()
 {
     while (($# > 0)); do
         case "$1" in
-            "--stdout") out="stdout" ;;
-            "-r"|"--raw") out="raw" ;;
+            "--stdout") [[ ! "${out}" ]] && out="stdout" ;;
+            "-r"|"--raw") [[ ! "${out}" ]] && out="raw" ;;
             "-d"|"--disk") [[ "$2" ]] && { type="disk"; search="${2%/}"; } ;;
             "-m"|"--mount") [[ "$2" ]] && { type="mount"; search="${2%/}"; } ;;
+            *)
+                [[ ! "${out}" ]] && out="string"
+                func+=("$1")
         esac
         shift
     done
@@ -223,10 +238,17 @@ get_args()
 
 main()
 {
+    declare -A disk_info
     get_args "$@"
     get_os
-
     get_prog_out
+
+    [[ ! "${func[*]}" ]] && \
+        func=(
+            "disk_name" "disk_mount" "disk_used"
+            "disk_capacity" "disk_percent"
+            "disk_device" "disk_part"
+        )
 
     if search="$(get_search "${search}")"; then
         get_disk_info
@@ -234,33 +256,44 @@ main()
         return 1
     fi
 
-    [[ ! "${disk_device}" \
-    || ! "${disk_used}" \
-    || ! "${disk_capacity}" \
-    || "${disk_capacity}" == "0.00" \
+    [[ ! "${disk_info["disk_device"]}" \
+    || ! "${disk_info["disk_used"]}" \
+    || ! "${disk_info["disk_capacity"]}" \
+    || "${disk_info["disk_capacity"]}" == "0.00" \
     ]] && exit 1
 
     case "${out}" in
         "raw")
-            printf -v raw "%s," \
-                "${disk_name}" \
-                "${disk_mount}" \
-                "${disk_used} GiB" \
-                "${disk_capacity} GiB" \
-                "${disk_percent}%" \
-                "${disk_device}"
-            printf -v raw "%s%s" "${raw}" "${disk_part}"
+            raw="${disk_info[${func[0]}]}"
+            for function in "${func[@]:1}"; do
+                raw="${raw},${disk_info[${function}]}"
+            done
             printf "%s\\n" "${raw}"
+        ;;
+
+        "string")
+            for function in "${func[@]}"; do
+                [[ "${disk_info[${function}]}" ]] && \
+                    printf "%s\\n" "${disk_info[${function}]}"
+            done
         ;;
 
         *)
             title_parts+=("${disk_name:-Disk}")
-            [[ "${disk_mount}" ]] && title_parts+=("(${disk_mount})")
-            [[ "${disk_used}" ]] && subtitle_parts+=("${disk_used}" "GiB")
-            [[ "${disk_capacity}" ]] && subtitle_parts+=("|" "${disk_capacity}" "GiB")
-            [[ "${disk_percent}" ]] && subtitle_parts+=("(${disk_percent}%)")
-            [[ "${disk_device}" ]] && message_parts+=("${disk_device}")
-            [[ "${disk_part}" ]] && message_parts+=("|" "${disk_part}")
+            [[ "${disk_info["disk_mount"]}" ]] && \
+                title_parts+=("(${disk_info["disk_mount"]})")
+
+            [[ "${disk_info["disk_used"]}" ]] && \
+                subtitle_parts+=("${disk_info["disk_used"]}")
+            [[ "${disk_info["disk_capacity"]}" ]] && \
+                subtitle_parts+=("|" "${disk_info["disk_capacity"]}")
+            [[ "${disk_info["disk_percent"]}" ]] && \
+                subtitle_parts+=("(${disk_info["disk_percent"]})")
+
+            [[ "${disk_info["disk_device"]}" ]] && \
+                message_parts+=("${disk_info["disk_device"]}")
+            [[ "${disk_info["disk_part"]}" ]] && \
+                message_parts+=("|" "${disk_info["disk_part"]}")
 
             notify
         ;;
