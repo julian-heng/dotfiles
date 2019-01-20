@@ -121,7 +121,6 @@ get_cores()
             done < /proc/cpuinfo
         ;;
     esac
-
     cpu_info["cores"]="${cores}"
 }
 
