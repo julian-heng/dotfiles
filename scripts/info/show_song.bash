@@ -102,9 +102,8 @@ check_app_state()
     if pgrep -x "cmus" > /dev/null; then
         app="cmus"
         while read -r line && [[ ! "${app_state}" ]]; do
-            case "${line}" in
-                "status"*) read -r _ app_state <<< "${line}" ;;
-            esac
+            [[ "${line}" =~ ^'status' ]] && \
+                read -r _ app_state <<< "${line}"
         done < <(cmus-remote -Q)
     elif [[ "${os}" == "MacOS" && \
             "$(osascript -e "application \"iTunes\" is running")" == "true" ]]; then
@@ -114,6 +113,9 @@ check_app_state()
         app="none"
         app_state="none"
     fi
+
+    song_info["app"]="${app}"
+    song_info["app_state"]="${app_state}"
 }
 
 get_song()
@@ -137,14 +139,22 @@ get_song()
 
     IFS=":" \
     read -r track artist album <<< "${song_info}"
+
+    song_info["track"]="${track}"
+    song_info["artist"]="${artist}"
+    song_info["album"]="${album}"
 }
 
 get_args()
 {
     while (($# > 0)); do
         case "$1" in
-            "--stdout") out="stdout" ;;
-            "-r"|"--raw") out="raw" ;;
+            "--stdout") [[ ! "${out}" ]] && out="stdout" ;;
+            "-r"|"--raw") [[ ! "${out}" ]] && out="raw" ;;
+            *)
+                [[ ! "${out}" ]] && out="string"
+                func+=("$1")
+            ;;
         esac
         shift
     done
@@ -152,8 +162,12 @@ get_args()
 
 main()
 {
+    declare -A song_info
     get_args "$@"
     get_os
+
+    [[ ! "${func[*]}" ]] && \
+        func=("app" "app_state" "artist" "track" "album")
 
     check_app_state
 
@@ -171,28 +185,33 @@ main()
 
     case "${out}" in
         "raw")
-            printf -v raw "%s," \
-                "${app}" \
-                "${app_state}" \
-                "${artist:-none}" \
-                "${album:-none}"
-            printf -v raw "%s%s" "${raw}" "${track:-none}"
+            raw="${song_info[${func[0]}]}"
+            for function in "${func[@]:1}"; do
+                raw="${raw},${song_info[${function}]}"
+            done
             printf "%s\\n" "${raw}"
+        ;;
+
+        "string")
+            for function in "${func[@]}"; do
+                [[ "${song_info[${function}]}" ]] && \
+                    printf "%s\\n" "${song_info[${function}]}"
+            done
         ;;
 
         *)
             title_parts=("Now Playing")
 
-            if [[ "${artist}" ]]; then
-                subtitle_parts+=("${artist}")
-                [[ "${track}" ]] && \
-                    subtitle_parts+=("-" "${track}")
-            elif [[ "${track}" ]]; then
-                subtitle_parts+=("${track}")
+            if [[ "${song_info["artist"]}" ]]; then
+                subtitle_parts+=("${song_info["artist"]}")
+                [[ "${song_info["track"]}" ]] && \
+                    subtitle_parts+=("-" "${song_info["track"]}")
+            elif [[ "${song_info["track"]}" ]]; then
+                subtitle_parts+=("${song_info["track"]}")
             fi
 
-            [[ "${album}" ]] && \
-                message_parts+=("${album}")
+            [[ "${song_info["album"]}" ]] && \
+                message_parts+=("${song_info["album"]}")
 
             notify
     esac
