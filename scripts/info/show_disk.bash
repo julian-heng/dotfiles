@@ -256,10 +256,10 @@ Examples:
     Print to standard out:
     \$ ${0##*/} --stdout
 
-    Print disk device and mount
+    Print disk device and mount:
     \$ ${0##*/} disk_device disk_mount
 
-    Print disk usage with a format string
+    Print disk usage with a format string:
     \$ ${0##*/} --format '{} | {}' disk_used disk_capacity
 
 Misc:
@@ -328,9 +328,9 @@ main()
 
     case "${out}" in
         "raw")
-            raw="${disk_info[${func[0]}]}"
+            raw="${func[0]}:${disk_info[${func[0]}]}"
             for function in "${func[@]:1}"; do
-                raw="${raw},${disk_info[${function}]}"
+                raw="${raw},${function}:${disk_info[${function}]}"
             done
             printf "%s\\n" "${raw}"
         ;;

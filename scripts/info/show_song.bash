@@ -179,10 +179,10 @@ Examples:
     Print to standard out:
     \$ ${0##*/} --stdout
 
-    Print playing track
+    Print playing track:
     \$ ${0##*/} track
 
-    Print current music player and state
+    Print current music player and state:
     \$ ${0##*/} --format '{} | {}' app app_state
 
 Misc:
@@ -233,9 +233,9 @@ main()
 
     case "${out}" in
         "raw")
-            raw="${song_info[${func[0]}]}"
+            raw="${func[0]}:${song_info[${func[0]}]}"
             for function in "${func[@]:1}"; do
-                raw="${raw},${song_info[${function}]}"
+                raw="${raw},${function}:${song_info[${function}]}"
             done
             printf "%s\\n" "${raw}"
         ;;

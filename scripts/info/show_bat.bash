@@ -247,10 +247,10 @@ Examples:
     Print to standard out:
     \$ ${0##*/} --stdout
 
-    Print battery condition and temp
+    Print battery condition and temp:
     \$ ${0##*/} bat_condition bat_temp
 
-    Print battery percentage and time remaining with a format string
+    Print battery percentage and time remaining with a format string:
     \$ ${0##*/} --format '{} | {}' percent bat_time
 
 Misc:

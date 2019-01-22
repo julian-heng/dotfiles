@@ -137,12 +137,12 @@ get_mem()
     esac
 
     printf -v mem_percent "%.*f" "0" "$(percent "${mem_used}" "${mem_total}")"
-    printf -v mem_total "%.*f" "0" "$(div "${mem_total}" "$((1024 ** pow))")"
     printf -v mem_used "%.*f" "0" "$(div "${mem_used}" "$((1024 ** pow))")"
+    printf -v mem_total "%.*f" "0" "$(div "${mem_total}" "$((1024 ** pow))")"
 
     mem_info["mem_percent"]="${mem_percent}%"
-    mem_info["mem_total"]="${mem_total} MiB"
     mem_info["mem_used"]="${mem_used} MiB"
+    mem_info["mem_total"]="${mem_total} MiB"
 }
 
 get_swap()
@@ -151,8 +151,8 @@ get_swap()
         "MacOS")
             pow="0"
             read -r _ _ swap_total _ _ swap_used _ < <(sysctl -n vm.swapusage)
-            swap_total="${swap_total/M}"
             swap_used="${swap_used/M}"
+            swap_total="${swap_total/M}"
         ;;
 
         "Linux")
@@ -166,13 +166,13 @@ get_swap()
         ;;
     esac
 
-    printf -v swap_total "%.*f" "0" "$(div "${swap_total}" "$((1024 ** pow))")"
     printf -v swap_used "%.*f" "0" "$(div "${swap_used}" "$((1024 ** pow))")"
+    printf -v swap_total "%.*f" "0" "$(div "${swap_total}" "$((1024 ** pow))")"
     printf -v swap_percent "%.*f" "0" "$(percent "${swap_used}" "${swap_total}")"
 
     mem_info["swap_percent"]="${swap_percent}%"
-    mem_info["swap_total"]="${swap_total} MiB"
     mem_info["swap_used"]="${swap_used} MiB"
+    mem_info["swap_total"]="${swap_total} MiB"
 }
 
 print_usage()
@@ -189,12 +189,12 @@ Info:
     info_name           Print the output of func_name
 
 Valid Names:
+    mem_percent
     mem_used
     mem_total
-    mem_percent
+    swap_percent
     swap_used
     swap_total
-    swap_percent
 
 Output:
     -f, --format \"str\"    Print info_name in a formatted string
@@ -210,10 +210,10 @@ Examples:
     Print to standard out:
     \$ ${0##*/} --stdout
 
-    Print memory usage
+    Print memory usage:
     \$ ${0##*/} mem_used mem_total
 
-    Print swap usage with a format string
+    Print swap usage with a format string:
     \$ ${0##*/} --format '{} | {}' swap_used swap_total
 
 Misc:
@@ -246,9 +246,9 @@ main()
 
     [[ ! "${func[*]}" ]] && \
         func=(
-            "mem_percent" "mem_total"
-            "mem_used" "swap_total"
-            "swap_used"
+            "mem_percent" "mem_used"
+            "mem_total" "swap_percent"
+            "swap_used" "swap_total"
         )
 
     get_mem
@@ -256,9 +256,9 @@ main()
 
     case "${out}" in
         "raw")
-            raw="${mem_info[${func[0]}]}"
+            raw="${func[0]}:${mem_info[${func[0]}]}"
             for function in "${func[@]:1}"; do
-                raw="${raw},${mem_info[${function}]}"
+                raw="${raw},${function}:${mem_info[${function}]}"
             done
             printf "%s\\n" "${raw}"
         ;;

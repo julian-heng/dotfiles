@@ -330,10 +330,10 @@ Examples:
     Print to standard out:
     \$ ${0##*/} --stdout
 
-    Print CPU name and CPU Usage
+    Print CPU name and CPU Usage:
     \$ ${0##*/} cpu cpu_usage
 
-    Print CPU temperature and fan speed with a format string
+    Print CPU temperature and fan speed with a format string:
     \$ ${0##*/} --format '{} | {}' temp fan
 
 Misc:
@@ -379,9 +379,9 @@ main()
 
     case "${out}" in
         "raw")
-            raw="${cpu_info[${func[0]}]}"
+            raw="${func[0]}:${cpu_info[${func[0]}]}"
             for function in "${func[@]:1}"; do
-                raw="${raw},${cpu_info[${function}]}"
+                raw="${raw},${function}:${cpu_info[${function}]}"
             done
             printf "%s\\n" "${raw}"
         ;;
