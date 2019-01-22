@@ -160,7 +160,7 @@ get_bat()
     printf -v bat_percent "%.*f" "1" "${bat_percent}"
     printf -v bat_condition "%.*f" "1" "${bat_condition}"
 
-    if [[ "${bat_is_charging}" == "Yes" ]]; then
+    if [[ "${bat_is_charging}" == "true" ]]; then
         bat_is_charging="true"
         bat_time="$(div "$((bat_capacity_max - bat_capacity_now))" "${bat_current}")"
     else
