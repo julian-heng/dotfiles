@@ -295,6 +295,7 @@ get_args()
             *)
                 [[ ! "${out}" ]] && out="string"
                 func+=("$1")
+            ;;
         esac
         shift
     done
