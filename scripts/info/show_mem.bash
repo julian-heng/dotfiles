@@ -280,8 +280,9 @@ main()
         ;;
 
         *)
+            title_parts=("Memory")
             [[ "${mem_info["mem_percent"]}" ]] && \
-                title_parts+=("Memory" "(${mem_info["mem_percent"]})")
+                title_parts+=("(${mem_info["mem_percent"]})")
 
             [[ "${mem_info["mem_used"]}" ]] && \
                 subtitle_parts+=("${mem_info["mem_used"]}")
