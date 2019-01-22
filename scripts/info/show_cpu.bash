@@ -271,7 +271,7 @@ get_uptime()
             boot="$(sysctl -n kern.boottime)"
             boot="${boot/'{ sec = '}"
             boot="${boot/,*}"
-            secs="$((${EPOCHSECONDS:-$(printf "%(%s)T" "-1")}))"
+            secs="$((${EPOCHSECONDS:-$(printf "%(%s)T" "-1")} - boot))"
         ;;
 
         "Linux")
