@@ -150,10 +150,67 @@ get_bat()
         ;;
 
         "Linux")
+            while [[ ! "${bat_driver}" ]] && read -r line; do
+                [[ "${line}" =~ 'tp_smapi' ]] && \
+                    bat_driver="tp_smapi"
+            done < /proc/modules
+
+            [[ ! "${bat_driver}" ]] && bat_driver="generic"
+
+            case "${bat_driver}" in
+                "tp_smapi") power_dir="/sys/devices/platform/smapi" ;;
+                "generic") power_dir="/sys/class/power_supply" ;;
+            esac
+
+            while [[ ! "${bat_dir}" ]] && read -r dir; do
+                [[ "${dir##"${power_dir}/"}" =~ ^'BAT'[0-9] ]] && \
+                    bat_dir="${dir}"
+            done < <(printf "%s\\n" "${power_dir}/"*)
+
+            case "${bat_driver}" in
+                "tp_smapi")
+                    bat_capacity_design="$(< "${bat_dir}/design_capacity")"
+                    bat_capacity_max="$(< "${bat_dir}/last_full_capacity")"
+                    bat_capacity_now="$(< "${bat_dir}/remaining_capacity")"
+                    bat_cycles="$(< "${bat_dir}/cycle_count")"
+                    bat_power="$(< "${bat_dir}/power_now")"
+                    bat_temp="$(< "${bat_dir}/temperature")"
+                    bat_volt="$(< "${bat_dir}/voltage")"
+                    bat_volt_design="$(< "${bat_dir}/design_voltage")"
+
+                    if [[ "$(< "${bat_dir}/state")" == "discharging" ]]; then
+                        bat_is_charging="false"
+                    else
+                        bat_is_charging="true"
+                    fi
+
+                    bat_current="$(
+                        div "$((bat_power * 1000))" "${bat_volt_design}"
+                    )"
+                    bat_capacity_design="$(
+                        div "$((bat_capacity_design * 1000))" "${bat_volt_design}"
+                    )"
+                    bat_capacity_max="$(
+                        div "$((bat_capacity_max * 1000))" "${bat_volt_design}"
+                    )"
+                    bat_capacity_now="$(
+                        div "$((bat_capacity_now * 1000))" "${bat_volt_design}"
+                    )"
+
+                    printf -v bat_current "%.*f" "0" "${bat_current}"
+                    printf -v bat_capacity_design "%.*f" "0" "${bat_capacity_design}"
+                    printf -v bat_capacity_max "%.*f" "0" "${bat_capacity_max}"
+                    printf -v bat_capacity_now "%.*f" "0" "${bat_capacity_now}"
+                ;;
+
+                "generic")
+                ;;
+            esac
         ;;
     esac
 
     bat_current="${bat_current/'-'}"
+    bat_power="${bat_power/'-'}"
     bat_percent="$(percent "${bat_capacity_now}" "${bat_capacity_max}")"
     bat_condition="$(percent "${bat_capacity_max}" "${bat_capacity_design}")"
 
@@ -161,7 +218,6 @@ get_bat()
     printf -v bat_condition "%.*f" "1" "${bat_condition}"
 
     if [[ "${bat_is_charging}" == "true" ]]; then
-        bat_is_charging="true"
         bat_time="$(div "$((bat_capacity_max - bat_capacity_now))" "${bat_current}")"
     else
         bat_is_charging="false"
@@ -184,8 +240,13 @@ get_bat()
         bat_time="0h 0m 0s"
     fi
 
-    bat_power="$(div "$((bat_current * bat_volt))" "$((10 ** 6))")"
+    if [[ ! "${bat_power}" ]]; then
+        bat_power="$(div "$((bat_current * bat_volt))" "$((10 ** 6))")"
+    else
+        bat_power="$(div "${bat_power}" "1000")"
+    fi
     bat_current="$(div "${bat_current}" "1000")"
+    bat_volt="$(div "${bat_volt}" "1000")"
 
     printf -v bat_power "%.*f" "2" "${bat_power}"
     printf -v bat_current "%.*f" "2" "${bat_current}"
@@ -208,6 +269,7 @@ get_bat()
     bat_info["bat_power"]="${bat_power}W"
     bat_info["bat_temp"]="${bat_temp}°C"
     bat_info["bat_time"]="${bat_time}"
+    bat_info["bat_volt"]="${bat_volt}"
 }
 
 print_usage()
@@ -224,14 +286,15 @@ Info:
     info_name           Print the output of func_name
 
 Valid Names:
-    bat_percent
-    bat_time
-    bat_temp
-    bat_cycles
-    bat_is_charging
     bat_condition
     bat_current
+    bat_cycles
+    bat_is_charging
+    bat_percent
     bat_power
+    bat_temp
+    bat_time
+    bat_volt
 
 Output:
     -f, --format \"str\"    Print info_name in a formatted string
@@ -270,6 +333,7 @@ get_args()
             *)
                 [[ ! "${out}" ]] && out="string"
                 func+=("$1")
+            ;;
         esac
         shift
     done
@@ -292,6 +356,7 @@ main()
             "bat_power"
             "bat_temp"
             "bat_time"
+            "bat_volt"
         )
 
     get_bat
