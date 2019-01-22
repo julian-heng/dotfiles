@@ -250,6 +250,7 @@ get_bat()
 
     printf -v bat_power "%.*f" "2" "${bat_power}"
     printf -v bat_current "%.*f" "2" "${bat_current}"
+    printf -v bat_volt "%.*f" "2" "${bat_volt}"
 
     bat_temp="$(div "${bat_temp}" "1000")"
     printf -v bat_temp "%.*f" "1" "${bat_temp}"
