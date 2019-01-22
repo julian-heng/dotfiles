@@ -118,96 +118,96 @@ get_bat()
         "MacOS")
             while IFS='="' read -r _ a _ b; do
                 case "$a" in
-                    "MaxCapacity") capacity_max="$(trim "$b")" ;;
-                    "CurrentCapacity") capacity_now="$(trim "$b")" ;;
-                    "CycleCount") cycles="$(trim "$b")" ;;
-                    "DesignCapacity") capacity_design="$(trim "$b")" ;;
-                    "Temperature") temp="$(trim "$b")" ;;
-                    "InstantAmperage") current="$(trim "$b")" ;;
-                    "Voltage") volt="$(trim "$b")" ;;
+                    "MaxCapacity") bat_capacity_max="$(trim "$b")" ;;
+                    "CurrentCapacity") bat_capacity_now="$(trim "$b")" ;;
+                    "CycleCount") bat_cycles="$(trim "$b")" ;;
+                    "DesignCapacity") bat_capacity_design="$(trim "$b")" ;;
+                    "Temperature") bat_temp="$(trim "$b")" ;;
+                    "InstantAmperage") bat_current="$(trim "$b")" ;;
+                    "Voltage") bat_volt="$(trim "$b")" ;;
                     "FullyCharged")
                         if [[ "$(trim "$b")" == "Yes" ]]; then
-                            is_full="true"
+                            bat_is_full="true"
                         else
-                            is_full="false"
+                            bat_is_full="false"
                         fi
                     ;;
 
                     "IsCharging")
                         if [[ "$(trim "$b")" == "Yes" ]]; then
-                            is_charging="true"
+                            bat_is_charging="true"
                         else
-                            is_charging="false"
+                            bat_is_charging="false"
                         fi
                     ;;
                 esac
             done < <(ioreg -rc AppleSmartBattery)
 
-            ((${#current} >= 20)) && \
-                current="$(bc <<< "${current} - (2 ^ 64)")"
+            ((${#bat_current} >= 20)) && \
+                bat_current="$(bc <<< "${bat_current} - (2 ^ 64)")"
 
-            ((temp *= 10))
+            ((bat_temp *= 10))
         ;;
 
         "Linux")
         ;;
     esac
 
-    current="${current/'-'}"
-    percent="$(percent "${capacity_now}" "${capacity_max}")"
-    condition="$(percent "${capacity_max}" "${capacity_design}")"
+    bat_current="${bat_current/'-'}"
+    bat_percent="$(percent "${bat_capacity_now}" "${bat_capacity_max}")"
+    bat_condition="$(percent "${bat_capacity_max}" "${bat_capacity_design}")"
 
-    printf -v percent "%.*f" "1" "${percent}"
-    printf -v condition "%.*f" "1" "${condition}"
+    printf -v bat_percent "%.*f" "1" "${bat_percent}"
+    printf -v bat_condition "%.*f" "1" "${bat_condition}"
 
-    if [[ "${is_charging}" == "Yes" ]]; then
-        is_charging="true"
-        time="$(div "$((capacity_max - capacity_now))" "${current}")"
+    if [[ "${bat_is_charging}" == "Yes" ]]; then
+        bat_is_charging="true"
+        bat_time="$(div "$((bat_capacity_max - bat_capacity_now))" "${bat_current}")"
     else
-        is_charging="false"
-        time="$(div "${capacity_now}" "${current}")"
+        bat_is_charging="false"
+        bat_time="$(div "${bat_capacity_now}" "${bat_current}")"
     fi
-    time="$(multi "${time}" "3600")"
-    printf -v time "%.*f" "0" "${time}"
+    bat_time="$(multi "${bat_time}" "3600")"
+    printf -v bat_time "%.*f" "0" "${bat_time}"
 
-    if ((time != 0)); then
-        hours="$((time / 60 / 60 % 24))h "
-        mins="$((time / 60 % 60))m "
-        secs="$(((time % 60) % 60))s"
+    if ((bat_time != 0)); then
+        hours="$((bat_time / 60 / 60 % 24))h "
+        mins="$((bat_time / 60 % 60))m "
+        secs="$(((bat_time % 60) % 60))s"
 
         ((${hours/h*} == 0)) && unset hours
         ((${mins/m*} == 0)) && unset mins
         ((${secs/s*} == 0)) && unset secs
 
-        time="${hours}${mins}${secs}"
+        bat_time="${hours}${mins}${secs}"
     else
-        time="0h 0m 0s"
+        bat_time="0h 0m 0s"
     fi
 
-    power="$(div "$((current * volt))" "$((10 ** 6))")"
-    current="$(div "${current}" "1000")"
+    bat_power="$(div "$((bat_current * bat_volt))" "$((10 ** 6))")"
+    bat_current="$(div "${bat_current}" "1000")"
 
-    printf -v power "%.*f" "2" "${power}"
-    printf -v current "%.*f" "2" "${current}"
+    printf -v bat_power "%.*f" "2" "${bat_power}"
+    printf -v bat_current "%.*f" "2" "${bat_current}"
 
-    temp="$(div "${temp}" "1000")"
-    printf -v temp "%.*f" "1" "${temp}"
+    bat_temp="$(div "${bat_temp}" "1000")"
+    printf -v bat_temp "%.*f" "1" "${bat_temp}"
 
-    if [[ "${is_full}" == "true" ]] || ((${percent/.*} == 100)); then
-        is_full="true"
+    if [[ "${bat_is_full}" == "true" ]] || ((${bat_percent/.*} == 100)); then
+        bat_is_full="true"
     else
-        is_full="false"
+        bat_is_full="false"
     fi
 
-    bat["condition"]="${condition}%"
-    bat["current"]="${current}A"
-    bat["cycles"]="${cycles} Cycles"
-    bat["is_charging"]="${is_charging}"
-    bat["is_full"]="${is_full}"
-    bat["percent"]="${percent}%"
-    bat["power"]="${power}W"
-    bat["temp"]="${temp}°C"
-    bat["time"]="${time}"
+    bat_info["bat_condition"]="${bat_condition}%"
+    bat_info["bat_current"]="${bat_current}A"
+    bat_info["bat_cycles"]="${bat_cycles} Cycles"
+    bat_info["bat_is_charging"]="${bat_is_charging}"
+    bat_info["bat_is_full"]="${bat_is_full}"
+    bat_info["bat_percent"]="${bat_percent}%"
+    bat_info["bat_power"]="${bat_power}W"
+    bat_info["bat_temp"]="${bat_temp}°C"
+    bat_info["bat_time"]="${bat_time}"
 }
 
 print_usage()
@@ -224,14 +224,14 @@ Info:
     info_name           Print the output of func_name
 
 Valid Names:
-    percent
-    time
-    temp
-    cycles
-    is_charging
-    condition
-    current
-    power
+    bat_percent
+    bat_time
+    bat_temp
+    bat_cycles
+    bat_is_charging
+    bat_condition
+    bat_current
+    bat_power
 
 Output:
     -f, --format \"str\"    Print info_name in a formatted string
@@ -248,10 +248,10 @@ Examples:
     \$ ${0##*/} --stdout
 
     Print battery condition and temp
-    \$ ${0##*/} condition temp
+    \$ ${0##*/} bat_condition bat_temp
 
     Print battery percentage and time remaining with a format string
-    \$ ${0##*/} --format '{} | {}' percent time
+    \$ ${0##*/} --format '{} | {}' percent bat_time
 
 Misc:
     If notify-send if not installed, then the script will
@@ -277,30 +277,30 @@ get_args()
 
 main()
 {
-    declare -A bat
+    declare -A bat_info
     get_args "$@"
     get_os
 
     [[ ! "${func[*]}" ]] && \
         func=(
-            "condition"
-            "current"
-            "cycles"
-            "is_charging"
-            "is_full"
-            "percent"
-            "power"
-            "temp"
-            "time"
+            "bat_condition"
+            "bat_current"
+            "bat_cycles"
+            "bat_is_charging"
+            "bat_is_full"
+            "bat_percent"
+            "bat_power"
+            "bat_temp"
+            "bat_time"
         )
 
     get_bat
 
     case "${out}" in
         "raw")
-            raw="${func[0]}:${bat[${func[0]}]}"
+            raw="${func[0]}:${bat_info[${func[0]}]}"
             for function in "${func[@]:1}"; do
-                raw="${raw},${function}:${bat[${function}]}"
+                raw="${raw},${function}:${bat_info[${function}]}"
             done
             printf "%s\\n" "${raw}"
         ;;
@@ -309,46 +309,47 @@ main()
             if [[ "${str_format}" ]]; then
                 out="${str_format}"
                 for function in "${func[@]}"; do
-                    [[ "${bat[${function}]}" ]] && \
-                        out="${out/'{}'/${bat[${function}]}}"
+                    [[ "${bat_info[${function}]}" ]] && \
+                        out="${out/'{}'/${bat_info[${function}]}}"
                 done
                 printf "%s" "${out}"
             else
                 for function in "${func[@]}"; do
-                    [[ "${bat[${function}]}" ]] && \
-                        printf "%s\\n" "${bat[${function}]}"
+                    [[ "${bat_info[${function}]}" ]] && \
+                        printf "%s\\n" "${bat_info[${function}]}"
                 done
             fi
         ;;
 
         *)
             title_parts+=("Battery")
-            [[ "${bat["percent"]}" ]] && \
-                title_parts+=("(${bat["percent"]})")
+            [[ "${bat_info["bat_percent"]}" ]] && \
+                title_parts+=("(${bat_info["bat_percent"]})")
 
-            [[ "${bat["time"]}" ]] && \
-                subtitle_parts+=("${bat["time"]}")
-            [[ "${bat["condition"]}" ]] && \
-                subtitle_parts+=("|" "Condition: ${bat["condition"]}")
-            [[ "${bat["temp"]}" ]] && \
-                subtitle_parts+=("|" "${bat["temp"]}")
-            [[ "${bat["cycles"]}" ]] && \
-                subtitle_parts+=("|" "${bat["cycles"]}")
+            [[ "${bat_info["bat_time"]}" && \
+               "${bat_info["bat_time"]}" != "0h 0m 0s" ]] && \
+                subtitle_parts+=("${bat_info["bat_time"]}")
+            [[ "${bat_info["bat_condition"]}" ]] && \
+                subtitle_parts+=("|" "Condition: ${bat_info["bat_condition"]}")
+            [[ "${bat_info["bat_temp"]}" ]] && \
+                subtitle_parts+=("|" "${bat_info["bat_temp"]}")
+            [[ "${bat_info["bat_cycles"]}" ]] && \
+                subtitle_parts+=("|" "${bat_info["bat_cycles"]}")
 
-            [[ "${bat["is_full"]}" ]] && \
-                if [[ "${bat["is_full"]}" == "true" ]]; then
+            [[ "${bat_info["bat_is_full"]}" ]] && \
+                if [[ "${bat_info["bat_is_full"]}" == "true" ]]; then
                     message_parts+=("Full")
-                elif [[ "${bat["is_charging"]}" == "true" ]]; then
+                elif [[ "${bat_info["bat_is_charging"]}" == "true" ]]; then
                     message_parts+=("Charging")
-                elif [[ "${bat["is_charging"]}" == "false" ]]; then
+                elif [[ "${bat_info["bat_is_charging"]}" == "false" ]]; then
                     message_parts+=("Discharging")
                 else
                     message_parts+=("Unknown")
                 fi
-            [[ "${bat["current"]}" ]] && \
-                message_parts+=("|" "${bat["current"]}")
-            [[ "${bat["power"]}" ]] && \
-                message_parts+=("|" "${bat["power"]}")
+            [[ "${bat_info["bat_current"]}" ]] && \
+                message_parts+=("|" "${bat_info["bat_current"]}")
+            [[ "${bat_info["bat_power"]}" ]] && \
+                message_parts+=("|" "${bat_info["bat_power"]}")
 
             notify
         ;;
