@@ -180,6 +180,11 @@ get_bat()
                     bat_dir="${dir}"
             done < <(printf "%s\\n" "${power_dir}/"*)
 
+            [[ ! "${bat_dir}" ]] && {
+                printf "Error: No batteries detected\\n" >&2
+                exit 1
+            }
+
             case "${bat_driver}" in
                 "tp_smapi")
                     bat_capacity_design="$(read_file "${bat_dir}/design_capacity")"
