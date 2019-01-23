@@ -106,6 +106,12 @@ multi()
         awk -v a="$1" -v b="$2" 'BEGIN { printf "%f", a * b }'
 }
 
+round()
+{
+    [[ "$1" && "$2" ]] && \
+        printf "%.*f" "$1" "$2"
+}
+
 get_os()
 {
     case "${OSTYPE:-$(uname -s)}" in
@@ -204,10 +210,10 @@ get_bat()
                         div "$((bat_capacity_now * 1000))" "${bat_volt_design}"
                     )"
 
-                    printf -v bat_current "%.*f" "0" "${bat_current}"
-                    printf -v bat_capacity_design "%.*f" "0" "${bat_capacity_design}"
-                    printf -v bat_capacity_max "%.*f" "0" "${bat_capacity_max}"
-                    printf -v bat_capacity_now "%.*f" "0" "${bat_capacity_now}"
+                    bat_current="$(round "0" "${bat_current}")"
+                    bat_capacity_design="$(round "0" "${bat_capacity_design}")"
+                    bat_capacity_max="$(round "0" "${bat_capacity_max}")"
+                    bat_capacity_now="$(round "0" "${bat_capacity_now}")"
                 ;;
 
                 "generic")
@@ -270,10 +276,10 @@ get_bat()
                             div "$((bat_capacity_now * 1000))" "${bat_volt_design}"
                         )"
 
-                        printf -v bat_current "%.*f" "0" "${bat_current}"
-                        printf -v bat_capacity_design "%.*f" "0" "${bat_capacity_design}"
-                        printf -v bat_capacity_max "%.*f" "0" "${bat_capacity_max}"
-                        printf -v bat_capacity_now "%.*f" "0" "${bat_capacity_now}"
+                        bat_current="$(round "0" "${bat_current}")"
+                        bat_capacity_design="$(round "0" "${bat_capacity_design}")"
+                        bat_capacity_max="$(round "0" "${bat_capacity_max}")"
+                        bat_capacity_now="$(round "0" "${bat_capacity_now}")"
                     fi
                 ;;
             esac
@@ -285,8 +291,8 @@ get_bat()
     bat_percent="$(percent "${bat_capacity_now}" "${bat_capacity_max}")"
     bat_condition="$(percent "${bat_capacity_max}" "${bat_capacity_design}")"
 
-    printf -v bat_percent "%.*f" "1" "${bat_percent}"
-    printf -v bat_condition "%.*f" "1" "${bat_condition}"
+    bat_percent="$(round "1" "${bat_percent}")"
+    bat_condition="$(round "1" "${bat_condition}")"
 
     if [[ "${bat_is_charging}" == "true" ]]; then
         bat_time="$(div "$((bat_capacity_max - bat_capacity_now))" "${bat_current}")"
@@ -294,8 +300,7 @@ get_bat()
         bat_is_charging="false"
         bat_time="$(div "${bat_capacity_now}" "${bat_current}")"
     fi
-    bat_time="$(multi "${bat_time}" "3600")"
-    printf -v bat_time "%.*f" "0" "${bat_time}"
+    bat_time="$(round "0" "$(multi "${bat_time}" "3600")")"
 
     if ((bat_time != 0)); then
         hours="$((bat_time / 60 / 60 % 24))h "
@@ -319,12 +324,12 @@ get_bat()
     bat_current="$(div "${bat_current}" "1000")"
     bat_volt="$(div "${bat_volt}" "1000")"
 
-    printf -v bat_power "%.*f" "2" "${bat_power}"
-    printf -v bat_current "%.*f" "2" "${bat_current}"
-    printf -v bat_volt "%.*f" "2" "${bat_volt}"
+    bat_power="$(round "2" "${bat_power}")"
+    bat_current="$(round "2" "${bat_current}")"
+    bat_volt="$(round "2" "${bat_volt}")"
 
     bat_temp="$(div "${bat_temp}" "1000")"
-    printf -v bat_temp "%.*f" "1" "${bat_temp}"
+    bat_temp="$(round "1" "${bat_temp}")"
 
     if [[ "${bat_is_full}" == "true" ]] || ((${bat_percent/.*} == 100)); then
         bat_is_full="true"
