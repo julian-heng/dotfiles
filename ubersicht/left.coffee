@@ -1,4 +1,4 @@
-command: "/usr/local/bin/bash ${HOME}/.dotfiles/scripts/mac/ubersicht/left.sh"
+command: "/usr/local/bin/bash ${HOME}/.dotfiles/ubersicht/chunkwm.bash"
 
 refreshFrequency: 400 # ms
 
