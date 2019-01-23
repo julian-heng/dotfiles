@@ -153,6 +153,13 @@ get_bat()
                             bat_is_charging="false"
                         fi
                     ;;
+
+                    "BatteryInstalled")
+                        [[ "$(trim "$b")" != "Yes" ]] && {
+                            printf "Error: No batteries detected\\n" >&2
+                            exit 1
+                        }
+                    ;;
                 esac
             done < <(ioreg -rc AppleSmartBattery)
 
