@@ -182,16 +182,16 @@ get_bat()
 
             case "${bat_driver}" in
                 "tp_smapi")
-                    bat_capacity_design="$(< "${bat_dir}/design_capacity")"
-                    bat_capacity_max="$(< "${bat_dir}/last_full_capacity")"
-                    bat_capacity_now="$(< "${bat_dir}/remaining_capacity")"
-                    bat_cycles="$(< "${bat_dir}/cycle_count")"
-                    bat_power="$(< "${bat_dir}/power_now")"
-                    bat_temp="$(< "${bat_dir}/temperature")"
-                    bat_volt="$(< "${bat_dir}/voltage")"
-                    bat_volt_design="$(< "${bat_dir}/design_voltage")"
+                    bat_capacity_design="$(read_file "${bat_dir}/design_capacity")"
+                    bat_capacity_max="$(read_file "${bat_dir}/last_full_capacity")"
+                    bat_capacity_now="$(read_file "${bat_dir}/remaining_capacity")"
+                    bat_cycles="$(read_file "${bat_dir}/cycle_count")"
+                    bat_power="$(read_file "${bat_dir}/power_now")"
+                    bat_temp="$(read_file "${bat_dir}/temperature")"
+                    bat_volt="$(read_file "${bat_dir}/voltage")"
+                    bat_volt_design="$(read_file "${bat_dir}/design_voltage")"
 
-                    if [[ "$(< "${bat_dir}/state")" == "discharging" ]]; then
+                    if [[ "$(read_file "${bat_dir}/state")" == "discharging" ]]; then
                         bat_is_charging="false"
                     else
                         bat_is_charging="true"
