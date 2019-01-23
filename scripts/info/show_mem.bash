@@ -93,6 +93,12 @@ div()
         awk -v a="$1" -v b="$2" 'BEGIN { printf "%f", a / b }'
 }
 
+round()
+{
+    [[ "$1" && "$2" ]] && \
+        printf "%.*f" "$1" "$2"
+}
+
 get_os()
 {
     case "${OSTYPE:-$(uname -s)}" in
@@ -136,9 +142,9 @@ get_mem()
         ;;
     esac
 
-    printf -v mem_percent "%.*f" "0" "$(percent "${mem_used}" "${mem_total}")"
-    printf -v mem_used "%.*f" "0" "$(div "${mem_used}" "$((1024 ** pow))")"
-    printf -v mem_total "%.*f" "0" "$(div "${mem_total}" "$((1024 ** pow))")"
+    mem_percent="$(round "0" "$(percent "${mem_used}" "${mem_total}")")"
+    mem_used="$(round "0" "$(div "${mem_used}" "$((1024 ** pow))")")"
+    mem_total="$(round "0" "$(div "${mem_total}" "$((1024 ** pow))")")"
 
     mem_info["mem_percent"]="${mem_percent}%"
     mem_info["mem_used"]="${mem_used} MiB"
@@ -166,9 +172,9 @@ get_swap()
         ;;
     esac
 
-    printf -v swap_used "%.*f" "0" "$(div "${swap_used}" "$((1024 ** pow))")"
-    printf -v swap_total "%.*f" "0" "$(div "${swap_total}" "$((1024 ** pow))")"
-    printf -v swap_percent "%.*f" "0" "$(percent "${swap_used}" "${swap_total}")"
+    swap_used="$(round "0" "$(div "${swap_used}" "$((1024 ** pow))")")"
+    swap_total="$(round "0" "$(div "${swap_total}" "$((1024 ** pow))")")"
+    swap_percent="$(round "0" "$(percent "${swap_used}" "${swap_total}")")"
 
     mem_info["swap_percent"]="${swap_percent}%"
     mem_info["swap_used"]="${swap_used} MiB"

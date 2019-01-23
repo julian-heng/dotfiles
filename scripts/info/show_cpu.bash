@@ -81,6 +81,13 @@ trim()
     }
 }
 
+read_file()
+{
+    local file="$1"
+    [[ -f "${file}" ]] && \
+        printf "%s" "$(< "${file}")"
+}
+
 percent()
 {
     [[ "$1" && "$2" ]] && (($2 > 0)) && \
@@ -91,6 +98,12 @@ div()
 {
     [[ "$1" && "$2" ]] && (($2 != 0)) && \
         awk -v a="$1" -v b="$2" 'BEGIN { printf "%f", a / b }'
+}
+
+round()
+{
+    [[ "$1" && "$2" ]] && \
+        printf "%.*f" "$1" "$2"
 }
 
 get_os()
@@ -145,8 +158,11 @@ get_cpu()
             done
             shopt -u globstar
 
-            [[ "${speed_file}" ]] && \
-                printf -v speed "%.*f" "2" "$(div "$(< "${speed_file}")" 1000000)"
+            [[ "${speed_file}" ]] && {
+                speed="$(read_file "${speed_file}")"
+                speed="$(div "${speed}" "1000000")"
+                speed="$(round "2" "${speed}")"
+            }
         ;;
     esac
 
@@ -195,7 +211,7 @@ get_cpu_usage()
 
     cpu_usage="$(awk -v cores="${cores:-1}" \
                      -v sum="0" "${awk_script}" <(ps aux))"
-    printf -v cpu_usage "%.*f" "1" "${cpu_usage}"
+     cpu_usage="$(round "1" "${cpu_usage}")"
     cpu_info["cpu_usage"]="${cpu_usage}%"
 }
 
@@ -209,13 +225,13 @@ get_temp()
                         temp="${line#*:}"
                 done < <(osx-cpu-temp -f -c)
 
-                printf -v temp "%.*f" "1" "${temp/'°C'}"
+                temp="$(round "1" "${temp/'°C'}")"
             }
         ;;
 
         "Linux")
             for file in "/sys/class/hwmon/"*; do
-                [[ -f "${file}/name" && "$(< "${file}/name")" =~ temp ]] && {
+                [[ "$(read_file "${file}/name")" =~ temp ]] && {
                     for i in "${file}/temp"*; do
                         [[ "$i" =~ '_input'$ ]] && \
                             temp_file="$i"
@@ -225,7 +241,7 @@ get_temp()
             done
 
             [[ "${temp_file}" ]] && \
-                temp="$(($(< "${temp_file}") / 1000))"
+                temp="$(($(read_file "${temp_file}") / 1000))"
         ;;
     esac
     [[ "${temp}" ]] && cpu_info["temp"]="${temp}°C"

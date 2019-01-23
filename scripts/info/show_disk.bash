@@ -93,6 +93,12 @@ div()
         awk -v a="$1" -v b="$2" 'BEGIN { printf "%f", a / b }'
 }
 
+round()
+{
+    [[ "$1" && "$2" ]] && \
+        printf "%.*f" "$1" "$2"
+}
+
 get_os()
 {
     case "${OSTYPE:-$(uname -s)}" in
@@ -207,9 +213,9 @@ get_disk_info()
         }
     done < <(printf "%s\\n" "${df_out[@]}")
 
-    printf -v disk_percent "%.*f" "2" "$(percent "${disk_used}" "${disk_capacity}")"
-    printf -v disk_used "%.*f" "2" "$(div "${disk_used}" "$((1024 ** 2))")"
-    printf -v disk_capacity "%.*f" "2" "$(div "${disk_capacity}" "$((1024 ** 2))")"
+    disk_percent="$(round "2" "$(percent "${disk_used}" "${disk_capacity}")")"
+    disk_used="$(round "2" "$(div "${disk_used}" "$((1024 ** 2))")")"
+    disk_capacity="$(round "2" "$(div "${disk_capacity}" "$((1024 ** 2))")")"
 
     disk_info["disk_name"]="${disk_name}"
     disk_info["disk_mount"]="${disk_mount}"
