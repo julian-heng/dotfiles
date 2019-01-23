@@ -81,6 +81,13 @@ trim()
     }
 }
 
+read_file()
+{
+    local file="$1"
+    [[ -f "${file}" ]] && \
+        printf "%s" "$(< "${file}")"
+}
+
 percent()
 {
     [[ "$1" && "$2" ]] && (($2 > 0)) && \
@@ -204,6 +211,49 @@ get_bat()
                 ;;
 
                 "generic")
+                    if [[ -f "${bat_dir}/current_now" ]]; then
+                        :
+                    elif [[ -f "${bat_dir}/power_now" ]]; then
+                        bat_capacity_design="$(read_file "${bat_dir}/energy_full_design")"
+                        bat_capacity_max="$(read_file "${bat_dir}/energy_full")"
+                        bat_capacity_now="$(read_file "${bat_dir}/energy_now")"
+                        bat_cycles="$(read_file "${bat_dir}/cycle_count")"
+                        bat_power="$(read_file "${bat_dir}/power_now")"
+                        bat_temp="$(read_file "${bat_dir}/temp")"
+                        bat_volt="$(read_file "${bat_dir}/voltage_now")"
+                        bat_volt_design="$(read_file "${bat_dir}/voltage_min_design")"
+
+                        if [[ "$(read_file "${bat_dir}/status")" == "Discharging" ]]; then
+                            bat_is_charging="false"
+                        else
+                            bat_is_charging="true"
+                        fi
+
+                        bat_capacity_design="$((bat_capacity_design / 1000))"
+                        bat_capacity_max="$((bat_capacity_max / 1000))"
+                        bat_capacity_now="$((bat_capacity_now / 1000))"
+                        bat_power="$((bat_power / 1000))"
+                        bat_volt="$((bat_volt / 1000))"
+                        bat_volt_design="$((bat_volt_design / 1000))"
+
+                        bat_current="$(
+                            div "$((bat_power * 1000))" "${bat_volt_design}"
+                        )"
+                        bat_capacity_design="$(
+                            div "$((bat_capacity_design * 1000))" "${bat_volt_design}"
+                        )"
+                        bat_capacity_max="$(
+                            div "$((bat_capacity_max * 1000))" "${bat_volt_design}"
+                        )"
+                        bat_capacity_now="$(
+                            div "$((bat_capacity_now * 1000))" "${bat_volt_design}"
+                        )"
+
+                        printf -v bat_current "%.*f" "0" "${bat_current}"
+                        printf -v bat_capacity_design "%.*f" "0" "${bat_capacity_design}"
+                        printf -v bat_capacity_max "%.*f" "0" "${bat_capacity_max}"
+                        printf -v bat_capacity_now "%.*f" "0" "${bat_capacity_now}"
+                    fi
                 ;;
             esac
         ;;
