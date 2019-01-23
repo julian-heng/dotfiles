@@ -212,7 +212,28 @@ get_bat()
 
                 "generic")
                     if [[ -f "${bat_dir}/current_now" ]]; then
-                        :
+                        bat_capacity_design="$(read_file "${bat_dir}/charge_full_design")"
+                        bat_capacity_max="$(read_file "${bat_dir}/charge_full")"
+                        bat_capacity_now="$(read_file "${bat_dir}/charge_now")"
+                        bat_cycles="$(read_file "${bat_dir}/cycle_count")"
+                        bat_power="$(read_file "${bat_dir}/power_now")"
+                        bat_temp="$(read_file "${bat_dir}/temp")"
+                        bat_volt="$(read_file "${bat_dir}/voltage_now")"
+                        bat_volt_design="$(read_file "${bat_dir}/voltage_min_design")"
+
+                        if [[ "$(read_file "${bat_dir}/status")" == "Discharging" ]]; then
+                            bat_is_charging="false"
+                        else
+                            bat_is_charging="true"
+                        fi
+
+                        bat_capacity_design="$((bat_capacity_design / 1000))"
+                        bat_capacity_max="$((bat_capacity_max / 1000))"
+                        bat_capacity_now="$((bat_capacity_now / 1000))"
+                        [[ "${bat_power}" ]] && \
+                            bat_power="$((bat_power / 1000))"
+                        bat_volt="$((bat_volt / 1000))"
+                        bat_volt_design="$((bat_volt_design / 1000))"
                     elif [[ -f "${bat_dir}/power_now" ]]; then
                         bat_capacity_design="$(read_file "${bat_dir}/energy_full_design")"
                         bat_capacity_max="$(read_file "${bat_dir}/energy_full")"
