@@ -219,11 +219,11 @@ get_temp()
 {
     case "${os}" in
         "MacOS")
-            type -p osx-cpu-temp 2>&1 > /dev/null && {
+            type -p /usr/local/bin/osx-cpu-temp 2>&1 > /dev/null && {
                 while read -r line; do
                     [[ "${line}" =~ 'CPU' ]] && \
                         temp="${line#*:}"
-                done < <(osx-cpu-temp -f -c)
+                done < <(/usr/local/bin/osx-cpu-temp -f -c)
 
                 temp="$(round "1" "${temp/'°C'}")"
             }
@@ -251,11 +251,11 @@ get_fan()
 {
     case "${os}" in
         "MacOS")
-            type -p osx-cpu-temp 2>&1 > /dev/null && {
+            type -p /usr/local/bin/osx-cpu-temp 2>&1 > /dev/null && {
                 while read -r line; do
                     [[ "${line}" =~ 'Fan '[0-9] ]] && \
                         fan="${line/'Fan '}"
-                done < <(osx-cpu-temp -f -c)
+                done < <(/usr/local/bin/osx-cpu-temp -f -c)
 
                 fan="${fan/*at }"
                 fan="${fan/ RPM*}"
