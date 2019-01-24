@@ -18,7 +18,8 @@ main()
     [[ "${mem}" ]] && mem_out="Mem: ${mem}"
 
     [[ "${disk[0]}" ]] && disk_out="${disk[0]##*/}"
-    [[ "${disk[1]}" ]] && disk_out="${disk_out}: ${disk[1]}"
+    [[ "${disk[1]}" ]] && \
+        printf -v disk_out "%s: %.*f%%" "${disk_out}" "0" "${disk[1]/'%'}"
 
     [[ "${bat}" ]] && bat_out="Bat: ${bat}"
 
