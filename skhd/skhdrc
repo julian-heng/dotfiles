@@ -2,11 +2,11 @@
 alt - return : "${HOME}"/.dotfiles/scripts/utils/open_iterm2.sh
 
 # Show system statistics
-fn + lalt - 1 : "${HOME}"/.dotfiles/scripts/info/show_cpu.sh
-fn + lalt - 2 : "${HOME}"/.dotfiles/scripts/info/show_mem.sh
-fn + lalt - 3 : "${HOME}"/.dotfiles/scripts/info/show_bat.sh
-fn + lalt - 4 : "${HOME}"/.dotfiles/scripts/info/show_disk.sh
-fn + lalt - 5 : "${HOME}"/.dotfiles/scripts/info/show_song.sh
+fn + lalt - 1 : "${HOME}"/.dotfiles/scripts/info/show_cpu.bash
+fn + lalt - 2 : "${HOME}"/.dotfiles/scripts/info/show_mem.bash
+fn + lalt - 3 : "${HOME}"/.dotfiles/scripts/info/show_bat.bash
+fn + lalt - 4 : "${HOME}"/.dotfiles/scripts/info/show_disk.bash
+fn + lalt - 5 : "${HOME}"/.dotfiles/scripts/info/show_song.bash
 
 # Navigation
 alt - h : chunkc tiling::window --focus west
