@@ -20,7 +20,7 @@ main()
 
     printf -v cpu_out "[ %s | %s | %s ]" "${cpu[@]}"
     printf -v mem_out "[ Mem: %s ]" "${mem}"
-    printf -v disk_out "[ %s: %s ]" "${disk[0]##*/}" "${disk[1]}"
+    printf -v disk_out "[ %s: %.*f%% ]" "${disk[0]##*/}" "0" "${disk[1]/'%'}"
     printf -v wifi_out "[ %s ]" "${wifi_name}"
 
     if [[ "${bat[1]}" == "0h 0m 0s" ]]; then
