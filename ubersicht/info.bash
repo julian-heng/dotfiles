@@ -23,7 +23,7 @@ main()
     printf -v disk_out "[ %s: %s ]" "${disk[0]##*/}" "${disk[1]}"
     printf -v wifi_out "[ %s ]" "${wifi_name}"
 
-    if [[ ! "${bat[1]}" ]]; then
+    if [[ "${bat[1]}" == "0h 0m 0s" ]]; then
         printf -v bat_out "[ Bat: %s ]" "${bat[0]}"
     else
         printf -v bat_out "[ Bat: %s | %s ]" "${bat[@]}"
