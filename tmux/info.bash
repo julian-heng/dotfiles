@@ -9,8 +9,6 @@ main()
     mem="$(bash "${script_dir}/show_mem.bash" mem_percent)"
     bat="$(bash "${script_dir}/show_bat.bash" bat_percent 2> /dev/null)"
 
-    user_host="${USER}@${HOSTNAME}"
-
     [[ "${cpu[0]}" ]] && cpu_out="${cpu_out}${cpu[0]}"
     [[ "${cpu[1]}" ]] && cpu_out="${cpu_out} | ${cpu[1]}"
     [[ "${cpu[2]}" ]] && cpu_out="${cpu_out} | ${cpu[2]}"
@@ -25,7 +23,6 @@ main()
 
     printf -v time_out "%(%a, %d %h)T | %(%H:%M)T" "-1"
 
-    [[ "${user_host}" ]] && printf "| %s " "${user_host}"
     [[ "${cpu_out}" ]]   && printf "| %s " "${cpu_out}"
     [[ "${mem_out}" ]]   && printf "| %s " "${mem_out}"
     [[ "${disk_out}" ]]  && printf "| %s " "${disk_out}"
