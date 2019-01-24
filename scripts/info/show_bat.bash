@@ -324,6 +324,7 @@ get_bat()
         ((${secs/s*} == 0)) && unset secs
 
         bat_time="${hours}${mins}${secs}"
+        bat_time="$(trim "${bat_time}")"
     else
         bat_time="0h 0m 0s"
     fi

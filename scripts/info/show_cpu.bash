@@ -307,6 +307,7 @@ get_uptime()
     ((${secs/s*} == 0)) && unset secs
 
     uptime="${days}${hours}${mins}${secs}"
+    uptime="$(trim "${uptime}")"
     cpu_info["uptime"]="${uptime}"
 }
 
