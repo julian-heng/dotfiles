@@ -27,28 +27,6 @@ command_not_found_handle()
                 done < <(pacman -Fs -- "${cmd}")
             fi
         ;;
-
-        "Fedora"|"CentOS"*)
-            if type -p dnf > /dev/null 2>&1; then
-                package_manager="sudo dnf install"
-            else
-                package_manager="sudo yum install"
-            fi
-
-            while IFS="" read -r line; do
-                case "${line}" in
-                    "Load"*|*"*"*|"Last metadata"*|\
-                    "Repo"*|"Matched from"*|"Provide"*|"") ;;
-                    *) pkgs+=("${line%%:*}") ;;
-                esac
-            done < <(
-                    if [[ "${package_manager}" =~ dnf ]]; then
-                        dnf whatprovides -- "${cmd}" 2> /dev/null
-                    else
-                        yum provides -- "${cmd}" 2> /dev/null
-                    fi
-                )
-        ;;
     esac
 
     [[ "${pkgs[*]}" ]] && {
