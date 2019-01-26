@@ -15,7 +15,7 @@ main()
 
     [[ "${cpu[0]}" ]] && cpu_out="${cpu_out}${cpu[0]}"
     [[ "${cpu[1]}" ]] && cpu_out="${cpu_out} | ${cpu[1]}"
-    [[ "${mem[*]}" ]] && mem_out="${mem[0]} MiB / ${mem[1]} MiB"
+    [[ "${mem[*]}" ]] && mem_out="${mem[0]} GiB / ${mem[1]} GiB"
 
     printf -v time_out "%(%a, %d %h)T | %(%H:%M)T" "-1"
 
