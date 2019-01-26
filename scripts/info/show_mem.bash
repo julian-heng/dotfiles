@@ -83,13 +83,13 @@ trim()
 
 percent()
 {
-    [[ "$1" && "$2" ]] && (($2 > 0)) && \
+    [[ "$1" && "$2" ]] && (($(awk -v a="$2" 'BEGIN { printf "%d", (a > 0) }'))) && \
         awk -v a="$1" -v b="$2" 'BEGIN { printf "%f", (a / b) * 100 }'
 }
 
 div()
 {
-    [[ "$1" && "$2" ]] && (($2 != 0)) && \
+    [[ "$1" && "$2" ]] && (($(awk -v a="$2" 'BEGIN { printf "%d", (a != 0) }'))) && \
         awk -v a="$1" -v b="$2" 'BEGIN { printf "%f", a / b }'
 }
 
@@ -112,12 +112,29 @@ get_os()
     esac
 }
 
-get_mem()
+get_mem_percent()
 {
+    [[ "${mem_percent}" && "${mem_info[mem_percent]}" ]] && \
+        return
+
+    [[ ! "${mem_info[mem_total]}" ]] && \
+        get_mem_total
+    [[ ! "${mem_info[mem_used]}" ]] && \
+        get_mem_used
+
+    mem_percent="$(percent "${mem_info[mem_used]/'MiB'}" "${mem_info[mem_total]/'MiB'}")"
+    mem_percent="$(round "0" "${mem_percent}")"
+    mem_info[mem_percent]="${mem_percent}%"
+}
+
+get_mem_used()
+{
+    [[ "${mem_used}" && "${mem_info[mem_used]}" ]] && \
+        return
+
     case "${os}" in
         "MacOS")
             pow="2"
-            mem_total=$(sysctl -n hw.memsize)
             while IFS=":" read -r a b; do
                 case "$a" in
                     *" wired"*|*" active"*|*" occupied"*)
@@ -132,7 +149,7 @@ get_mem()
             pow="1"
             while read -r a b _; do
                 case "${a/:}" in
-                    "MemTotal") mem_total="$b"; mem_used="$b" ;;
+                    "MemTotal") mem_used="$b" ;;
                     "Shmem") ((mem_used += b)) ;;
                     "MemFree"|"Buffers"|"Cached"|"SReclaimable")
                         ((mem_used -= b))
@@ -142,42 +159,103 @@ get_mem()
         ;;
     esac
 
-    mem_percent="$(round "0" "$(percent "${mem_used}" "${mem_total}")")"
-    mem_used="$(round "0" "$(div "${mem_used}" "$((1024 ** pow))")")"
-    mem_total="$(round "0" "$(div "${mem_total}" "$((1024 ** pow))")")"
-
-    mem_info["mem_percent"]="${mem_percent}%"
+    mem_used="$(div "${mem_used}" "$((1024 ** pow))")"
+    mem_used="$(round "0" "${mem_used}")"
     mem_info["mem_used"]="${mem_used} MiB"
+}
+
+get_mem_total()
+{
+    [[ "${mem_total}" && "${mem_info[mem_total]}" ]] && \
+        return
+
+    case "${os}" in
+        "MacOS")
+            pow="2"
+            mem_total=$(sysctl -n hw.memsize)
+        ;;
+
+        "Linux")
+            pow="1"
+            while [[ ! "${mem_total}" ]] && read -r a b _; do
+                [[ "$a" =~ 'MemTotal' ]] && \
+                    mem_total="$b"
+            done < /proc/meminfo
+        ;;
+    esac
+
+    mem_total="$(div "${mem_total}" "$((1024 ** pow))")"
+    mem_total="$(round "0" "${mem_total}")"
     mem_info["mem_total"]="${mem_total} MiB"
 }
 
-get_swap()
+get_swap_percent()
 {
+    [[ "${swap_percent}" && "${mem_info[swap_percent]}" ]] && \
+        return
+
+    [[ ! "${mem_info[swap_total]}" ]] && \
+        get_swap_total
+    [[ ! "${mem_info[swap_used]}" ]] && \
+        get_swap_used
+
+    swap_percent="$(percent "${mem_info[swap_used]/'MiB'}" "${mem_info[swap_total]/'MiB'}")"
+    swap_percent="$(round "0" "${swap_percent}")"
+    mem_info[swap_percent]="${swap_percent}%"
+}
+
+get_swap_used()
+{
+    [[ "${swap_used}" && "${mem_info[swap_used]}" ]] && \
+        return
+
     case "${os}" in
         "MacOS")
             pow="0"
-            read -r _ _ swap_total _ _ swap_used _ < <(sysctl -n vm.swapusage)
+            read -r _ _ _ _ _ swap_used _ < <(sysctl -n vm.swapusage)
             swap_used="${swap_used/M}"
+        ;;
+
+        "Linux")
+            pow="1"
+            while [[ ! "${swap_used}" ]] && read -r a b _; do
+                if [[ "$a" =~ 'SwapTotal' ]]; then
+                    tmp="$b"
+                elif [[ "$a" =~ 'SwapFree' ]]; then
+                    ((swap_used = tmp - b))
+                fi
+            done < /proc/meminfo
+        ;;
+    esac
+
+    swap_used="$(div "${swap_used}" "$((1024 ** pow))")"
+    swap_used="$(round "0" "${swap_used}")"
+    mem_info["swap_used"]="${swap_used} MiB"
+}
+
+get_swap_total()
+{
+    [[ "${swap_total}" && "${mem_info[swap_total]}" ]] && \
+        return
+
+    case "${os}" in
+        "MacOS")
+            pow="0"
+            read -r _ _ swap_total _ < <(sysctl -n vm.swapusage)
             swap_total="${swap_total/M}"
         ;;
 
         "Linux")
             pow="1"
-            while read -r a b _; do
-                case "${a/:}" in
-                    "SwapTotal") swap_total="$b" ;;
-                    "SwapFree") ((swap_used = swap_total - b)) ;;
-                esac
+            while [[ ! "${swap_total}" ]] && read -r a b _; do
+                [[ "$a" =~ 'SwapTotal' ]] && \
+                    swap_total="$b"
             done < /proc/meminfo
         ;;
     esac
 
-    swap_used="$(round "0" "$(div "${swap_used}" "$((1024 ** pow))")")"
-    swap_total="$(round "0" "$(div "${swap_total}" "$((1024 ** pow))")")"
-    swap_percent="$(round "0" "$(percent "${swap_used}" "${swap_total}")")"
-
-    mem_info["swap_percent"]="${swap_percent}%"
-    mem_info["swap_used"]="${swap_used} MiB"
+    swap_total="$(div "${swap_total}" "$((1024 ** pow))")"
+    swap_total="$(round "0" "${swap_total}")"
     mem_info["swap_total"]="${swap_total} MiB"
 }
 
@@ -253,13 +331,14 @@ main()
 
     [[ ! "${func[*]}" ]] && \
         func=(
-            "mem_percent" "mem_used"
-            "mem_total" "swap_percent"
-            "swap_used" "swap_total"
+            "mem_used" "mem_total" "mem_percent"
+            "swap_used" "swap_total" "swap_percent"
         )
 
-    get_mem
-    get_swap
+    for function in "${func[@]}"; do
+        [[ "$(type -t "get_${function}")" == "function" ]] && \
+            "get_${function}"
+    done
 
     case "${out}" in
         "raw")

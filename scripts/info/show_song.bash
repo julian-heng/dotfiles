@@ -74,16 +74,6 @@ notify()
     fi
 }
 
-trim()
-{
-    [[ "$*" ]] && {
-        set -f
-        set -- $*
-        printf "%s" "${*//\"}"
-        set +f
-    }
-}
-
 get_os()
 {
     case "${OSTYPE:-$(uname -s)}" in
@@ -97,52 +87,141 @@ get_os()
     esac
 }
 
-check_app_state()
+get_app()
 {
-    if pgrep -x "cmus" > /dev/null; then
+    [[ "${app}" && "${song_info[app]}" ]] && \
+        return
+
+    if pgrep -x cmus > /dev/null 2>&1; then
         app="cmus"
-        while read -r line && [[ ! "${app_state}" ]]; do
-            [[ "${line}" =~ ^'status' ]] && \
-                read -r _ app_state <<< "${line}"
-        done < <(cmus-remote -Q)
-    elif [[ "${os}" == "MacOS" && \
-            "$(osascript -e "application \"iTunes\" is running")" == "true" ]]; then
+    elif [[ "${os}" == "MacOS" \
+         && "$(osascript -e "application \"iTunes\" is running")" == "true" ]]; then
         app="iTunes"
-        app_state="$(osascript -e "tell application \"iTunes\" to player state as string")"
     else
         app="none"
-        app_state="none"
     fi
 
-    song_info["app"]="${app}"
-    song_info["app_state"]="${app_state}"
+    song_info[app]="${app}"
 }
 
-get_song()
+get_app_state()
 {
-    case "${app}" in
+    [[ "${app_state}" && "${song_info[app_state]}" ]] && \
+        return
+
+    [[ ! "${song_info[app]}" ]] && \
+        get_app
+
+    case "${song_info[app]}" in
         "cmus")
-            format="format_print %{title}:%{artist}:%{album}"
-            song_info="$(cmus-remote -C "${format}")"
+            while [[ ! "${app_state}" ]] && read -r line; do
+                [[ "${line}" =~ ^'status' ]] && \
+                    read -r _ app_state <<< "${line}"
+            done < <(cmus-remote -Q)
         ;;
 
         "iTunes")
-            cmd="_ of current track as string"
-            osa_script="tell application \"${app}\"
-                            ${cmd/_/'track'} & \":\" & \
-                            ${cmd/_/'artist'} & \":\" & \
-                            ${cmd/_/'album'}
-                        end tell"
-            song_info="$(/usr/bin/env osascript <<< "${osa_script}")"
+            osa_script='tell application "iTunes" to player state as string'
+            app_state="$(osascript -e "${osa_script}")"
+        ;;
+
+        "none") app_state="none" ;;
+    esac
+
+    song_info[app_state]="${app_state}"
+}
+
+get_track()
+{
+    [[ "${track}" && "${song_info[track]}" ]] && \
+        return
+
+    [[ ! "${app_state}" && ! "${song_info[app_state]}" ]] && \
+        get_app_state
+
+    case "${app_state}" in
+        "none"|"stopped")
+            return
         ;;
     esac
 
-    IFS=":" \
-    read -r track artist album <<< "${song_info}"
+    case "${app}" in
+        "cmus")
+            format="format_print %{title}"
+            track="$(cmus-remote -C "${format}")"
+        ;;
 
-    song_info["track"]="${track}"
-    song_info["artist"]="${artist}"
-    song_info["album"]="${album}"
+        "iTunes")
+            osa_script='tell application "iTunes"
+                            track of current track as string
+                        end tell'
+            track="$(/usr/bin/env osascript <<< "${osa_script}")"
+        ;;
+    esac
+
+    song_info[track]="${track}"
+}
+
+get_artist()
+{
+    [[ "${artist}" && "${song_info[artist]}" ]] && \
+        return
+
+    [[ ! "${app_state}" && ! "${song_info[app_state]}" ]] && \
+        get_app_state
+
+    case "${app_state}" in
+        "none"|"stopped")
+            return
+        ;;
+    esac
+
+    case "${app}" in
+        "cmus")
+            format="format_print %{artist}"
+            artist="$(cmus-remote -C "${format}")"
+        ;;
+
+        "iTunes")
+            osa_script='tell application "iTunes"
+                            artist of current artist as string
+                        end tell'
+            artist="$(/usr/bin/env osascript <<< "${osa_script}")"
+        ;;
+    esac
+
+    song_info[artist]="${artist}"
+}
+
+get_album()
+{
+    [[ "${album}" && "${song_info[album]}" ]] && \
+        return
+
+    [[ ! "${app_state}" && ! "${song_info[app_state]}" ]] && \
+        get_app_state
+
+    case "${app_state}" in
+        "none"|"stopped")
+            return
+        ;;
+    esac
+
+    case "${app}" in
+        "cmus")
+            format="format_print %{album}"
+            album="$(cmus-remote -C "${format}")"
+        ;;
+
+        "iTunes")
+            osa_script='tell application "iTunes"
+                            album of current album as string
+                        end tell'
+            album="$(/usr/bin/env osascript <<< "${osa_script}")"
+        ;;
+    esac
+
+    song_info[album]="${album}"
 }
 
 print_usage()
@@ -215,20 +294,15 @@ main()
     get_os
 
     [[ ! "${func[*]}" ]] && \
-        func=("app" "app_state" "artist" "track" "album")
+        func=("app" "app_state" "track" "artist" "album")
 
-    check_app_state
+    for function in "${func[@]}"; do
+        [[ "$(type -t "get_${function}")" == "function" ]] && \
+            "get_${function}"
+    done
 
     case "${app_state}" in
-        "none"|"stopped")
-            title_parts=("Now Playing")
-            subtitle_parts=()
-            message_parts=("No Music Playing")
-        ;;
-
-        *)
-            get_song
-        ;;
+        "none"|"stopped") message_parts=("No Music Playing") ;;
     esac
 
     case "${out}" in
@@ -259,16 +333,16 @@ main()
         *)
             title_parts=("Now Playing")
 
-            if [[ "${song_info["artist"]}" ]]; then
-                subtitle_parts+=("${song_info["artist"]}")
-                [[ "${song_info["track"]}" ]] && \
-                    subtitle_parts+=("-" "${song_info["track"]}")
-            elif [[ "${song_info["track"]}" ]]; then
-                subtitle_parts+=("${song_info["track"]}")
+            if [[ "${song_info[artist]}" ]]; then
+                subtitle_parts+=("${song_info[artist]}")
+                [[ "${song_info[track]}" ]] && \
+                    subtitle_parts+=("-" "${song_info[track]}")
+            elif [[ "${song_info[track]}" ]]; then
+                subtitle_parts+=("${song_info[track]}")
             fi
 
-            [[ "${song_info["album"]}" ]] && \
-                message_parts+=("${song_info["album"]}")
+            [[ "${song_info[album]}" ]] && \
+                message_parts+=("${song_info[album]}")
 
             notify
     esac
