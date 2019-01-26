@@ -83,13 +83,13 @@ trim()
 
 percent()
 {
-    [[ "$1" && "$2" ]] && (($2 > 0)) && \
+    [[ "$1" && "$2" ]] && (($(awk -v a="$2" 'BEGIN { printf "%d", (a > 0) }'))) && \
         awk -v a="$1" -v b="$2" 'BEGIN { printf "%f", (a / b) * 100 }'
 }
 
 div()
 {
-    [[ "$1" && "$2" ]] && (($2 != 0)) && \
+    [[ "$1" && "$2" ]] && (($(awk -v a="$2" 'BEGIN { printf "%d", (a != 0) }'))) && \
         awk -v a="$1" -v b="$2" 'BEGIN { printf "%f", a / b }'
 }
 
@@ -122,10 +122,8 @@ get_prog_out()
         "Linux")
             df_flags=("-P")
             lsblk_flags=(
-                "--output"
-                "KNAME,NAME,LABEL,PARTLABEL,FSTYPE,MOUNTPOINT"
-                "--paths"
-                "--pair"
+                "--output" "KNAME,NAME,LABEL,PARTLABEL,FSTYPE,MOUNTPOINT"
+                "--paths" "--pair"
             )
 
         ;;
@@ -167,63 +165,162 @@ get_search()
     fi
 }
 
-get_disk_info()
+check_diskutil_out()
 {
+    [[ ! "${diskutil_out[*]}" ]] && \
+        mapfile -t diskutil_out < <(diskutil info "${search}")
+}
+
+check_lsblk_line()
+{
+    while [[ ! "${lsblk_line}" ]] && read -r line; do
+        [[ "${line}" =~ ${search} ]] && \
+            lsblk_line="${line}"
+    done < <(printf "%s\\n" "${lsblk_out[@]}")
+}
+
+check_df_line()
+{
+    while [[ ! "${df_line}" ]] && read -r line; do
+        [[ "${line}" =~ ${search} ]] && \
+            df_line="${line}"
+    done < <(printf "%s\\n" "${df_out[@]}")
+}
+
+get_disk_name()
+{
+    [[ "${disk_name}" && "${disk_info[disk_name]}" ]] && \
+        return
+
     case "${os}" in
         "MacOS")
-            while IFS=":" read -r a b; do
-                case "$a" in
-                    *"Device Node"*) disk_device="$(trim "$b")" ;;
-                    *"Volume Name"*) disk_name="$(trim "$b")" ;;
-                    *"File System Personality"*) disk_part="$(trim "$b")" ;;
-                    *"Mount Point"*) disk_mount="$(trim "$b")" ;;
-                esac
-            done < <(diskutil info "${search}")
+            check_diskutil_out
+            while [[ ! "${disk_name}" ]] && IFS=":" read -r a b; do
+                [[ "$a" =~ 'Volume Name' ]] && \
+                    disk_name="$(trim "$b")"
+            done < <(printf "%s\\n" "${diskutil_out[@]}")
         ;;
 
         "Linux")
-            match="false"
-
-            while read -r line && [[ "${match}" != "true" ]]; do
-                [[ "${line}" =~ ${search} ]] && {
-                    read -r disk_device _ \
-                            disk_label \
-                            disk_partlabel \
-                            disk_part \
-                            disk_mount <<< "${line}"
-
-                    disk_device="$(trim "${disk_device##*=}")"
-                    disk_label="$(trim "${disk_label##*=}")"
-                    disk_partlabel="$(trim "${disk_partlabel##*=}")"
-                    disk_part="$(trim "${disk_part##*=}")"
-                    disk_mount="$(trim "${disk_mount##*=}")"
-
-                    disk_name="${disk_label:-${disk_partlabel}}"
-                    match="true"
-                }
-            done < <(printf "%s\\n" "${lsblk_out[@]}")
+            check_lsblk_line
+            read -r _ _ disk_label disk_partlabel _ <<< "${lsblk_line}"
+            disk_label="$(trim "${disk_label##*=}")"
+            disk_partlabel="$(trim "${disk_partlabel##*=}")"
+            disk_name="${disk_label:-${disk_partlabel}}"
         ;;
     esac
 
-    match="false"
-    while read -r line && [[ "${match}" != "true" ]]; do
-        [[ "${line}" =~ ${search} ]] && {
-            read -r _ disk_capacity disk_used _ <<< "${line}"
-            match="true"
-        }
-    done < <(printf "%s\\n" "${df_out[@]}")
+    disk_info[disk_name]="${disk_name}"
+}
 
-    disk_percent="$(round "2" "$(percent "${disk_used}" "${disk_capacity}")")"
+get_disk_device()
+{
+    [[ "${disk_device}" && "${disk_info[disk_device]}" ]] && \
+        return
+
+    case "${os}" in
+        "MacOS")
+            check_diskutil_out
+            while [[ ! "${disk_device}" ]] && IFS=":" read -r a b; do
+                [[ "$a" =~ 'Device Node' ]] && \
+                    disk_device="$(trim "$b")"
+            done < <(printf "%s\\n" "${diskutil_out[@]}")
+        ;;
+
+        "Linux")
+            check_lsblk_line
+            read -r disk_device _ <<< "${lsblk_line}"
+            disk_device="$(trim "${disk_device##*=}")"
+        ;;
+    esac
+
+    disk_info[disk_device]="${disk_device}"
+}
+
+get_disk_mount()
+{
+    [[ "${disk_mount}" && "${disk_info[disk_mount]}" ]] && \
+        return
+
+    case "${os}" in
+        "MacOS")
+            check_diskutil_out
+            while [[ ! "${disk_mount}" ]] && IFS=":" read -r a b; do
+                [[ "$a" =~ 'Mount Point' ]] && \
+                    disk_mount="$(trim "$b")"
+            done < <(printf "%s\\n" "${diskutil_out[@]}")
+        ;;
+
+        "Linux")
+            check_lsblk_line
+            read -r _ _ _ _ _ disk_mount <<< "${lsblk_line}"
+            disk_mount="$(trim "${disk_mount##*=}")"
+        ;;
+    esac
+
+    disk_info[disk_mount]="${disk_mount}"
+}
+
+get_disk_partition()
+{
+    [[ "${disk_partition}" && "${disk_info[disk_partition]}" ]] && \
+        return
+
+    case "${os}" in
+        "MacOS")
+            check_diskutil_out
+            while [[ ! "${disk_partition}" ]] && IFS=":" read -r a b; do
+                [[ "$a" =~ 'File System Personality' ]] && \
+                    disk_partition="$(trim "$b")"
+            done < <(printf "%s\\n" "${diskutil_out[@]}")
+        ;;
+
+        "Linux")
+            check_lsblk_line
+            read -r _ _ _ _ disk_partition _ <<< "${lsblk_line}"
+            disk_partition="$(trim "${disk_partition##*=}")"
+        ;;
+    esac
+
+    disk_info[disk_partition]="${disk_partition}"
+}
+
+get_disk_used()
+{
+    [[ "${disk_used}" && "${disk_info[disk_used]}" ]] && \
+        return
+
+    check_df_line
+    read -r _ _ disk_used _ <<< "${line}"
     disk_used="$(round "2" "$(div "${disk_used}" "$((1024 ** 2))")")"
-    disk_capacity="$(round "2" "$(div "${disk_capacity}" "$((1024 ** 2))")")"
+    disk_info[disk_used]="${disk_used} GiB"
+}
 
-    disk_info["disk_name"]="${disk_name}"
-    disk_info["disk_mount"]="${disk_mount}"
-    disk_info["disk_used"]="${disk_used} GiB"
-    disk_info["disk_capacity"]="${disk_capacity} GiB"
-    disk_info["disk_percent"]="${disk_percent}%"
-    disk_info["disk_device"]="${disk_device}"
-    disk_info["disk_part"]="${disk_part}"
+get_disk_total()
+{
+    [[ "${disk_total}" && "${disk_info[disk_total]}" ]] && \
+        return
+
+    check_df_line
+    read -r _ disk_total _ <<< "${line}"
+    disk_total="$(div "${disk_total}" "$((1024 ** 2))")"
+    disk_total="$(round "2" "${disk_total}")"
+    disk_info[disk_total]="${disk_total} GiB"
+}
+
+get_disk_percent()
+{
+    [[ "${disk_percent}" && "${disk_info[disk_percent]}" ]] && \
+        return
+
+    [[ ! "${disk_info[disk_used]}" ]] && \
+        get_disk_used
+    [[ ! "${disk_info[disk_total]}" ]] && \
+        get_disk_total
+
+    disk_percent="$(percent "${disk_info[disk_used]/'GiB'}" "${disk_info[disk_total]/'GiB'}")"
+    disk_percent="$(round "2" "${disk_percent}")"
+    disk_info[disk_percent]="${disk_percent}%"
 }
 
 print_usage()
@@ -241,12 +338,12 @@ Info:
 
 Valid Names:
     disk_name
-    disk_mount
-    disk_used
-    disk_capacity
-    disk_percent
     disk_device
-    disk_part
+    disk_mount
+    disk_partition
+    disk_used
+    disk_total
+    disk_percent
 
 Output:
     -f, --format \"str\"    Print info_name in a formatted string
@@ -316,22 +413,25 @@ main()
 
     [[ ! "${func[*]}" ]] && \
         func=(
-            "disk_name" "disk_mount" "disk_used"
-            "disk_capacity" "disk_percent"
-            "disk_device" "disk_part"
+            "disk_name" "disk_device" "disk_mount" "disk_partition"
+            "disk_used" "disk_total" "disk_percent"
         )
 
     if search="$(get_search "${search}")"; then
-        get_disk_info
+        for function in "${func[@]}"; do
+            [[ "$(type -t "get_${function}")" == "function" ]] && \
+                "get_${function}"
+        done
     else
         return 1
     fi
 
-    [[ ! "${disk_info["disk_device"]}" \
-    || ! "${disk_info["disk_used"]}" \
-    || ! "${disk_info["disk_capacity"]}" \
-    || "${disk_info["disk_capacity"]}" == "0.00" \
-    ]] && exit 1
+    [[ "${out}" != "string" ]] && \
+        [[ ! "${disk_info["disk_device"]}" \
+        || ! "${disk_info["disk_used"]}" \
+        || ! "${disk_info["disk_total"]}" \
+        || "${disk_info["disk_total"]}" == "0.00" \
+        ]] && exit 1
 
     case "${out}" in
         "raw")
@@ -365,15 +465,15 @@ main()
 
             [[ "${disk_info["disk_used"]}" ]] && \
                 subtitle_parts+=("${disk_info["disk_used"]}")
-            [[ "${disk_info["disk_capacity"]}" ]] && \
-                subtitle_parts+=("|" "${disk_info["disk_capacity"]}")
+            [[ "${disk_info["disk_total"]}" ]] && \
+                subtitle_parts+=("|" "${disk_info["disk_total"]}")
             [[ "${disk_info["disk_percent"]}" ]] && \
                 subtitle_parts+=("(${disk_info["disk_percent"]})")
 
             [[ "${disk_info["disk_device"]}" ]] && \
                 message_parts+=("${disk_info["disk_device"]}")
-            [[ "${disk_info["disk_part"]}" ]] && \
-                message_parts+=("|" "${disk_info["disk_part"]}")
+            [[ "${disk_info["disk_partition"]}" ]] && \
+                message_parts+=("|" "${disk_info["disk_partition"]}")
 
             notify
         ;;
