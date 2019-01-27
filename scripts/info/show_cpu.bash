@@ -354,7 +354,7 @@ Examples:
     \$ ${0##*/} --format '{} | {}' temp fan
 
 Misc:
-    If notify-send if not installed, then the script will
+    If notify-send is not installed, then the script will
     print to standard output.
 "
 }

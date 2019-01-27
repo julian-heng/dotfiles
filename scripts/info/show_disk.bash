@@ -366,7 +366,7 @@ Examples:
     \$ ${0##*/} --format '{} | {}' disk_used disk_capacity
 
 Misc:
-    If notify-send if not installed, then the script will
+    If notify-send is not installed, then the script will
     print to standard output.
 "
 }
