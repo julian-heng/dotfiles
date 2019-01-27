@@ -138,6 +138,15 @@ get_network_device()
 
     case "${os}" in
         "MacOS")
+            while read -r line; do
+                [[ "${line}" =~ ^'Device:' ]] && \
+                    devices+=("${line##*:}")
+            done < <(networksetup -listallhardwareports)
+
+            while [[ ! "${network_device}" ]] && read -r device; do
+                [[ "$(ifconfig "${device}")" =~ 'status: active' ]] && \
+                    network_device="${device}"
+            done < <(printf "%s\\n" "${devices[@]}")
         ;;
 
         "Linux")
@@ -162,6 +171,10 @@ get_network_local_ip()
 
     case "${os}" in
         "MacOS")
+            while [[ ! "${network_local_ip}" ]] && read -r ip_type ip _; do
+                [[ "${ip_type}" == "inet" ]] && \
+                    network_local_ip="${ip}"
+            done < <(ifconfig "${device}")
         ;;
 
         "Linux")
@@ -185,19 +198,51 @@ get_network_download()
 
     case "${os}" in
         "MacOS")
+            parse_netstat()
+            {
+                unset delta
+                while [[ ! "${delta}" ]] && read -r _ _ _ _ _ _ rx _; do
+                    [[ "${rx}" =~ ^[0-9]+$ ]] && \
+                        delta="${rx}"
+                done < <(netstat -nbiI "${net_info[network_device]}")
+                printf "%s" "${delta}"
+            }
+
+            rx_1="$(parse_netstat)"
+            time_1="${EPOCHREALTIME:-$(date '+%s.%N')}"
+
+            until (($(parse_netstat) > rx_1)); do
+                read -rst "0.05" -N 999
+            done
+
+            rx_2="$(parse_netstat)"
+            time_2="${EPOCHREALTIME:-$(date '+%s.%N')}"
+
+            ((rx_delta = rx_2 - rx_1))
+            time_delta="$(minus "${time_2}" "${time_1}")"
+            multiplier="$(div "1" "${time_delta}")"
+
+            rx_delta="$(multi "${rx_delta}" "${multiplier}")"
+            network_download="$(round "0" "${rx_delta}")"
         ;;
 
         "Linux")
             net_dir="/sys/class/net/${net_info[network_device]}/statistics"
+
             rx_1="$(< "${net_dir}/rx_bytes")"
             time_1="${EPOCHREALTIME:-$(date '+%s.%N')}"
-            while (($(< "${net_dir}/rx_bytes") == rx_1)); do :; done
+
+            until (($(< "${net_dir}/rx_bytes") > rx_1)); do
+                read -rst "0.05" -N 999
+            done
+
             rx_2="$(< "${net_dir}/rx_bytes")"
             time_2="${EPOCHREALTIME:-$(date '+%s.%N')}"
 
             ((rx_delta = rx_2 - rx_1))
             time_delta="$(minus "${time_2}" "${time_1}")"
             multiplier="$(div "1" "${time_delta}")"
+
             rx_delta="$(multi "${rx_delta}" "${multiplier}")"
             network_download="$(round "0" "${rx_delta}")"
         ;;
@@ -226,19 +271,51 @@ get_network_upload()
 
     case "${os}" in
         "MacOS")
+            parse_netstat()
+            {
+                unset delta
+                while [[ ! "${delta}" ]] && read -r _ _ _ _ _ _ _ _ _ tx _; do
+                    [[ "${tx}" =~ ^[0-9]+$ ]] && \
+                        delta="${tx}"
+                done < <(netstat -nbiI "${net_info[network_device]}")
+                printf "%s" "${delta}"
+            }
+
+            tx_1="$(parse_netstat)"
+            time_1="${EPOCHREALTIME:-$(date '+%s.%N')}"
+
+            until (($(parse_netstat) > tx_1)); do
+                read -rst "0.05" -N 999
+            done
+
+            tx_2="$(parse_netstat)"
+            time_2="${EPOCHREALTIME:-$(date '+%s.%N')}"
+
+            ((tx_delta = tx_2 - tx_1))
+            time_delta="$(minus "${time_2}" "${time_1}")"
+            multiplier="$(div "1" "${time_delta}")"
+
+            tx_delta="$(multi "${tx_delta}" "${multiplier}")"
+            network_upload="$(round "0" "${tx_delta}")"
         ;;
 
         "Linux")
             net_dir="/sys/class/net/${net_info[network_device]}/statistics"
+
             tx_1="$(< "${net_dir}/tx_bytes")"
             time_1="${EPOCHREALTIME:-$(date '+%s.%N')}"
-            while (($(< "${net_dir}/tx_bytes") == tx_1)); do :; done
+
+            until (($(< "${net_dir}/tx_bytes") > tx_1)); do
+                read -rst "0.05" -N 999
+            done
+
             tx_2="$(< "${net_dir}/tx_bytes")"
             time_2="${EPOCHREALTIME:-$(date '+%s.%N')}"
 
             ((tx_delta = tx_2 - tx_1))
             time_delta="$(minus "${time_2}" "${time_1}")"
             multiplier="$(div "1" "${time_delta}")"
+
             tx_delta="$(multi "${tx_delta}" "${multiplier}")"
             network_upload="$(round "0" "${tx_delta}")"
         ;;
@@ -290,11 +367,11 @@ Examples:
     Print to standard out:
     \$ ${0##*/} --stdout
 
-    Print memory usage:
-    \$ ${0##*/} mem_used mem_total
+    Print local ip address:
+    \$ ${0##*/} network_local_ip
 
-    Print swap usage with a format string:
-    \$ ${0##*/} --format '{} | {}' swap_used swap_total
+    Print download and upload speed:
+    \$ ${0##*/} --format '{} | {}' network_download network_upload
 
 Misc:
     If notify-send if not installed, then the script will
