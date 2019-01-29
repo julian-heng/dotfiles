@@ -88,6 +88,27 @@ read_file()
         printf "%s" "$(< "${file}")"
 }
 
+_get_real_time()
+{
+    if [[ "${EPOCHREALTIME}" ]]; then
+        printf "%s" "${EPOCHREALTIME}"
+    else
+        case "${os}" in
+            "MacOS")
+                if has gdate; then
+                    gdate '+%s.%N'
+                else
+                    python -c 'import time; print(time.time())'
+                fi
+            ;;
+
+            "Linux")
+                date '+%s.%N'
+            ;;
+        esac
+    fi
+}
+
 percent()
 {
     [[ "$1" && "$2" ]] && (($(awk -v a="$2" 'BEGIN { printf "%d", (a > 0) }'))) && \
@@ -209,14 +230,14 @@ get_network_download()
             }
 
             rx_1="$(parse_netstat)"
-            time_1="${EPOCHREALTIME:-$(date '+%s.%N')}"
+            time_1="$(_get_real_time)"
 
             until (($(parse_netstat) > rx_1)); do
                 read -rst "0.05" -N 999
             done
 
             rx_2="$(parse_netstat)"
-            time_2="${EPOCHREALTIME:-$(date '+%s.%N')}"
+            time_2="$(_get_real_time)"
 
             ((rx_delta = rx_2 - rx_1))
             time_delta="$(minus "${time_2}" "${time_1}")"
@@ -230,14 +251,14 @@ get_network_download()
             net_dir="/sys/class/net/${net_info[network_device]}/statistics"
 
             rx_1="$(< "${net_dir}/rx_bytes")"
-            time_1="${EPOCHREALTIME:-$(date '+%s.%N')}"
+            time_1="$(_get_real_time)"
 
             until (($(< "${net_dir}/rx_bytes") > rx_1)); do
                 read -rst "0.05" -N 999
             done
 
             rx_2="$(< "${net_dir}/rx_bytes")"
-            time_2="${EPOCHREALTIME:-$(date '+%s.%N')}"
+            time_2="$(_get_real_time)"
 
             ((rx_delta = rx_2 - rx_1))
             time_delta="$(minus "${time_2}" "${time_1}")"
@@ -282,14 +303,15 @@ get_network_upload()
             }
 
             tx_1="$(parse_netstat)"
-            time_1="${EPOCHREALTIME:-$(date '+%s.%N')}"
+            time_1="${EPOCHREALTIME:-$(gdate '+%s.%N')}"
+            time_1="$(_get_real_time)"
 
             until (($(parse_netstat) > tx_1)); do
                 read -rst "0.05" -N 999
             done
 
             tx_2="$(parse_netstat)"
-            time_2="${EPOCHREALTIME:-$(date '+%s.%N')}"
+            time_2="$(_get_real_time)"
 
             ((tx_delta = tx_2 - tx_1))
             time_delta="$(minus "${time_2}" "${time_1}")"
@@ -303,14 +325,14 @@ get_network_upload()
             net_dir="/sys/class/net/${net_info[network_device]}/statistics"
 
             tx_1="$(< "${net_dir}/tx_bytes")"
-            time_1="${EPOCHREALTIME:-$(date '+%s.%N')}"
+            time_1="$(_get_real_time)"
 
             until (($(< "${net_dir}/tx_bytes") > tx_1)); do
                 read -rst "0.05" -N 999
             done
 
             tx_2="$(< "${net_dir}/tx_bytes")"
-            time_2="${EPOCHREALTIME:-$(date '+%s.%N')}"
+            time_2="$(_get_real_time)"
 
             ((tx_delta = tx_2 - tx_1))
             time_delta="$(minus "${time_2}" "${time_1}")"
