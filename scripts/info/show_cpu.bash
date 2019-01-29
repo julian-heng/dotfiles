@@ -296,18 +296,16 @@ get_uptime()
         ;;
     esac
 
-    days="$((secs / 60 / 60 / 24))d "
-    hours="$((secs / 60 / 60 % 24))h "
-    mins="$((secs / 60 % 60))m "
-    secs="$(((secs % 60) % 60))s"
+    days="$((secs / 60 / 60 / 24))"
+    hours="$((secs / 60 / 60 % 24))"
+    mins="$((secs / 60 % 60))"
+    secs="$(((secs % 60) % 60))"
 
-    ((${days/d*} == 0)) && unset days
-    ((${hours/h*} == 0)) && unset hours
-    ((${mins/m*} == 0)) && unset mins
-    ((${secs/s*} == 0)) && unset secs
+    ((days == 0)) && unset days
+    ((hours == 0)) && unset hours
+    ((mins == 0)) && unset mins
 
-    uptime="${days}${hours}${mins}${secs}"
-    uptime="$(trim "${uptime}")"
+    uptime="${days:+${days}d }${hours:+${hours}h }${mins:+${mins}m }${secs}s"
     cpu_info["uptime"]="${uptime}"
 }
 

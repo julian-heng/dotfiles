@@ -315,16 +315,15 @@ get_bat()
     bat_time="$(round "0" "$(multi "${bat_time}" "3600")")"
 
     if ((bat_time != 0)); then
-        hours="$((bat_time / 60 / 60 % 24))h "
-        mins="$((bat_time / 60 % 60))m "
-        secs="$(((bat_time % 60) % 60))s"
+        hours="$((bat_time / 60 / 60 % 24))"
+        mins="$((bat_time / 60 % 60))"
+        secs="$(((bat_time % 60) % 60))"
 
-        ((${hours/h*} == 0)) && unset hours
-        ((${mins/m*} == 0)) && unset mins
-        ((${secs/s*} == 0)) && unset secs
+        ((hours == 0)) && unset hours
+        ((mins == 0)) && unset mins
+        ((secs == 0)) && unset secs
 
-        bat_time="${hours}${mins}${secs}"
-        bat_time="$(trim "${bat_time}")"
+        bat_time="${hours:+${hours}h }${mins:+${mins}m }${secs}s"
     else
         bat_time="0h 0m 0s"
     fi
