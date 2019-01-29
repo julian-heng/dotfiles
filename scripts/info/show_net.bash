@@ -191,20 +191,14 @@ get_network_local_ip()
         get_network_device
 
     case "${os}" in
-        "MacOS")
-            while [[ ! "${network_local_ip}" ]] && read -r ip_type ip _; do
-                [[ "${ip_type}" == "inet" ]] && \
-                    network_local_ip="${ip}"
-            done < <(ifconfig "${device}")
-        ;;
-
-        "Linux")
-            while [[ ! "${network_local_ip}" ]] && read -r _ _ ip_type ip _; do
-                [[ "${ip_type}" == "inet" ]] && \
-                    network_local_ip="${ip%%/*}"
-            done < <(ip --oneline address show dev "${net_info[network_device]}")
-        ;;
+        "MacOS") cmd=("ifconfig" "${net_info[network_device]}") ;;
+        "Linux") cmd=("ip" "address" "show" "dev" "${net_info[network_device]}") ;;
     esac
+
+    while [[ ! "${network_local_ip}" ]] && read -r ip_type ip _; do
+        [[ "${ip_type}" == "inet" ]] && \
+            network_local_ip="${ip%%/*}"
+    done < <("${cmd[@]}")
 
     net_info[network_local_ip]="${network_local_ip}"
 }
@@ -219,7 +213,7 @@ get_network_download()
 
     case "${os}" in
         "MacOS")
-            parse_netstat()
+            _get_bytes()
             {
                 unset delta
                 while [[ ! "${delta}" ]] && read -r _ _ _ _ _ _ rx _; do
@@ -228,46 +222,33 @@ get_network_download()
                 done < <(netstat -nbiI "${net_info[network_device]}")
                 printf "%s" "${delta}"
             }
-
-            rx_1="$(parse_netstat)"
-            time_1="$(_get_real_time)"
-
-            until (($(parse_netstat) > rx_1)); do
-                read -rst "0.05" -N 999
-            done
-
-            rx_2="$(parse_netstat)"
-            time_2="$(_get_real_time)"
-
-            ((rx_delta = rx_2 - rx_1))
-            time_delta="$(minus "${time_2}" "${time_1}")"
-            multiplier="$(div "1" "${time_delta}")"
-
-            rx_delta="$(multi "${rx_delta}" "${multiplier}")"
-            network_download="$(round "0" "${rx_delta}")"
         ;;
 
         "Linux")
-            net_dir="/sys/class/net/${net_info[network_device]}/statistics"
-
-            rx_1="$(read_file "${net_dir}/rx_bytes")"
-            time_1="$(_get_real_time)"
-
-            until (($(read_file "${net_dir}/rx_bytes") > rx_1)); do
-                read -rst "0.05" -N 999
-            done
-
-            rx_2="$(read_file "${net_dir}/rx_bytes")"
-            time_2="$(_get_real_time)"
-
-            ((rx_delta = rx_2 - rx_1))
-            time_delta="$(minus "${time_2}" "${time_1}")"
-            multiplier="$(div "1" "${time_delta}")"
-
-            rx_delta="$(multi "${rx_delta}" "${multiplier}")"
-            network_download="$(round "0" "${rx_delta}")"
+            _get_bytes()
+            {
+                net_dir="/sys/class/net/${net_info[network_device]}/statistics"
+                read_file "${net_dir}/rx_bytes"
+            }
         ;;
     esac
+
+    rx_1="$(_get_bytes)"
+    time_1="$(_get_real_time)"
+
+    until (($(_get_bytes) > rx_1)); do
+        read -rst "0.05" -N 999
+    done
+
+    rx_2="$(_get_bytes)"
+    time_2="$(_get_real_time)"
+
+    ((rx_delta = rx_2 - rx_1))
+    time_delta="$(minus "${time_2}" "${time_1}")"
+    multiplier="$(div "1" "${time_delta}")"
+
+    rx_delta="$(multi "${rx_delta}" "${multiplier}")"
+    network_download="$(round "0" "${rx_delta}")"
 
     network_download="$(div "${network_download}" "1024")"
     network_download="$(round "2" "${network_download}")"
@@ -292,7 +273,7 @@ get_network_upload()
 
     case "${os}" in
         "MacOS")
-            parse_netstat()
+            _get_bytes()
             {
                 unset delta
                 while [[ ! "${delta}" ]] && read -r _ _ _ _ _ _ _ _ _ tx _; do
@@ -301,46 +282,33 @@ get_network_upload()
                 done < <(netstat -nbiI "${net_info[network_device]}")
                 printf "%s" "${delta}"
             }
-
-            tx_1="$(parse_netstat)"
-            time_1="$(_get_real_time)"
-
-            until (($(parse_netstat) > tx_1)); do
-                read -rst "0.05" -N 999
-            done
-
-            tx_2="$(parse_netstat)"
-            time_2="$(_get_real_time)"
-
-            ((tx_delta = tx_2 - tx_1))
-            time_delta="$(minus "${time_2}" "${time_1}")"
-            multiplier="$(div "1" "${time_delta}")"
-
-            tx_delta="$(multi "${tx_delta}" "${multiplier}")"
-            network_upload="$(round "0" "${tx_delta}")"
         ;;
 
         "Linux")
-            net_dir="/sys/class/net/${net_info[network_device]}/statistics"
-
-            tx_1="$(read_file "${net_dir}/tx_bytes")"
-            time_1="$(_get_real_time)"
-
-            until (($(read_file "${net_dir}/tx_bytes") > tx_1)); do
-                read -rst "0.05" -N 999
-            done
-
-            tx_2="$(read_file "${net_dir}/tx_bytes")"
-            time_2="$(_get_real_time)"
-
-            ((tx_delta = tx_2 - tx_1))
-            time_delta="$(minus "${time_2}" "${time_1}")"
-            multiplier="$(div "1" "${time_delta}")"
-
-            tx_delta="$(multi "${tx_delta}" "${multiplier}")"
-            network_upload="$(round "0" "${tx_delta}")"
+            _get_bytes()
+            {
+                net_dir="/sys/class/net/${net_info[network_device]}/statistics"
+                read_file "${net_dir}/tx_bytes"
+            }
         ;;
     esac
+
+    tx_1="$(_get_bytes)"
+    time_1="$(_get_real_time)"
+
+    until (($(_get_bytes) > tx_1)); do
+        read -rst "0.05" -N 999
+    done
+
+    tx_2="$(_get_bytes)"
+    time_2="$(_get_real_time)"
+
+    ((tx_delta = tx_2 - tx_1))
+    time_delta="$(minus "${time_2}" "${time_1}")"
+    multiplier="$(div "1" "${time_delta}")"
+
+    tx_delta="$(multi "${tx_delta}" "${multiplier}")"
+    network_upload="$(round "0" "${tx_delta}")"
 
     network_upload="$(div "${network_upload}" "1024")"
     network_upload="$(round "2" "${network_upload}")"
@@ -465,7 +433,6 @@ main()
 
             [[ "${net_info[network_download]}" ]] && \
                 subtitle_parts+=("Down:" "${net_info[network_download]}")
-
             [[ "${net_info[network_upload]}" ]] && \
                 subtitle_parts+=("|" "Up:" "${net_info[network_upload]}")
 
