@@ -159,15 +159,13 @@ get_network_device()
 
     case "${os}" in
         "MacOS")
-            while read -r line; do
-                [[ "${line}" =~ ^'Device:' ]] && \
-                    devices+=("${line##*:}")
+            while [[ ! "${network_device}" ]] && read -r line; do
+                [[ "${line}" =~ ^'Device:' ]] && {
+                    device="$(trim "${line##*:}")"
+                    [[ "$(ifconfig "${device}")" =~ 'status: active' ]] && \
+                        network_device="${device}"
+                }
             done < <(networksetup -listallhardwareports)
-
-            while [[ ! "${network_device}" ]] && read -r device; do
-                [[ "$(ifconfig "${device}")" =~ 'status: active' ]] && \
-                    network_device="${device}"
-            done < <(printf "%s\\n" "${devices[@]}")
         ;;
 
         "Linux")
