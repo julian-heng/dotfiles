@@ -250,14 +250,14 @@ get_network_download()
         "Linux")
             net_dir="/sys/class/net/${net_info[network_device]}/statistics"
 
-            rx_1="$(< "${net_dir}/rx_bytes")"
+            rx_1="$(read_file "${net_dir}/rx_bytes")"
             time_1="$(_get_real_time)"
 
-            until (($(< "${net_dir}/rx_bytes") > rx_1)); do
+            until (($(read_file "${net_dir}/rx_bytes") > rx_1)); do
                 read -rst "0.05" -N 999
             done
 
-            rx_2="$(< "${net_dir}/rx_bytes")"
+            rx_2="$(read_file "${net_dir}/rx_bytes")"
             time_2="$(_get_real_time)"
 
             ((rx_delta = rx_2 - rx_1))
@@ -324,14 +324,14 @@ get_network_upload()
         "Linux")
             net_dir="/sys/class/net/${net_info[network_device]}/statistics"
 
-            tx_1="$(< "${net_dir}/tx_bytes")"
+            tx_1="$(read_file "${net_dir}/tx_bytes")"
             time_1="$(_get_real_time)"
 
-            until (($(< "${net_dir}/tx_bytes") > tx_1)); do
+            until (($(read_file "${net_dir}/tx_bytes") > tx_1)); do
                 read -rst "0.05" -N 999
             done
 
-            tx_2="$(< "${net_dir}/tx_bytes")"
+            tx_2="$(read_file "${net_dir}/tx_bytes")"
             time_2="$(_get_real_time)"
 
             ((tx_delta = tx_2 - tx_1))
