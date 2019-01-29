@@ -303,7 +303,6 @@ get_network_upload()
             }
 
             tx_1="$(parse_netstat)"
-            time_1="${EPOCHREALTIME:-$(gdate '+%s.%N')}"
             time_1="$(_get_real_time)"
 
             until (($(parse_netstat) > tx_1)); do
