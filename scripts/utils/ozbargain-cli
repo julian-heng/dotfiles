@@ -99,6 +99,12 @@ display_deal()
     printf "%s\\r" "Loading deals from ${url}/$1..."
 
     raw_xml="$(curl -L "${url}/$1/feed" 2> /dev/null)"
+    [[ "${raw_xml}" =~ '404 Not Found' ]] && {
+        printf "\\e[2K"
+        err "$1: 404 Not Found"
+        return
+    }
+
     mapfile -t xml < <(printf "%s" "${raw_xml}")
 
     count="1"
