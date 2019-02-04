@@ -179,7 +179,7 @@ main()
         num_monitors="$((monitor + 1))"
     fi
 
-    _change_wal
+    _change_wal()
     (
         [[ -f "${HOME}/.last_wal/monitor$i" ]] && \
             last_wal="$(< "${HOME}/.last_wal/monitor$i")"
