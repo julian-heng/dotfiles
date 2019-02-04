@@ -73,9 +73,9 @@ get_file_list()
                     list+=("$i")
             done
         fi
-    fi
 
-    printf "%s\\n" "${list[@]}"
+        printf "%s\\n" "${list[@]}"
+    fi
 )
 
 rand()
@@ -101,6 +101,12 @@ change_wal()
                  --set "${img}"
 )
 
+print_exit()
+{
+    printf "%s\\n" "XFCE is not running" >&2
+    exit 2
+}
+
 print_usage()
 (
     printf "%s\\n" "
@@ -114,6 +120,7 @@ Usage: ${0##*/} -o --option --option \"value\"
     [-s|--same-image]           Use the same image for all monitors
     [-r|--recursive]            Search the image directory recursively
     [-l|--list-monitors]        List all the monitors available
+    [-d|--dry]                  Run without changing wallpapers
     [-h|--help]                 Show this message
 
     Settings:
@@ -139,6 +146,7 @@ get_args()
             "-s"|"--same-image")    same="true" ;;
             "-r"|"--recursive")     recursive="true" ;;
             "-l"|"--list-monitors") list_monitors; exit ;;
+            "-d"|"--dry")           dry="true" ;;
             "-h"|"--help")          print_usage; exit ;;
         esac
         shift
@@ -148,6 +156,18 @@ get_args()
 main()
 (
     get_args "$@"
+
+    if [[ "${XDG_CURRENT_DESKTOP}" ]]; then
+        [[ "${XDG_CURRENT_DESKTOP}" != "XFCE" ]] && \
+            print_exit
+    elif type -p xprop > /dev/null 2>&1; then
+        [[ ! "$(xprop -root)" =~ XFCE|xfce ]] && \
+            print_exit
+    else
+        ! type -p xfconf-query > /dev/null 2>&1 && \
+            print_exit
+    fi
+
     [[ ! -d "${HOME}/.last_wal" ]] && \
         mkdir -p "${HOME}/.last_wal"
 
@@ -171,13 +191,19 @@ main()
             index="$(rand "${#file_list[@]}")"
             img="${file_list[${index}]}"
         done
-        printf "%s" "${img}" > "${HOME}/.last_wal/monitor$i"
-        change_wal "${img}" "$i"
+
+        if [[ "${dry}" != "dry" ]]; then
+            printf "%s" "${img}" > "${HOME}/.last_wal/monitor$i"
+            change_wal "${img}" "$i"
+        else
+            printf "Changing monitor%s to %s\\n" "$i" "${img}" >&2
+        fi
     )
 
-    for ((i = ${monitor:-0}; i < ${num_monitors:-1}; i++)); do
-        _change_wal &
-    done
+    [[ "${file_list[*]}" ]] && \
+        for ((i = ${monitor:-0}; i < ${num_monitors:-1}; i++)); do
+            _change_wal &
+        done
 )
 
 main "$@"
