@@ -99,6 +99,12 @@ display_deal()
     printf "%s\\r" "Loading deals from ${url}/$1..."
 
     raw_xml="$(curl -L "${url}/$1/feed" 2> /dev/null)"
+    [[ "${raw_xml}" =~ '404 Not Found' ]] && {
+        printf "\\e[2K"
+        err "$1: 404 Not Found"
+        return
+    }
+
     mapfile -t xml < <(printf "%s" "${raw_xml}")
 
     count="1"
@@ -113,13 +119,8 @@ display_deal()
                         title="$(trim "${title}")"
                     ;;
 
-                    *"<link>"*)
-                        page_link="$(strip_tag "${xml[$i]}")"
-                    ;;
-
-                    *"<description>"*)
-                        desc="${xml[$i]}"
-                    ;;
+                    *"<link>"*) page_link="$(strip_tag "${xml[$i]}")" ;;
+                    *"<description>"*) desc="${xml[$i]}" ;;
 
                     *"<ozb:meta"*)
                         read -ra vars <<< "${xml[$i]}"
@@ -137,31 +138,44 @@ display_deal()
                         done
                     ;;
 
-                    *"<pubDate>"*)
-                        date_posted="$(strip_tag "${xml[$i]}")"
-                    ;;
-
-                    *"<dc:creator>"*)
-                        author="$(strip_tag "${xml[$i]}")"
-                    ;;
+                    *"<pubDate>"*) date_posted="$(strip_tag "${xml[$i]}")" ;;
+                    *"<dc:creator>"*) author="$(strip_tag "${xml[$i]}")" ;;
                 esac
                 ((i++))
             done
 
-            printf "\\e[2K"
-            printf "${bold}%s. %s${reset}\\n" "$((count++))" "$(format_title "${title}")"
-            printf "Posted By ${fb[4]}%s${reset} " "${author}"
-            printf "on ${fb[4]}%s${reset} " "${date_posted}"
-            printf "[${f[2]}%s↑${reset}|${f[1]}%s↓${reset}] " \
-                                                "${votes_pos}" \
-                                                "${votes_neg}"
-            printf "${faint}- %s Clicks - " "${clicks}"
-            printf "%s Comments${reset}\\n" "${num_comments}"
+            line_1="${bold}$((count++)). $(format_title "${title}")"
+
+            line_2="Posted By ${fb[4]}${author}${reset}"
+            line_2="${line_2} on ${fb[4]}${date_posted}${reset}"
+            line_2="${line_2} [${f[2]}${votes_pos}↑${reset}|${f[1]}${votes_neg}↓${reset}]"
+            line_2="${line_2} ${faint}- ${clicks} Clicks - ${num_comments} Comments${reset}"
+
             [[ "${expiry}" ]] && \
-                printf "Expires on ${fb[4]}%s${reset}\\n" "${expiry}"
+                line_3="Expires on ${fb[4]}${expiry}${reset}"
+
+            printf "\\e[2K"
+            for line in "${line_1}" "${line_2}" "${line_3}"; do
+                [[ "${line}" ]] && \
+                    printf "%s\\n" "${line}"
+            done
+
             printf "\\n"
             printf "  - %s\\n" "${deal_link}" "${page_link}"
             printf "\\n"
+
+            unset title
+            unset page_link
+            unset num_comments
+            unset clicks
+            unset expiry
+            unset votes_pos
+            unset votes_neg
+            unset deal_link
+
+            unset line_1
+            unset line_2
+            unset line_3
         }
         ((i++))
     done

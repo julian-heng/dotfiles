@@ -145,17 +145,16 @@ get_cpu()
         ;;
 
         "Linux")
-            while read -r line; do
-                [[ "${line}" =~ 'model name' ]] && cpu="${line}"
-                [[ "${cpu}" ]] && break
+            while [[ ! "${cpu}" ]] && IFS=":" read -r a b; do
+                [[ "$a" =~ 'model name' ]] && \
+                    cpu="$b"
             done < /proc/cpuinfo
 
             shopt -s globstar
-            for file in "/sys/devices/system/cpu/"**/*; do
-                [[ "${file}" =~ "bios_limit|scaling_max|cpuinfo_max" ]] && \
+            while [[ ! "${speed_file}" ]] && read -r file; do
+                [[ "${file}" =~ bios_limit|scaling_max|cpuinfo_max ]] && \
                     speed_file="${file}"
-                [[ "${speed_file}" ]] && break
-            done
+            done < <(printf "%s\\n" "/sys/devices/system/cpu/"**/*)
             shopt -u globstar
 
             [[ "${speed_file}" ]] && {
@@ -168,8 +167,6 @@ get_cpu()
 
     [[ ! "${cores}" ]] && get_cores
 
-    cpu="${cpu//*:}"
-    cpu="${cpu//:}"
     cpu="${cpu//CPU}"
     cpu="${cpu//(R)}"
     cpu="${cpu//(TM)}"
@@ -203,15 +200,16 @@ get_load()
 
 get_cpu_usage()
 {
-    awk_script='
+    read -rd '' awk_script <<'EOF'
         { sum += $3 }
         END {
             printf "%f", sum / cores
-        }'
+        }
+EOF
 
     cpu_usage="$(awk -v cores="${cores:-1}" \
                      -v sum="0" "${awk_script}" <(ps aux))"
-     cpu_usage="$(round "1" "${cpu_usage}")"
+    cpu_usage="$(round "1" "${cpu_usage}")"
     cpu_info["cpu_usage"]="${cpu_usage}%"
 }
 
@@ -219,7 +217,7 @@ get_temp()
 {
     case "${os}" in
         "MacOS")
-            type -p /usr/local/bin/osx-cpu-temp 2>&1 > /dev/null && {
+            has /usr/local/bin/osx-cpu-temp && {
                 while read -r line; do
                     [[ "${line}" =~ 'CPU' ]] && \
                         temp="${line#*:}"
@@ -251,7 +249,7 @@ get_fan()
 {
     case "${os}" in
         "MacOS")
-            type -p /usr/local/bin/osx-cpu-temp 2>&1 > /dev/null && {
+            has /usr/local/bin/osx-cpu-temp && {
                 while read -r line; do
                     [[ "${line}" =~ 'Fan '[0-9] ]] && \
                         fan="${line/'Fan '}"
