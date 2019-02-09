@@ -189,19 +189,25 @@ get_network_ssid()
         "MacOS")
             exe="/System/Library/PrivateFrameworks/Apple80211.framework"
             exe="${exe}/Versions/Current/Resources/airport"
-
-            while IFS=":" read -r a b; do
-                [[ "$a" =~ ' SSID' ]] && \
-                    network_ssid="$b"
-            done < <("${exe}" --getinfo)
-
-            network_ssid="$(trim "${network_ssid}")"
+            cmd=("${exe}" "--getinfo")
+            regex=" SSID"
         ;;
 
         "Linux")
+            [[ ! "${network_device}" && ! "${net_info[network_device]}" ]] && \
+                get_network_device
+
+            cmd=("iw" "dev" "${net_info[network_device]}" "link")
+            regex="SSID"
         ;;
     esac
 
+    while [[ ! "${network_ssid}" ]] && IFS=":" read -r a b; do
+        [[ "$a" =~ ${regex} ]] && \
+            network_ssid="$b"
+    done < <("${cmd[@]}")
+
+    network_ssid="$(trim "${network_ssid}")"
     net_info[network_ssid]="${network_ssid}"
 }
 
