@@ -6,7 +6,7 @@
 RANGER_LOAD_DEFAULT_RC="FALSE"
 HISTCONTROL="ignoreboth"
 EDITOR="vim"
-PS4='+${BASH_SOURCE}:${LINENO}:${FUNCNAME:-}: '
+PS4='+${BASH_SOURCE:+${BASH_SOURCE}:}${LINENO:+${LINENO}:}${FUNCNAME:+${FUNCNAME}:} '
 
 [[ ! "${MAKEFLAGS}" ]] && {
     case "${OSTYPE:-$(uname -s)}" in
