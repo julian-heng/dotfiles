@@ -194,6 +194,13 @@ get_network_ssid()
         ;;
 
         "Linux")
+            mapfile -t proc_file < "/proc/net/wireless"
+            ((${#proc_file[@]} < 3)) && \
+                return
+
+            ! has "iw" && \
+                return
+
             [[ ! "${network_device}" && ! "${net_info[network_device]}" ]] && \
                 get_network_device
 
@@ -458,8 +465,7 @@ main()
         ;;
 
         *)
-            [[ "${net_info[network_device]}" ]] && \
-                title_parts+=("${net_info[network_ssid]}")
+            title_parts+=("${net_info[network_ssid]:-Network}")
             [[ "${net_info[network_device]}" ]] && \
                 title_parts+=("(${net_info[network_device]})")
 
