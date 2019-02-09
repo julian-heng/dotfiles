@@ -101,7 +101,6 @@ prompter()
         cwd="${cwd#/}"
 
         mapfile -d "/" -t parts < <(printf "%s" "${cwd:-/}")
-        : "${parts[@]}"
 
         for part in "${parts[@]:0:${#parts[@]}-1}"; do
             unset in_PWD
