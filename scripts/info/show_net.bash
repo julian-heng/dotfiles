@@ -180,6 +180,31 @@ get_network_device()
     net_info[network_device]="${network_device}"
 }
 
+get_network_ssid()
+{
+    [[ "${network_ssid}" && "${net_info[network_ssid]}" ]] && \
+        return
+
+    case "${os}" in
+        "MacOS")
+            exe="/System/Library/PrivateFrameworks/Apple80211.framework"
+            exe="${exe}/Versions/Current/Resources/airport"
+
+            while IFS=":" read -r a b; do
+                [[ "$a" =~ ' SSID' ]] && \
+                    network_ssid="$b"
+            done < <("${exe}" --getinfo)
+
+            network_ssid="$(trim "${network_ssid}")"
+        ;;
+
+        "Linux")
+        ;;
+    esac
+
+    net_info[network_ssid]="${network_ssid}"
+}
+
 get_network_local_ip()
 {
     [[ "${network_local_ip}" && "${net_info[network_local_ip]}" ]] && \
@@ -336,6 +361,7 @@ Info:
 
 Valid Names:
     network_device
+    network_ssid
     network_local_ip
     network_download
     network_upload
@@ -391,7 +417,7 @@ main()
 
     [[ ! "${func[*]}" ]] && \
         func=(
-            "network_device" "network_local_ip"
+            "network_device" "network_ssid" "network_local_ip"
             "network_download" "network_upload"
         )
 
@@ -427,7 +453,9 @@ main()
 
         *)
             [[ "${net_info[network_device]}" ]] && \
-                title_parts+=("Network" "(${net_info[network_device]})")
+                title_parts+=("${net_info[network_ssid]}")
+            [[ "${net_info[network_device]}" ]] && \
+                title_parts+=("(${net_info[network_device]})")
 
             [[ "${net_info[network_download]}" ]] && \
                 subtitle_parts+=("Down:" "${net_info[network_download]}")
