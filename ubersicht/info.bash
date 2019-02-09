@@ -10,11 +10,8 @@ main()
     mapfile -t disk < <("${bash_exec}" "${script_dir}/show_disk.bash" disk_device disk_percent)
     mapfile -t bat < <("${bash_exec}" "${script_dir}/show_bat.bash" bat_percent bat_time)
 
-    while read -r a b &&  [[ "$a" != "SSID:" ]]; do
-        :
-    done < <(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport --getinfo)
 
-    wifi_name="$b"
+    wifi_name="$("${bash_exec}" "${script_dir}/show_net.bash" network_ssid)"
     [[ ! "${wifi_name}" ]] && \
         wifi_name="Not Connected"
 
