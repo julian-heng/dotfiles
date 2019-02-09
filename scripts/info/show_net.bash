@@ -194,15 +194,15 @@ get_network_ssid()
         ;;
 
         "Linux")
+            [[ ! "${network_device}" && ! "${net_info[network_device]}" ]] && \
+                get_network_device
+
             mapfile -t proc_file < "/proc/net/wireless"
             ((${#proc_file[@]} < 3)) && \
                 return
 
             ! has "iw" && \
                 return
-
-            [[ ! "${network_device}" && ! "${net_info[network_device]}" ]] && \
-                get_network_device
 
             cmd=("iw" "dev" "${net_info[network_device]}" "link")
             regex="SSID"
