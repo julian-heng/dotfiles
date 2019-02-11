@@ -87,7 +87,13 @@ prompter()
                 "${num_untracked:+${reset}${bold}…${num_untracked}}"
             )
 
-            IFS="" git_prompt="${_git_branch}${_git_prompt[*]:+|${_git_prompt[*]}}${reset}]"
+            IFS="" _git_prompt="${_git_prompt[*]}"
+
+            ((BASH_VERSINFO[0] < 5)) && \
+                _git_prompt="${_git_prompt//$'\n'}"
+
+            IFS="" \
+            git_prompt="${_git_branch}${_git_prompt:+|${_git_prompt}}${reset}]"
         }
 
         printf "%s" "${git_prompt}"
