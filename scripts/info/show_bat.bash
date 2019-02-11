@@ -321,7 +321,6 @@ get_bat()
 
         ((hours == 0)) && unset hours
         ((mins == 0)) && unset mins
-        ((secs == 0)) && unset secs
 
         bat_time="${hours:+${hours}h }${mins:+${mins}m }${secs}s"
     else
