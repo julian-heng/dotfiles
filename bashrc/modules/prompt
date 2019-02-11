@@ -148,7 +148,7 @@ prompter()
     fi
 
     ((exit != 0)) && \
-        head="[${exit}]${head}"
+        head="[\[${fb[1]}\]${exit}\[${reset}\]]${head}"
 
     [[ ! "${userhost}" ]] && {
         user="${USER:-\\u}"
