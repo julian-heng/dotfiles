@@ -170,13 +170,16 @@ check_df_line()
     [[ "${df_line}" ]] && \
         return
 
+    [[ ! "${disk_info[disk_mount]}" ]] && \
+        get_disk_mount
+
     [[ ! "${df_flags[*]}" ]] && \
         case "${os}" in
             "MacOS") df_flags=("-P" "-k") ;;
             "Linux") df_flags=("-P") ;;
         esac
 
-    df_line="$(mapfile -t a < <(df "${df_flags[@]}" "${search}")
+    df_line="$(mapfile -t a < <(df "${df_flags[@]}" "${disk_info[disk_mount]}")
                printf "%s" "${a[1]}")"
 }
 
