@@ -96,8 +96,8 @@ prompter()
     dir_prompt()
     {
         local _PWD
-        cwd="${PWD}"
-        cwd="${cwd//${HOME}/'~'}"
+        cwd="\\w"
+        cwd="${cwd@P}"
         cwd="${cwd#/}"
 
         mapfile -d "/" -t parts < <(printf "%s" "${cwd:-/}")
