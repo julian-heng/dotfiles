@@ -366,7 +366,8 @@ Usage: ${0##*/} info_name --option --option [value] ...
 
 Options:
     --stdout            Print to stdout
-    -r, --raw           Print in csv form
+    --json              Print in json format
+    -r, --raw           Print in csv format
     -h, --help          Show this message
 
 Info:
@@ -409,12 +410,14 @@ get_args()
 {
     while (($# > 0)); do
         case "$1" in
-            "--stdout") [[ ! "${out}" ]] && out="stdout" ;;
-            "-r"|"--raw") [[ ! "${out}" ]] && out="raw" ;;
+            "--stdout") : "${out:=stdout}" ;;
+            "--json") : "${out:=json}" ;;
+            "-r"|"--raw") : "${out:=raw}" ;;
             "-f"|"--format") [[ "$2" ]] && { str_format="$2"; shift; } ;;
             "-h"|"--help") print_usage; exit ;;
             *)
                 [[ ! "${out}" ]] && out="string"
+                : "${out:=string}"
                 func+=("$1")
             ;;
         esac
@@ -439,6 +442,14 @@ main()
             "get_${function}"
     done
 
+    for i in "${!func[@]}"; do
+        [[ ! "${net_info[${func[$i]}]}" ]] && \
+            unset func[$i]
+    done
+
+    [[ ! "${func[*]}" ]] && \
+        exit 1
+
     case "${out}" in
         "raw")
             raw="${func[0]}:${net_info[${func[0]}]}"
@@ -448,18 +459,27 @@ main()
             printf "%s\\n" "${raw}"
         ;;
 
+        "json")
+            printf "{\\n"
+            for function in "${func[@]::${#func[@]} - 1}"; do
+                printf "    \"%s\": \"%s\",\\n" "${function}" "${net_info[${function}]}"
+            done
+
+            last="${func[@]:(-1):1}"
+            printf "    \"%s\": \"%s\"\\n" "${last}" "${net_info[${last}]}"
+            printf "}\\n"
+        ;;
+
         "string")
             if [[ "${str_format}" ]]; then
                 out="${str_format}"
                 for function in "${func[@]}"; do
-                    [[ "${net_info[${function}]}" ]] && \
-                        out="${out/'{}'/${net_info[${function}]}}"
+                    out="${out/'{}'/${net_info[${function}]}}"
                 done
                 printf "%s" "${out}"
             else
                 for function in "${func[@]}"; do
-                    [[ "${net_info[${function}]}" ]] && \
-                        printf "%s\\n" "${net_info[${function}]}"
+                    printf "%s\\n" "${net_info[${function}]}"
                 done
             fi
         ;;
