@@ -112,29 +112,6 @@ get_os()
     esac
 }
 
-get_prog_out()
-{
-    case "${os}" in
-        "MacOS")
-            df_flags=("-P" "-k")
-        ;;
-
-        "Linux")
-            df_flags=("-P")
-            lsblk_flags=(
-                "--output" "KNAME,NAME,LABEL,PARTLABEL,FSTYPE,MOUNTPOINT"
-                "--paths" "--pair"
-            )
-
-        ;;
-    esac
-
-    [[ "${df_flags[*]}" ]] && \
-        mapfile -t df_out < <(df "${df_flags[@]}")
-    [[ "${lsblk_flags[*]}" ]] && \
-        mapfile -t lsblk_out < <(lsblk "${lsblk_flags[@]}")
-}
-
 get_search()
 {
     if [[ ! "$1" ]]; then
@@ -144,19 +121,22 @@ get_search()
         search="$1"
     fi
 
-    while [[ ! "${dev}" ]] && read -r df_line; do
-        case "${type:-disk}" in
-            "disk")
-                [[ "${df_line}" =~ ${search} ]] && \
-                    dev="${df_line%% *}"
-            ;;
+    case "${type:-disk}" in
+        "disk")
+            mapfile -t df_out < <(df -P)
+            while [[ ! "${dev}" ]] && read -r line; do
+                [[ "${line}" =~ ${search} ]] && \
+                    dev="${line%% *}"
+            done < <(printf "%s\\n" "${df_out[@]:1}")
+        ;;
 
-            "mount")
-                [[ "${df_line}" =~ ${search}$ ]] && \
-                    dev="${df_line%% *}"
-            ;;
-        esac
-    done < <(printf "%s\\n" "${df_out[@]:1}")
+        "mount")
+            mapfile -t df_out < <(df -P "${search}")
+            read -r dev _ _ _ _ mount <<< "${df_out[1]}"
+            [[ "${mount}" != "${search}" ]] && \
+                unset dev
+        ;;
+    esac
 
     if [[ "${dev}" ]]; then
         printf "%s" "${dev}"
@@ -173,18 +153,31 @@ check_diskutil_out()
 
 check_lsblk_line()
 {
-    while [[ ! "${lsblk_line}" ]] && read -r line; do
-        [[ "${line}" =~ ${search} ]] && \
-            lsblk_line="${line}"
-    done < <(printf "%s\\n" "${lsblk_out[@]}")
+    [[ "${lsblk_line}" ]] && \
+        return
+
+    [[ ! "${lsblk_flags[*]}" ]] && \
+        lsblk_flags=(
+            "--output" "KNAME,NAME,LABEL,PARTLABEL,FSTYPE,MOUNTPOINT"
+            "--paths" "--pair"
+        )
+
+    lsblk_line="$(lsblk "${lsblk_flags[@]}" "${search}")"
 }
 
 check_df_line()
 {
-    while [[ ! "${df_line}" ]] && read -r line; do
-        [[ "${line}" =~ ${search} ]] && \
-            df_line="${line}"
-    done < <(printf "%s\\n" "${df_out[@]}")
+    [[ "${df_line}" ]] && \
+        return
+
+    [[ ! "${df_flags[*]}" ]] && \
+        case "${os}" in
+            "MacOS") df_flags=("-P" "-k") ;;
+            "Linux") df_flags=("-P") ;;
+        esac
+
+    df_line="$(mapfile -t a < <(df "${df_flags[@]}" "${search}")
+               printf "%s" "${a[1]}")"
 }
 
 get_disk_name()
@@ -291,7 +284,7 @@ get_disk_used()
         return
 
     check_df_line
-    read -r _ _ disk_used _ <<< "${line}"
+    read -r _ _ disk_used _ <<< "${df_line}"
     disk_used="$(round "2" "$(div "${disk_used}" "$((1024 ** 2))")")"
     disk_info[disk_used]="${disk_used} GiB"
 }
@@ -302,7 +295,7 @@ get_disk_total()
         return
 
     check_df_line
-    read -r _ disk_total _ <<< "${line}"
+    read -r _ disk_total _ <<< "${df_line}"
     disk_total="$(div "${disk_total}" "$((1024 ** 2))")"
     disk_total="$(round "2" "${disk_total}")"
     disk_info[disk_total]="${disk_total} GiB"
@@ -409,7 +402,6 @@ main()
     declare -A disk_info
     get_args "$@"
     get_os
-    get_prog_out
 
     [[ ! "${func[*]}" ]] && \
         func=(
