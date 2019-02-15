@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2048,SC2086
 
 has()
 {
@@ -305,7 +306,7 @@ main()
 
     for i in "${!func[@]}"; do
         [[ ! "${song_info[${func[$i]}]}" ]] && \
-            unset func[$i]
+            unset 'func[$i]'
     done
 
     [[ ! "${func[*]}" ]] && \
@@ -330,7 +331,7 @@ main()
                 printf "    \"%s\": \"%s\",\\n" "${function}" "${song_info[${function}]}"
             done
 
-            last="${func[@]:(-1):1}"
+            last="${func[*]:(-1):1}"
             printf "    \"%s\": \"%s\"\\n" "${last}" "${song_info[${last}]}"
             printf "}\\n"
         ;;

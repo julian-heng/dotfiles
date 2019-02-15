@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2048,SC2086
 
 has()
 {
@@ -394,7 +395,7 @@ main()
 
     for i in "${!func[@]}"; do
         [[ ! "${cpu_info[${func[$i]}]}" ]] && \
-            unset func[$i]
+            unset 'func[$i]'
     done
 
     [[ ! "${func[*]}" ]] && \
@@ -415,7 +416,7 @@ main()
                 printf "    \"%s\": \"%s\",\\n" "${function}" "${cpu_info[${function}]}"
             done
 
-            last="${func[@]:(-1):1}"
+            last="${func[*]:(-1):1}"
             printf "    \"%s\": \"%s\"\\n" "${last}" "${cpu_info[${last}]}"
             printf "}\\n"
         ;;
