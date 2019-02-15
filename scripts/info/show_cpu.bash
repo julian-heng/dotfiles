@@ -151,11 +151,15 @@ get_cpu()
             done < /proc/cpuinfo
 
             shopt -s globstar
+            shopt -s extglob
+
+            dir="/sys/devices/system/cpu"
             while [[ ! "${speed_file}" ]] && read -r file; do
-                [[ "${file}" =~ bios_limit|scaling_max|cpuinfo_max ]] && \
-                    speed_file="${file}"
-            done < <(printf "%s\\n" "/sys/devices/system/cpu/"**/*)
+                speed_file="${file}"
+            done < <(printf "%s\\n" "${dir}/"**/?(bios_limit|?(scaling|cpuinfo)_max_freq))
+
             shopt -u globstar
+            shopt -u extglob
 
             [[ "${speed_file}" ]] && {
                 speed="$(read_file "${speed_file}")"
@@ -228,15 +232,13 @@ get_temp()
         ;;
 
         "Linux")
-            for file in "/sys/class/hwmon/"*; do
-                [[ "$(read_file "${file}/name")" =~ temp ]] && {
-                    for i in "${file}/temp"*; do
-                        [[ "$i" =~ '_input'$ ]] && \
-                            temp_file="$i"
-                        [[ "${temp_file}" ]] && break 2
-                    done
-                }
-            done
+            while [[ ! "${temp_file}" ]] && read -r dir; do
+                [[ "$(read_file "${dir}/name")" =~ 'temp' ]] && \
+                    while [[ ! "${temp_file}" ]] && read -r file; do
+                        [[ "${file}" =~ '_input'$ ]] && \
+                            temp_file="${file}"
+                    done < <(printf "%s\\n" "${dir}/temp"*)
+            done < <(printf "%s\\n" "/sys/class/hwmon/"*)
 
             [[ "${temp_file}" ]] && \
                 temp="$(($(read_file "${temp_file}") / 1000))"
@@ -262,17 +264,15 @@ get_fan()
 
         "Linux")
             shopt -s globstar
-            for file in "/sys/devices/platform/"**/*; do
-                [[ "${file}" =~ 'fan1_input'$ ]] && \
-                    fan_files+=("${file}")
-            done
-            shopt -u globstar
+            shopt -s nullglob
 
-            [[ "${fan_files[*]}" ]] && \
-                for fan_file in "${fan_files[@]}"; do
-                    fan="$(< "${fan_file}")"
-                    ((fan != 0)) && break
-                done
+            for fan_file in "/sys/devices/platform/"**"/fan1_input"; do
+                fan="$(< "${fan_file}")"
+                ((fan != 0)) && break
+            done
+
+            shopt -u globstar
+            shopt -u nullglob
         ;;
     esac
     [[ "${fan}" ]] && cpu_info["fan"]="${fan} RPM"
