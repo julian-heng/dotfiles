@@ -3,33 +3,6 @@
 #############################
 # shellcheck disable=2139,2148,2154
 
-upgit()
-{
-    local -f header > /dev/null 2>&1
-    local -a git_dirs
-    local item
-    local git_dir
-
-    header()
-    {
-        eval printf -v line "%0.s=" "{1..${#1}}"
-        printf "%s\\n" "${line}" "$1" "${line}"
-    }
-
-    [[ "$1" ]] && dir="${1%/}" || dir="${PWD}"
-
-    for item in "${dir}/"*; do
-        { [[ -d "${item}/.git" ]] || git -C "${item}" rev-parse --git-dir > /dev/null 2>&1; } && \
-            git_dirs+=("${item}")
-    done
-
-    for git_dir in "${git_dirs[@]}"; do
-        header "Updating ${git_dir}"
-        git -C "${git_dir}" pull
-        printf "\\n"
-    done
-}
-
 gcll()
 {
     local -a args

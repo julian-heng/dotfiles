@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+git_run()
+{
+    local dir="$1"
+    local old_pwd
+    local status
+    local -a cmds
+    cmds=("${@:2}")
+
+    [[ ! "${git_version[*]}" ]] && {
+        _git="$(git --version)"
+        _git="${_git/* }"
+        IFS=$'\n' read -d '' -ra git_version <<< "${_git//\./$'\n'}"
+    }
+
+    if [[ "${old_git}" ]] || ((git_version[0] == 1 && git_version[1] == 8 && git_version[2] < 5)); then
+        old_git="true"
+        old_pwd="${PWD:-$(pwd)}"
+
+        cd "${dir}" || return 1
+        git "${cmds[@]}"
+        status="$?"
+        cd "${old_pwd}" || return 1
+    else
+        git -C "${dir}" "${cmds[@]}"
+        status="$?"
+    fi
+
+    return "${status}"
+}
+
+get_repos()
+{
+    while (($# > 0)); do
+        for dir in "${1%/}/"*; do
+            { [[ -d "${dir}/.git" ]] || git_run "${dir}" rev-parse --git-dir > /dev/null 2>&1; } && \
+                git_repos+=("${dir}")
+        done
+        shift
+    done
+}
+
+main()
+{
+    get_repos "$@"
+
+    for repo in "${git_repos[@]}"; do
+        printf "%s... " "${repo}"
+        mapfile -t output < <(git_run "${repo}" pull 2>&1)
+        if ((${#output[@]} > 1)); then
+            printf "\\n"
+            printf "%s\\n" "${output[@]}"
+            printf "\\n"
+        else
+            printf "%s\\n" "${output[@]}"
+        fi
+    done
+}
+
+main "$@"
