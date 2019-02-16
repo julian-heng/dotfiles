@@ -3,6 +3,8 @@
 #########################
 # shellcheck disable=2148,2154
 
+script_dir="${module_dir/'bashrc/modules'/'scripts'}"
+PATH="${PATH}:${script_dir}/info:${script_dir}/utils"
 RANGER_LOAD_DEFAULT_RC="FALSE"
 HISTCONTROL="ignoreboth"
 EDITOR="vim"
@@ -46,6 +48,7 @@ LESS_TERMCAP_us="${fb[6]}"          # enter underline mode - cyan
 ##### Exports #####
 ###################
 
+export PATH
 export RANGER_LOAD_DEFAULT_RC
 export HISTCONTROL
 export EDITOR
