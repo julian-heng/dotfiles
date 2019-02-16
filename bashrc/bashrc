@@ -72,14 +72,21 @@ get_full_path()
 
 get_module_dir()
 {
-    if [[ "${distro}" != "Windows" ]]; then
-        module_dir="$(ls -l "${BASH_SOURCE[0]}")"
-        module_dir="${module_dir##*->}"
-        module_dir="${module_dir//[[:space:]]}"
+    if type -p readlink > /dev/null 2>&1; then
+        exe="readlink"
+    elif type -p greadlink > /dev/null 2>&1; then
+        exe="greadlink"
+    elif type -p realpath > /dev/null 2>&1; then
+        exe="realpath"
+    fi
+
+    if [[ "${exe}" ]]; then
+        module_dir="$({ "${exe}" -f "${BASH_SOURCE[0]}" || "${exe}" "${BASH_SOURCE[0]}"; } 2> /dev/null)"
         module_dir="${module_dir%/*}/modules"
     else
         module_dir="${HOME}/.dotfiles/bashrc/modules"
     fi
+
     printf "%s" "${module_dir}"
 }
 
