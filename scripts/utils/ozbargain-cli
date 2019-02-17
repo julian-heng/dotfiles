@@ -87,7 +87,7 @@ format_title()
 
     [[ "${title}" =~ ${regex} ]] && \
         while read -r match; do
-            title="${title//${match}/${fb[2]}${match}${reset}${bold}}"
+            title="${title/${match}/${fb[2]}${match}${reset}${bold}}"
         done < <(return_match "${regex}" "${title}")
 
     printf "%s" "${title}"
