@@ -45,15 +45,26 @@ main()
 {
     get_repos "$@"
 
+    [[ ! "${COLUMNS}" ]] && {
+        shopt -s checkwinsize
+        (:;:)
+    }
+
+    eval printf -v line "%0.s=" "{1..${COLUMNS:-$(tput cols)}}"
+
     for repo in "${git_repos[@]}"; do
-        printf "%s... " "${repo}"
-        mapfile -t output < <(git_run "${repo}" pull 2>&1)
-        if ((${#output[@]} > 1)); then
-            printf "\\n"
-            printf "%s\\n" "${output[@]}"
-            printf "\\n"
+        printf "Updating %s... " "${repo}"
+
+        git_run "${repo}" fetch --quiet
+        local_ref="$(git_run "${repo}" rev-parse HEAD)"
+        remote_ref="$(git_run "${repo}" rev-parse @{u})"
+
+        if [[ "${local_ref}" == "${remote_ref}" ]]; then
+            printf "%s\\n" "Already up to date."
         else
-            printf "%s\\n" "${output[@]}"
+            printf "\\n%s\\n" "${line}"
+            git_run "${repo}" pull
+            printf "%s\\n" "${line}"
         fi
     done
 }
