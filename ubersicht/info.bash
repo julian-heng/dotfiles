@@ -5,13 +5,13 @@ main()
     bash_exec="/usr/local/bin/bash"
     script_dir="${HOME}/.dotfiles/scripts/info"
 
-    mapfile -t cpu < <("${bash_exec}" "${script_dir}/show_cpu.bash" load temp fan)
-    mem="$("${bash_exec}" "${script_dir}/show_mem.bash" mem_percent)"
-    mapfile -t disk < <("${bash_exec}" "${script_dir}/show_disk.bash" disk_device disk_percent)
-    mapfile -t bat < <("${bash_exec}" "${script_dir}/show_bat.bash" bat_percent bat_time)
+    mapfile -t cpu < <("${bash_exec}" "${script_dir}/show_cpu" load temp fan)
+    mem="$("${bash_exec}" "${script_dir}/show_mem" mem_percent)"
+    mapfile -t disk < <("${bash_exec}" "${script_dir}/show_disk" disk_device disk_percent)
+    mapfile -t bat < <("${bash_exec}" "${script_dir}/show_bat" bat_percent bat_time)
 
 
-    wifi_name="$("${bash_exec}" "${script_dir}/show_net.bash" network_ssid)"
+    wifi_name="$("${bash_exec}" "${script_dir}/show_net" network_ssid)"
     [[ ! "${wifi_name}" ]] && \
         wifi_name="Not Connected"
 
