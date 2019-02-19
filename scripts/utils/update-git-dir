@@ -1,5 +1,39 @@
 #!/usr/bin/env bash
 
+_qsort()
+{
+    (($# == 0)) && {
+        unset qreturn
+        return
+    }
+
+    local pivot="$1"; shift
+    local i
+    local -a higher
+    local -a lower
+
+    for i in "$@"; do
+        if [[ "$i" < "${pivot}" ]]; then
+            lower+=("$i")
+        else
+            higher+=("$i")
+        fi
+    done
+
+    _qsort "${higher[@]}"
+    higher=("${qreturn[@]}")
+
+    _qsort "${lower[@]}"
+    qreturn+=("${pivot}" "${higher[@]}")
+}
+
+qsort()
+(
+    qreturn=()
+    _qsort "$@"
+    printf "%s\\n" "${qreturn[@]}"
+)
+
 git_run()
 {
     local dir="$1"
@@ -12,33 +46,49 @@ git_run()
         _git="$(git --version)"
         _git="${_git/* }"
         IFS=$'\n' read -d '' -ra git_version <<< "${_git//\./$'\n'}"
+        export git_version
     }
 
-    if [[ "${old_git}" ]] || ((git_version[0] == 1 && git_version[1] == 8 && git_version[2] < 5)); then
-        old_git="true"
-        old_pwd="${PWD:-$(pwd)}"
+    [[ ! "${old_git}" ]] && {
+        if ((git_version[0] == 1 && git_version[1] == 8 && git_version[2] < 5)); then
+            old_git="true"
+        else
+            old_git="false"
+        fi
+        export old_git
+    }
 
-        cd "${dir}" || return 1
-        git "${cmds[@]}"
-        status="$?"
-        cd "${old_pwd}" || return 1
-    else
-        git -C "${dir}" "${cmds[@]}"
-        status="$?"
-    fi
+    case "${old_git}" in
+        "true")
+            old_pwd="${PWD:-$(pwd)}"
+            cd "${dir}" || return 1
+            git "${cmds[@]}"
+            status="$?"
+            cd "${old_pwd}" || return 1
+        ;;
 
-    return "${status}"
+        "false")
+            git -C "${dir}" "${cmds[@]}"
+            status="$?"
+        ;;
+    esac
+
+    return "${status:-1}"
 }
 
 get_repos()
 {
+    declare -A table
+
     while (($# > 0)); do
         for dir in "${1%/}/"*; do
             { [[ -d "${dir}/.git" ]] || git_run "${dir}" rev-parse --git-dir > /dev/null 2>&1; } && \
-                git_repos+=("${dir}")
+                table[$(git_run "${dir}" rev-parse --show-toplevel)]="1"
         done
         shift
     done
+
+    mapfile -t git_repos < <(qsort "${!table[@]}")
 }
 
 main()
@@ -55,7 +105,7 @@ main()
 
         git_run "${repo}" fetch --quiet
         local_ref="$(git_run "${repo}" rev-parse HEAD)"
-        remote_ref="$(git_run "${repo}" rev-parse @{u})"
+        remote_ref="$(git_run "${repo}" rev-parse '@{u}')"
 
         if [[ "${local_ref}" == "${remote_ref}" ]]; then
             printf "%s\\n" "Already up to date."
