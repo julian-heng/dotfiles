@@ -4,8 +4,8 @@ main()
 {
     script_dir="${HOME}/.dotfiles/scripts/info"
 
-    mapfile -t cpu < <(bash "${script_dir}/show_cpu.bash" load temp)
-    mapfile -t mem < <(bash "${script_dir}/show_mem.bash" mem_used mem_total)
+    mapfile -t cpu < <(bash "${script_dir}/show_cpu" load temp)
+    mapfile -t mem < <(bash "${script_dir}/show_mem" mem_used mem_total)
 
     mem[0]="${mem[0]/' MiB'}"
     mem[1]="${mem[1]/' MiB'}"
