@@ -34,6 +34,22 @@ qsort()
     printf "%s\\n" "${qreturn[@]}"
 )
 
+get_git_version()
+{
+    [[ ! "${git_version[*]}" ]] && {
+        _git="$(git --version)"
+        _git="${_git/* }"
+        IFS=$'\n' read -d '' -ra git_version <<< "${_git//\./$'\n'}"
+    }
+
+    [[ ! "${old_git}" ]] && \
+        if ((git_version[0] == 1 && git_version[1] == 8 && git_version[2] < 5)); then
+            old_git="true"
+        else
+            old_git="false"
+        fi
+}
+
 git_run()
 {
     local dir="$1"
@@ -42,21 +58,7 @@ git_run()
     local -a cmds
     cmds=("${@:2}")
 
-    [[ ! "${git_version[*]}" ]] && {
-        _git="$(git --version)"
-        _git="${_git/* }"
-        IFS=$'\n' read -d '' -ra git_version <<< "${_git//\./$'\n'}"
-        export git_version
-    }
-
-    [[ ! "${old_git}" ]] && {
-        if ((git_version[0] == 1 && git_version[1] == 8 && git_version[2] < 5)); then
-            old_git="true"
-        else
-            old_git="false"
-        fi
-        export old_git
-    }
+    [[ ! "${old_git}" ]] && get_git_version
 
     case "${old_git}" in
         "true")
@@ -94,6 +96,7 @@ get_repos()
 main()
 {
     get_repos "$@"
+    get_git_version
 
     [[ ! "${COLUMNS}" ]] && \
         shopt -s checkwinsize; (:;:)
