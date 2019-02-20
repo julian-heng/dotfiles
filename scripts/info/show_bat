@@ -126,6 +126,336 @@ get_os()
     esac
 }
 
+get_prog_out()
+{
+    [[ "${bat_out[*]}" ]] && return
+
+    case "${os}" in
+        "MacOS") mapfile -t bat_out < <(ioreg -rc AppleSmartBattery) ;;
+    esac
+}
+
+_get_bat_capacity_max()
+{
+    [[ "${bat_capacity_max}" && "${bat_info["bat_capacity_max"]}" ]] && \
+        return
+
+    case "${os}" in
+        "MacOS")
+            [[ ! "${bat_out[*]}" ]] && \
+                get_prog_out
+
+            while [[ ! "${bat_capacity_max}" ]] && IFS='="' read -r _ a _ b; do
+                [[ "$a" == "MaxCapacity" ]] && \
+                    bat_capacity_max="$(trim "$b")"
+            done < <(printf "%s\\n" "${bat_out[@]}")
+        ;;
+    esac
+
+    bat_info["bat_capacity_max"]="${bat_capacity_max}"
+}
+
+_get_bat_capacity_now()
+{
+    [[ "${bat_capacity_now}" && "${bat_info["bat_capacity_now"]}" ]] && \
+        return
+
+    case "${os}" in
+        "MacOS")
+            [[ ! "${bat_out[*]}" ]] && \
+                get_prog_out
+
+            while [[ ! "${bat_capacity_now}" ]] && IFS='="' read -r _ a _ b; do
+                [[ "$a" == "CurrentCapacity" ]] && \
+                    bat_capacity_now="$(trim "$b")"
+            done < <(printf "%s\\n" "${bat_out[@]}")
+        ;;
+    esac
+
+    bat_info["bat_capacity_now"]="${bat_capacity_now}"
+}
+
+_get_bat_capacity_design()
+{
+    [[ "${bat_capacity_design}" && "${bat_info["bat_capacity_design"]}" ]] && \
+        return
+
+    case "${os}" in
+        "MacOS")
+            [[ ! "${bat_out[*]}" ]] && \
+                get_prog_out
+
+            while [[ ! "${bat_capacity_design}" ]] && IFS='="' read -r _ a _ b; do
+                [[ "$a" == "DesignCapacity" ]] && \
+                    bat_capacity_design="$(trim "$b")"
+            done < <(printf "%s\\n" "${bat_out[@]}")
+        ;;
+    esac
+
+    bat_info["bat_capacity_design"]="${bat_capacity_design}"
+}
+
+get_bat_condition()
+{
+    [[ "${bat_condition}" && "${bat_info["bat_condition"]}" ]] && \
+        return
+
+    [[ ! "${bat_capacity_max}" && ! "${bat_info[bat_capacity_max]}" ]] && \
+        _get_bat_capacity_max
+    [[ ! "${bat_capacity_design}" && ! "${bat_info[bat_capacity_design]}" ]] && \
+        _get_bat_capacity_design
+
+    bat_condition="$(percent "${bat_capacity_max}" "${bat_capacity_design}")"
+    bat_condition="$(round "1" "${bat_condition}")"
+    bat_info["bat_condition"]="${bat_condition}%"
+}
+
+get_bat_current()
+{
+    [[ "${bat_current}" && "${bat_info["bat_current"]}" ]] && \
+        return
+
+    case "${os}" in
+        "MacOS")
+            [[ ! "${bat_out[*]}" ]] && \
+                get_prog_out
+
+            while [[ ! "${bat_current}" ]] && IFS='="' read -r _ a _ b; do
+                [[ "$a" == "InstantAmperage" ]] && \
+                    bat_current="$(trim "$b")"
+            done < <(printf "%s\\n" "${bat_out[@]}")
+
+            ((${#bat_current} >= 20)) && \
+                bat_current="$(bc <<< "${bat_current} - (2 ^ 64)")"
+
+            bat_current="${bat_current/'-'}"
+        ;;
+    esac
+
+    bat_current="$(div "${bat_current}" "1000")"
+    bat_current="$(round "2" "${bat_current}")"
+    bat_info["bat_current"]="${bat_current}A"
+}
+
+get_bat_cycles()
+{
+    [[ "${bat_cycles}" && "${bat_info["bat_cycles"]}" ]] && \
+        return
+
+    case "${os}" in
+        "MacOS")
+            [[ ! "${bat_out[*]}" ]] && \
+                get_prog_out
+
+            while [[ ! "${bat_cycles}" ]] && IFS='="' read -r _ a _ b; do
+                [[ "$a" == "CycleCount" ]] && \
+                    bat_cycles="$(trim "$b")"
+            done < <(printf "%s\\n" "${bat_out[@]}")
+        ;;
+    esac
+
+    bat_info["bat_cycles"]="${bat_cycles} Cycles"
+}
+
+get_bat_is_charging()
+{
+    [[ "${bat_is_charging}" && "${bat_info["bat_is_charging"]}" ]] && \
+        return
+
+    case "${os}" in
+        "MacOS")
+            [[ ! "${bat_out[*]}" ]] && \
+                get_prog_out
+
+            while [[ ! "${bat_cycles}" ]] && IFS='="' read -r _ a _ b; do
+                [[ "$a" == "IsCharging" ]] && \
+                    if [[ "$(trim "$b")" == "Yes" ]]; then
+                        bat_is_charging="true"
+                    else
+                        bat_is_charging="false"
+                    fi
+            done < <(printf "%s\\n" "${bat_out[@]}")
+        ;;
+    esac
+
+    bat_info["bat_is_charging"]="${bat_is_charging}"
+}
+
+get_bat_is_full()
+{
+    [[ "${bat_is_full}" && "${bat_info["bat_is_full"]}" ]] && \
+        return
+
+    case "${os}" in
+        "MacOS")
+            [[ ! "${bat_out[*]}" ]] && \
+                get_prog_out
+
+            while [[ ! "${bat_is_full}" ]] && IFS='="' read -r _ a _ b; do
+                [[ "$a" == "FullyCharged" ]] && \
+                    if [[ "$(trim "$b")" == "Yes" ]]; then
+                        bat_is_full="true"
+                    else
+                        bat_is_full="false"
+                    fi
+            done < <(printf "%s\\n" "${bat_out[@]}")
+        ;;
+    esac
+
+    bat_info["bat_is_full"]="${bat_is_full}"
+}
+
+get_bat_percent()
+{
+    [[ "${bat_percent}" && "${bat_info["bat_percent"]}" ]] && \
+        return
+
+    [[ ! "${bat_capacity_now}" && ! "${bat_info["bat_capacity_now"]}" ]] && \
+        _get_bat_capacity_now
+    [[ ! "${bat_capacity_max}" && ! "${bat_info["bat_capacity_max"]}" ]] && \
+        _get_bat_capacity_max
+
+    bat_percent="$(percent "${bat_info["bat_capacity_now"]}" "${bat_info["bat_capacity_max"]}")"
+    bat_percent="$(round "1" "${bat_percent}")"
+    bat_info["bat_percent"]="${bat_percent}%"
+}
+
+get_bat_volt()
+{
+    [[ "${bat_volt}" && "${bat_info["bat_volt"]}" ]] && \
+        return
+
+    case "${os}" in
+        "MacOS")
+            [[ ! "${bat_out[*]}" ]] && \
+                get_prog_out
+
+            while [[ ! "${bat_volt}" ]] && IFS='="' read -r _ a _ b; do
+                [[ "$a" == "Voltage" ]] && \
+                    bat_volt="$(trim "$b")"
+            done < <(printf "%s\\n" "${bat_out[@]}")
+        ;;
+    esac
+
+    bat_volt="$(div "${bat_volt}" "1000")"
+    bat_volt="$(round "2" "${bat_volt}")"
+    bat_info["bat_volt"]="${bat_volt}"
+}
+
+get_bat_current()
+{
+    [[ "${bat_current}" && "${bat_info["bat_current"]}" ]] && \
+        return
+
+    case "${os}" in
+        "MacOS")
+            [[ ! "${bat_out[*]}" ]] && \
+                get_prog_out
+
+            while [[ ! "${bat_current}" ]] && IFS='="' read -r _ a _ b; do
+                [[ "$a" == "InstantAmperage" ]] && \
+                    bat_current="$(trim "$b")"
+            done < <(printf "%s\\n" "${bat_out[@]}")
+
+            ((${#bat_current} >= 20)) && \
+                bat_current="$(bc <<< "${bat_current} - (2 ^ 64)")"
+        ;;
+    esac
+
+    bat_current="${bat_current/'-'}"
+    bat_current="$(div "${bat_current}" "1000")"
+    bat_current="$(round "2" "${bat_current}")"
+    bat_info["bat_current"]="${bat_current}"
+}
+
+get_bat_power()
+{
+    [[ "${bat_power}" && "${bat_info["bat_power"]}" ]] && \
+        return
+
+    case "${os}" in
+        "MacOS")
+            [[ ! "${bat_current}" && ! "${bat_info["bat_current"]}" ]] && \
+                get_bat_current
+            [[ ! "${bat_volt}" && ! "${bat_info["bat_volt"]}" ]] && \
+                get_bat_volt
+
+            bat_power="$(multi "${bat_info["bat_current"]}" "${bat_info["bat_volt"]}")"
+        ;;
+    esac
+
+    bat_power="$(round "2" "${bat_power}")"
+    bat_info["bat_power"]="${bat_power}"
+}
+
+get_bat_temp()
+{
+    [[ "${bat_temp}" && "${bat_info["bat_temp"]}" ]] && \
+        return
+
+    case "${os}" in
+        "MacOS")
+            [[ ! "${bat_out[*]}" ]] && \
+                get_prog_out
+
+            while [[ ! "${bat_temp}" ]] && IFS='="' read -r _ a _ b; do
+                [[ "$a" == "Temperature" ]] && \
+                    ((bat_temp = $(trim "$b") * 10))
+            done < <(printf "%s\\n" "${bat_out[@]}")
+        ;;
+    esac
+
+    bat_temp="$(div "${bat_temp}" "1000")"
+    bat_temp="$(round "1" "${bat_temp}")"
+    bat_info["bat_temp"]="${bat_temp}°C"
+}
+
+get_bat_time()
+{
+    [[ "${bat_time}" && "${bat_info["bat_time"]}" ]] && \
+        return
+
+    [[ ! "${bat_is_charging}" && ! "${bat_info["bat_is_charging"]}" ]] && \
+        get_bat_is_charging
+    [[ ! "${bat_capacity_now}" && ! "${bat_info["bat_capacity_now"]}" ]] && \
+        _get_bat_capacity_now
+    [[ ! "${bat_current}" && ! "${bat_info["bat_current"]}" ]] && \
+        get_bat_current
+
+    tmp_current="$(multi "${bat_info[bat_current]}" "1000")"
+    tmp_current="$(round "0" "${tmp_current}")"
+
+    if [[ "${bat_info["bat_is_charging"]}" == "true" ]]; then
+        [[ ! "${bat_capacity_max}" && ! "${bat_info["bat_capacity_max"]}" ]] && \
+            _get_bat_capacity_max
+
+        bat_time="$(div "$((bat_capacity_max - bat_capacity_now))" "${tmp_current}")"
+    else
+        bat_is_charging="false"
+        bat_info["bat_is_charging"]="${bat_is_charging}"
+        bat_time="$(div "${bat_capacity_now}" "${tmp_current}")"
+    fi
+
+    bat_time="$(multi "${bat_time}" "3600")"
+    bat_time="$(round "0" "${bat_time}")"
+
+    if ((bat_time != 0)); then
+        hours="$((bat_time / 60 / 60 % 24))"
+        mins="$((bat_time / 60 % 60))"
+        secs="$(((bat_time % 60) % 60))"
+
+        ((hours == 0)) && unset hours
+        ((mins == 0)) && unset mins
+
+        bat_time="${hours:+${hours}h }${mins:+${mins}m }${secs}s"
+    else
+        bat_time="0h 0m 0s"
+    fi
+
+    bat_info["bat_time"]="${bat_time}"
+}
+
+: <<'EOF'
 get_bat()
 {
     case "${os}" in
@@ -360,6 +690,7 @@ get_bat()
     bat_info["bat_time"]="${bat_time}"
     bat_info["bat_volt"]="${bat_volt}"
 }
+EOF
 
 print_usage()
 {
@@ -450,7 +781,12 @@ main()
             "bat_volt"
         )
 
-    get_bat
+    get_prog_out
+
+    for function in "${func[@]}"; do
+        [[ "$(type -t "get_${function}")" == "function" ]] && \
+            "get_${function}"
+    done
 
     for i in "${!func[@]}"; do
         [[ ! "${bat_info[${func[$i]}]}" ]] && \
@@ -520,9 +856,9 @@ main()
                     message_parts+=("Unknown")
                 fi
             [[ "${bat_info["bat_current"]}" ]] && \
-                message_parts+=("|" "${bat_info["bat_current"]}")
+                message_parts+=("|" "${bat_info["bat_current"]}A")
             [[ "${bat_info["bat_power"]}" ]] && \
-                message_parts+=("|" "${bat_info["bat_power"]}")
+                message_parts+=("|" "${bat_info["bat_power"]}W")
 
             notify
         ;;
