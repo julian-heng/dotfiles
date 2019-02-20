@@ -203,7 +203,7 @@ _get_bat_capacity_max()
 
             bat_capacity_max="$(read_file "${file}")"
 
-            [[ "${unit}" == "Watts" ]] && {
+            if [[ "${unit}" == "Watts" ]]; then
                 [[ ! "${bat_volt_design}" && ! "${bat_info["bat_volt_design"]}" ]] && \
                     _get_bat_volt_design
 
@@ -211,7 +211,10 @@ _get_bat_capacity_max()
                     div "$((bat_capacity_max * 1000))" "${bat_volt_design}"
                 )"
                 bat_capacity_max="$(round "0" "${bat_capacity_max}")"
-            }
+            else
+                bat_capacity_max="$(div "${bat_capacity_max}" "1000")"
+                bat_capacity_max="$(round "0" "${bat_capacity_max}")"
+            fi
     esac
 
     bat_info["bat_capacity_max"]="${bat_capacity_max}"
@@ -249,7 +252,7 @@ _get_bat_capacity_now()
 
             bat_capacity_now="$(read_file "${file}")"
 
-            [[ "${unit}" == "Watts" ]] && {
+            if [[ "${unit}" == "Watts" ]]; then
                 [[ ! "${bat_volt_design}" && ! "${bat_info["bat_volt_design"]}" ]] && \
                     _get_bat_volt_design
 
@@ -257,7 +260,10 @@ _get_bat_capacity_now()
                     div "$((bat_capacity_now * 1000))" "${bat_volt_design}"
                 )"
                 bat_capacity_now="$(round "0" "${bat_capacity_now}")"
-            }
+            else
+                bat_capacity_now="$(div "${bat_capacity_now}" "1000")"
+                bat_capacity_now="$(round "0" "${bat_capacity_now}")"
+            fi
     esac
 
     bat_info["bat_capacity_now"]="${bat_capacity_now}"
@@ -295,7 +301,7 @@ _get_bat_capacity_design()
 
             bat_capacity_design="$(read_file "${file}")"
 
-            [[ "${unit}" == "Watts" ]] && {
+            if [[ "${unit}" == "Watts" ]]; then
                 [[ ! "${bat_volt_design}" && ! "${bat_info["bat_volt_design"]}" ]] && \
                     _get_bat_volt_design
 
@@ -303,7 +309,10 @@ _get_bat_capacity_design()
                     div "$((bat_capacity_design * 1000))" "${bat_volt_design}"
                 )"
                 bat_capacity_design="$(round "0" "${bat_capacity_design}")"
-            }
+            else
+                bat_capacity_design="$(div "${bat_capacity_design}" "1000")"
+                bat_capacity_design="$(round "0" "${bat_capacity_design}")"
+            fi
     esac
 
     bat_info["bat_capacity_design"]="${bat_capacity_design}"
@@ -352,6 +361,7 @@ get_bat_current()
             case "${unit}" in
                 "Amps")
                     bat_current="$(read_file "${bat_dir}/current_now")"
+                    bat_current="$(div "${bat_current}" "1000")"
                 ;;
 
                 "Watts")
@@ -525,6 +535,9 @@ get_bat_volt()
             esac
 
             bat_volt="$(read_file "${file}")"
+
+            [[ "${bat_driver}" != "tp_smapi" ]] && \
+                bat_volt="$(div "${bat_volt}" "1000")"
         ;;
     esac
 
@@ -591,6 +604,7 @@ get_bat_power()
                         bat_power="$(
                             multi "${bat_info["bat_current"]}" "${bat_info["bat_volt"]}"
                         )"
+                        bat_power="$(multi "${bat_power}" "1000")"
                     fi
                 ;;
 
@@ -620,6 +634,8 @@ get_bat_temp()
                 [[ "$a" == "Temperature" ]] && \
                     ((bat_temp = $(trim "$b") * 10))
             done < <(printf "%s\\n" "${bat_out[@]}")
+
+            pow="3"
         ;;
 
         "Linux")
@@ -627,15 +643,22 @@ get_bat_temp()
                 get_prog_out
 
             case "${bat_driver}" in
-                "tp_smapi") file="${bat_dir}/temperature" ;;
-                "generic") file="${bat_dir}/temp" ;;
+                "tp_smapi")
+                    file="${bat_dir}/temperature"
+                    pow="3"
+                ;;
+
+                "generic")
+                    file="${bat_dir}/temp"
+                    pow="1"
+                ;;
             esac
 
             bat_temp="$(read_file "${file}")"
         ;;
     esac
 
-    bat_temp="$(div "${bat_temp}" "1000")"
+    bat_temp="$(div "${bat_temp}" "$((10 ** pow))")"
     bat_temp="$(round "1" "${bat_temp}")"
     bat_info["bat_temp"]="${bat_temp:+${bat_temp}°C}"
 }
