@@ -97,7 +97,7 @@ percent()
 
 div()
 {
-    [[ "$1" && "$2" ]] && (($2 != 0)) && \
+    [[ "$1" && "$2" ]] && (($(awk -v a="$2" 'BEGIN { printf "%d", (a != 0) }'))) && \
         awk -v a="$1" -v b="$2" 'BEGIN { printf "%f", a / b }'
 }
 
@@ -132,6 +132,42 @@ get_prog_out()
 
     case "${os}" in
         "MacOS") mapfile -t bat_out < <(ioreg -rc AppleSmartBattery) ;;
+        "Linux")
+            while [[ ! "${bat_driver}" ]] && read -r driver _; do
+                [[ "${driver}" == 'tp_smapi' ]] && \
+                    bat_driver="tp_smapi"
+            done < /proc/modules
+
+            : "${bat_driver:=generic}"
+
+            case "${bat_driver}" in
+                "tp_smapi") power_dir="/sys/devices/platform/smapi" ;;
+                "generic") power_dir="/sys/class/power_supply"
+            esac
+
+            shopt -s nullglob
+            while [[ ! "${bat_dir}" ]] && read -r dir; do
+                bat_dir="${dir}"
+            done < <(printf "%s\\n" "${power_dir}/BAT"[0-9])
+            shopt -u nullglob
+
+            if [[ "${bat_driver}" == "tp_smapi" ]]; then
+                unit="Watts"
+            else
+                if [[ -f "${bat_dir}/current_now" ]]; then
+                    unit="Amps"
+                elif [[ -f "${bat_dir}/power_now" ]]; then
+                    unit="Watts"
+                else
+                    unit="Unknown"
+                fi
+            fi
+
+            [[ ! "${bat_dir}" ]] && {
+                printf "Error: No batteries detected\\n" >&2
+                exit 1
+            }
+        ;;
     esac
 }
 
@@ -150,6 +186,32 @@ _get_bat_capacity_max()
                     bat_capacity_max="$(trim "$b")"
             done < <(printf "%s\\n" "${bat_out[@]}")
         ;;
+
+        "Linux")
+            [[ ! "${bat_driver}" && ! "${bat_dir}" && ! "${unit}" ]] && \
+                get_prog_out
+
+            case "${bat_driver}" in
+                "tp_smapi") file="${bat_dir}/last_full_capacity" ;;
+                "generic")
+                    case "${unit}" in
+                        "Amps") file="${bat_dir}/charge_full" ;;
+                        "Watts") file="${bat_dir}/energy_full" ;;
+                    esac
+                ;;
+            esac
+
+            bat_capacity_max="$(read_file "${file}")"
+
+            [[ "${unit}" == "Watts" ]] && {
+                [[ ! "${bat_volt_design}" && ! "${bat_info["bat_volt_design"]}" ]] && \
+                    _get_bat_volt_design
+
+                bat_capacity_max="$(
+                    div "$((bat_capacity_max * 1000))" "${bat_volt_design}"
+                )"
+                bat_capacity_max="$(round "0" "${bat_capacity_max}")"
+            }
     esac
 
     bat_info["bat_capacity_max"]="${bat_capacity_max}"
@@ -170,6 +232,32 @@ _get_bat_capacity_now()
                     bat_capacity_now="$(trim "$b")"
             done < <(printf "%s\\n" "${bat_out[@]}")
         ;;
+
+        "Linux")
+            [[ ! "${bat_driver}" && ! "${bat_dir}" && ! "${unit}" ]] && \
+                get_prog_out
+
+            case "${bat_driver}" in
+                "tp_smapi") file="${bat_dir}/remaining_capacity" ;;
+                "generic")
+                    case "${unit}" in
+                        "Amps") file="${bat_dir}/charge_now" ;;
+                        "Watts") file="${bat_dir}/energy_now" ;;
+                    esac
+                ;;
+            esac
+
+            bat_capacity_now="$(read_file "${file}")"
+
+            [[ "${unit}" == "Watts" ]] && {
+                [[ ! "${bat_volt_design}" && ! "${bat_info["bat_volt_design"]}" ]] && \
+                    _get_bat_volt_design
+
+                bat_capacity_now="$(
+                    div "$((bat_capacity_now * 1000))" "${bat_volt_design}"
+                )"
+                bat_capacity_now="$(round "0" "${bat_capacity_now}")"
+            }
     esac
 
     bat_info["bat_capacity_now"]="${bat_capacity_now}"
@@ -190,6 +278,32 @@ _get_bat_capacity_design()
                     bat_capacity_design="$(trim "$b")"
             done < <(printf "%s\\n" "${bat_out[@]}")
         ;;
+
+        "Linux")
+            [[ ! "${bat_driver}" && ! "${bat_dir}" && ! "${unit}" ]] && \
+                get_prog_out
+
+            case "${bat_driver}" in
+                "tp_smapi") file="${bat_dir}/design_capacity" ;;
+                "generic")
+                    case "${unit}" in
+                        "Amps") file="${bat_dir}/charge_full_design" ;;
+                        "Watts") file="${bat_dir}/energy_full_design" ;;
+                    esac
+                ;;
+            esac
+
+            bat_capacity_design="$(read_file "${file}")"
+
+            [[ "${unit}" == "Watts" ]] && {
+                [[ ! "${bat_volt_design}" && ! "${bat_info["bat_volt_design"]}" ]] && \
+                    _get_bat_volt_design
+
+                bat_capacity_design="$(
+                    div "$((bat_capacity_design * 1000))" "${bat_volt_design}"
+                )"
+                bat_capacity_design="$(round "0" "${bat_capacity_design}")"
+            }
     esac
 
     bat_info["bat_capacity_design"]="${bat_capacity_design}"
@@ -207,7 +321,7 @@ get_bat_condition()
 
     bat_condition="$(percent "${bat_capacity_max}" "${bat_capacity_design}")"
     bat_condition="$(round "1" "${bat_condition}")"
-    bat_info["bat_condition"]="${bat_condition}%"
+    bat_info["bat_condition"]="${bat_condition:+${bat_condition}%}"
 }
 
 get_bat_current()
@@ -230,11 +344,35 @@ get_bat_current()
 
             bat_current="${bat_current/'-'}"
         ;;
+
+        "Linux")
+            [[ ! "${bat_driver}" && ! "${bat_dir}" && ! "${unit}" ]] && \
+                get_prog_out
+
+            case "${unit}" in
+                "Amps")
+                    bat_current="$(read_file "${bat_dir}/current_now")"
+                ;;
+
+                "Watts")
+                    [[ ! "${bat_power}" && ! "${bat_info["bat_power"]}" ]] && \
+                        get_bat_power
+                    [[ ! "${bat_volt_design}" && ! "${bat_info["bat_volt_design"]}" ]] && \
+                        _get_bat_volt_design
+
+                    tmp_power="$(multi "${bat_info["bat_power"]}" "$((10 ** 6))")"
+
+                    bat_current="$(
+                        div "${tmp_power}" "${bat_volt_design}"
+                    )"
+                ;;
+            esac
     esac
 
+    bat_current="${bat_current/'-'}"
     bat_current="$(div "${bat_current}" "1000")"
     bat_current="$(round "2" "${bat_current}")"
-    bat_info["bat_current"]="${bat_current}A"
+    bat_info["bat_current"]="${bat_current:+${bat_current}A}"
 }
 
 get_bat_cycles()
@@ -252,9 +390,16 @@ get_bat_cycles()
                     bat_cycles="$(trim "$b")"
             done < <(printf "%s\\n" "${bat_out[@]}")
         ;;
+
+        "Linux")
+            [[ ! "${bat_dir}" ]] && \
+                get_prog_out
+
+            bat_cycles="$(read_file "${bat_dir}/cycle_count")"
+        ;;
     esac
 
-    bat_info["bat_cycles"]="${bat_cycles} Cycles"
+    bat_info["bat_cycles"]="${bat_cycles:+${bat_cycles} Cycles}"
 }
 
 get_bat_is_charging()
@@ -275,6 +420,22 @@ get_bat_is_charging()
                         bat_is_charging="false"
                     fi
             done < <(printf "%s\\n" "${bat_out[@]}")
+        ;;
+
+        "Linux")
+            [[ ! "${bat_driver}" && ! "${bat_dir}" && ! "${unit}" ]] && \
+                get_prog_out
+
+            case "${bat_driver}" in
+                "tp_smapi") file="${bat_dir}/state" ;;
+                "generic") file="${bat_dir}/status" ;;
+            esac
+
+            if [[ ! "$(read_file "${file}")" =~ '(C|c)harging' ]]; then
+                bat_is_charging="true"
+            else
+                bat_is_charging="false"
+            fi
         ;;
     esac
 
@@ -300,6 +461,22 @@ get_bat_is_full()
                     fi
             done < <(printf "%s\\n" "${bat_out[@]}")
         ;;
+
+        "Linux")
+            [[ ! "${bat_driver}" && ! "${bat_dir}" && ! "${unit}" ]] && \
+                get_prog_out
+
+            case "${bat_driver}" in
+                "tp_smapi") file="${bat_dir}/state" ;;
+                "generic") file="${bat_dir}/status" ;;
+            esac
+
+            if [[ "$(read_file "${file}")" =~ 'Full|idle' ]]; then
+                bat_is_full="true"
+            else
+                bat_is_full="false"
+            fi
+        ;;
     esac
 
     bat_info["bat_is_full"]="${bat_is_full}"
@@ -315,9 +492,11 @@ get_bat_percent()
     [[ ! "${bat_capacity_max}" && ! "${bat_info["bat_capacity_max"]}" ]] && \
         _get_bat_capacity_max
 
-    bat_percent="$(percent "${bat_info["bat_capacity_now"]}" "${bat_info["bat_capacity_max"]}")"
+    bat_percent="$(
+        percent "${bat_info["bat_capacity_now"]}" "${bat_info["bat_capacity_max"]}"
+    )"
     bat_percent="$(round "1" "${bat_percent}")"
-    bat_info["bat_percent"]="${bat_percent}%"
+    bat_info["bat_percent"]="${bat_percent:+${bat_percent}%}"
 }
 
 get_bat_volt()
@@ -335,37 +514,45 @@ get_bat_volt()
                     bat_volt="$(trim "$b")"
             done < <(printf "%s\\n" "${bat_out[@]}")
         ;;
+
+        "Linux")
+            [[ ! "${bat_driver}" && ! "${bat_dir}" && ! "${unit}" ]] && \
+                get_prog_out
+
+            case "${bat_driver}" in
+                "tp_smapi") file="${bat_dir}/voltage" ;;
+                "generic") file="${bat_dir}/voltage_now" ;;
+            esac
+
+            bat_volt="$(read_file "${file}")"
+        ;;
     esac
 
     bat_volt="$(div "${bat_volt}" "1000")"
     bat_volt="$(round "2" "${bat_volt}")"
-    bat_info["bat_volt"]="${bat_volt}"
+    bat_info["bat_volt"]="${bat_volt:+${bat_volt}V}"
 }
 
-get_bat_current()
+_get_bat_volt_design()
 {
-    [[ "${bat_current}" && "${bat_info["bat_current"]}" ]] && \
+    [[ "${bat_volt_design}" ]] && \
         return
 
     case "${os}" in
-        "MacOS")
-            [[ ! "${bat_out[*]}" ]] && \
+        "Linux")
+            [[ ! "${bat_driver}" && ! "${bat_dir}" && ! "${unit}" ]] && \
                 get_prog_out
 
-            while [[ ! "${bat_current}" ]] && IFS='="' read -r _ a _ b; do
-                [[ "$a" == "InstantAmperage" ]] && \
-                    bat_current="$(trim "$b")"
-            done < <(printf "%s\\n" "${bat_out[@]}")
+            case "${bat_driver}" in
+                "tp_smapi") file="${bat_dir}/design_voltage" ;;
+                "generic") file="${bat_dir}/voltage_min_design" ;;
+            esac
 
-            ((${#bat_current} >= 20)) && \
-                bat_current="$(bc <<< "${bat_current} - (2 ^ 64)")"
+            bat_volt_design="$(read_file "${file}")"
         ;;
     esac
 
-    bat_current="${bat_current/'-'}"
-    bat_current="$(div "${bat_current}" "1000")"
-    bat_current="$(round "2" "${bat_current}")"
-    bat_info["bat_current"]="${bat_current}"
+    bat_info["bat_volt_design"]="${bat_volt_design}"
 }
 
 get_bat_power()
@@ -380,12 +567,43 @@ get_bat_power()
             [[ ! "${bat_volt}" && ! "${bat_info["bat_volt"]}" ]] && \
                 get_bat_volt
 
-            bat_power="$(multi "${bat_info["bat_current"]}" "${bat_info["bat_volt"]}")"
+            bat_power="$(
+                multi "${bat_info["bat_current"]}" "${bat_info["bat_volt"]}"
+            )"
+        ;;
+
+        "Linux")
+            [[ ! "${bat_driver}" && ! "${bat_dir}" && ! "${unit}" ]] && \
+                get_prog_out
+
+            case "${unit}" in
+                "Amps")
+                    bat_power="$(read_file "${bat_dir}/power_now")"
+
+                    if [[ "${bat_power}" ]]; then
+                        ((bat_power /= 1000))
+                    else
+                        [[ ! "${bat_current}" && ! "${bat_info["bat_current"]}" ]] && \
+                            get_bat_current
+                        [[ ! "${bat_volt}" && ! "${bat_info["bat_volt"]}" ]] && \
+                            get_bat_volt
+
+                        bat_power="$(
+                            multi "${bat_info["bat_current"]}" "${bat_info["bat_volt"]}"
+                        )"
+                    fi
+                ;;
+
+                "Watts") bat_power="$(read_file "${bat_dir}/power_now")" ;;
+            esac
+
+            bat_power="$(div "${bat_power}" "1000")"
         ;;
     esac
 
+    bat_power="${bat_power/'-'}"
     bat_power="$(round "2" "${bat_power}")"
-    bat_info["bat_power"]="${bat_power}"
+    bat_info["bat_power"]="${bat_power:+${bat_power}W}"
 }
 
 get_bat_temp()
@@ -403,11 +621,23 @@ get_bat_temp()
                     ((bat_temp = $(trim "$b") * 10))
             done < <(printf "%s\\n" "${bat_out[@]}")
         ;;
+
+        "Linux")
+            [[ ! "${bat_driver}" && ! "${bat_dir}" && ! "${unit}" ]] && \
+                get_prog_out
+
+            case "${bat_driver}" in
+                "tp_smapi") file="${bat_dir}/temperature" ;;
+                "generic") file="${bat_dir}/temp" ;;
+            esac
+
+            bat_temp="$(read_file "${file}")"
+        ;;
     esac
 
     bat_temp="$(div "${bat_temp}" "1000")"
     bat_temp="$(round "1" "${bat_temp}")"
-    bat_info["bat_temp"]="${bat_temp}°C"
+    bat_info["bat_temp"]="${bat_temp:+${bat_temp}°C}"
 }
 
 get_bat_time()
@@ -423,13 +653,14 @@ get_bat_time()
         get_bat_current
 
     tmp_current="$(multi "${bat_info[bat_current]}" "1000")"
-    tmp_current="$(round "0" "${tmp_current}")"
 
     if [[ "${bat_info["bat_is_charging"]}" == "true" ]]; then
         [[ ! "${bat_capacity_max}" && ! "${bat_info["bat_capacity_max"]}" ]] && \
             _get_bat_capacity_max
 
-        bat_time="$(div "$((bat_capacity_max - bat_capacity_now))" "${tmp_current}")"
+        bat_time="$(
+            div "$((bat_capacity_max - bat_capacity_now))" "${tmp_current}"
+        )"
     else
         bat_is_charging="false"
         bat_info["bat_is_charging"]="${bat_is_charging}"
@@ -454,243 +685,6 @@ get_bat_time()
 
     bat_info["bat_time"]="${bat_time}"
 }
-
-: <<'EOF'
-get_bat()
-{
-    case "${os}" in
-        "MacOS")
-            while IFS='="' read -r _ a _ b; do
-                case "$a" in
-                    "MaxCapacity") bat_capacity_max="$(trim "$b")" ;;
-                    "CurrentCapacity") bat_capacity_now="$(trim "$b")" ;;
-                    "CycleCount") bat_cycles="$(trim "$b")" ;;
-                    "DesignCapacity") bat_capacity_design="$(trim "$b")" ;;
-                    "Temperature") bat_temp="$(trim "$b")" ;;
-                    "InstantAmperage") bat_current="$(trim "$b")" ;;
-                    "Voltage") bat_volt="$(trim "$b")" ;;
-                    "FullyCharged")
-                        if [[ "$(trim "$b")" == "Yes" ]]; then
-                            bat_is_full="true"
-                        else
-                            bat_is_full="false"
-                        fi
-                    ;;
-
-                    "IsCharging")
-                        if [[ "$(trim "$b")" == "Yes" ]]; then
-                            bat_is_charging="true"
-                        else
-                            bat_is_charging="false"
-                        fi
-                    ;;
-
-                    "BatteryInstalled")
-                        [[ "$(trim "$b")" != "Yes" ]] && {
-                            printf "Error: No batteries detected\\n" >&2
-                            exit 1
-                        }
-                    ;;
-                esac
-            done < <(ioreg -rc AppleSmartBattery)
-
-            ((${#bat_current} >= 20)) && \
-                bat_current="$(bc <<< "${bat_current} - (2 ^ 64)")"
-
-            ((bat_temp *= 10))
-        ;;
-
-        "Linux")
-            while [[ ! "${bat_driver}" ]] && read -r line; do
-                [[ "${line}" =~ 'tp_smapi' ]] && \
-                    bat_driver="tp_smapi"
-            done < /proc/modules
-
-            : "${bat_driver:=generic}"
-
-            case "${bat_driver}" in
-                "tp_smapi") power_dir="/sys/devices/platform/smapi" ;;
-                "generic") power_dir="/sys/class/power_supply" ;;
-            esac
-
-            while [[ ! "${bat_dir}" ]] && read -r dir; do
-                [[ "${dir##"${power_dir}/"}" =~ ^'BAT'[0-9] ]] && \
-                    bat_dir="${dir}"
-            done < <(printf "%s\\n" "${power_dir}/"*)
-
-            [[ ! "${bat_dir}" ]] && {
-                printf "Error: No batteries detected\\n" >&2
-                exit 1
-            }
-
-            case "${bat_driver}" in
-                "tp_smapi")
-                    bat_capacity_design="$(read_file "${bat_dir}/design_capacity")"
-                    bat_capacity_max="$(read_file "${bat_dir}/last_full_capacity")"
-                    bat_capacity_now="$(read_file "${bat_dir}/remaining_capacity")"
-                    bat_cycles="$(read_file "${bat_dir}/cycle_count")"
-                    bat_power="$(read_file "${bat_dir}/power_now")"
-                    bat_temp="$(read_file "${bat_dir}/temperature")"
-                    bat_volt="$(read_file "${bat_dir}/voltage")"
-                    bat_volt_design="$(read_file "${bat_dir}/design_voltage")"
-
-                    if [[ "$(read_file "${bat_dir}/state")" == "discharging" ]]; then
-                        bat_is_charging="false"
-                    else
-                        bat_is_charging="true"
-                    fi
-
-                    bat_current="$(
-                        div "$((bat_power * 1000))" "${bat_volt_design}"
-                    )"
-                    bat_capacity_design="$(
-                        div "$((bat_capacity_design * 1000))" "${bat_volt_design}"
-                    )"
-                    bat_capacity_max="$(
-                        div "$((bat_capacity_max * 1000))" "${bat_volt_design}"
-                    )"
-                    bat_capacity_now="$(
-                        div "$((bat_capacity_now * 1000))" "${bat_volt_design}"
-                    )"
-
-                    bat_current="$(round "0" "${bat_current}")"
-                    bat_capacity_design="$(round "0" "${bat_capacity_design}")"
-                    bat_capacity_max="$(round "0" "${bat_capacity_max}")"
-                    bat_capacity_now="$(round "0" "${bat_capacity_now}")"
-                ;;
-
-                "generic")
-                    if [[ -f "${bat_dir}/current_now" ]]; then
-                        bat_capacity_design="$(read_file "${bat_dir}/charge_full_design")"
-                        bat_capacity_max="$(read_file "${bat_dir}/charge_full")"
-                        bat_capacity_now="$(read_file "${bat_dir}/charge_now")"
-                        bat_cycles="$(read_file "${bat_dir}/cycle_count")"
-                        bat_power="$(read_file "${bat_dir}/power_now")"
-                        bat_temp="$(read_file "${bat_dir}/temp")"
-                        bat_volt="$(read_file "${bat_dir}/voltage_now")"
-                        bat_volt_design="$(read_file "${bat_dir}/voltage_min_design")"
-
-                        if [[ "$(read_file "${bat_dir}/status")" == "Discharging" ]]; then
-                            bat_is_charging="false"
-                        else
-                            bat_is_charging="true"
-                        fi
-
-                        bat_capacity_design="$((bat_capacity_design / 1000))"
-                        bat_capacity_max="$((bat_capacity_max / 1000))"
-                        bat_capacity_now="$((bat_capacity_now / 1000))"
-                        [[ "${bat_power}" ]] && \
-                            bat_power="$((bat_power / 1000))"
-                        bat_volt="$((bat_volt / 1000))"
-                        bat_volt_design="$((bat_volt_design / 1000))"
-                    elif [[ -f "${bat_dir}/power_now" ]]; then
-                        bat_capacity_design="$(read_file "${bat_dir}/energy_full_design")"
-                        bat_capacity_max="$(read_file "${bat_dir}/energy_full")"
-                        bat_capacity_now="$(read_file "${bat_dir}/energy_now")"
-                        bat_cycles="$(read_file "${bat_dir}/cycle_count")"
-                        bat_power="$(read_file "${bat_dir}/power_now")"
-                        bat_temp="$(read_file "${bat_dir}/temp")"
-                        bat_volt="$(read_file "${bat_dir}/voltage_now")"
-                        bat_volt_design="$(read_file "${bat_dir}/voltage_min_design")"
-
-                        if [[ "$(read_file "${bat_dir}/status")" == "Discharging" ]]; then
-                            bat_is_charging="false"
-                        else
-                            bat_is_charging="true"
-                        fi
-
-                        bat_capacity_design="$((bat_capacity_design / 1000))"
-                        bat_capacity_max="$((bat_capacity_max / 1000))"
-                        bat_capacity_now="$((bat_capacity_now / 1000))"
-                        bat_power="$((bat_power / 1000))"
-                        bat_volt="$((bat_volt / 1000))"
-                        bat_volt_design="$((bat_volt_design / 1000))"
-
-                        bat_current="$(
-                            div "$((bat_power * 1000))" "${bat_volt_design}"
-                        )"
-                        bat_capacity_design="$(
-                            div "$((bat_capacity_design * 1000))" "${bat_volt_design}"
-                        )"
-                        bat_capacity_max="$(
-                            div "$((bat_capacity_max * 1000))" "${bat_volt_design}"
-                        )"
-                        bat_capacity_now="$(
-                            div "$((bat_capacity_now * 1000))" "${bat_volt_design}"
-                        )"
-
-                        bat_current="$(round "0" "${bat_current}")"
-                        bat_capacity_design="$(round "0" "${bat_capacity_design}")"
-                        bat_capacity_max="$(round "0" "${bat_capacity_max}")"
-                        bat_capacity_now="$(round "0" "${bat_capacity_now}")"
-                    fi
-                ;;
-            esac
-        ;;
-    esac
-
-    bat_current="${bat_current/'-'}"
-    bat_power="${bat_power/'-'}"
-    bat_percent="$(percent "${bat_capacity_now}" "${bat_capacity_max}")"
-    bat_condition="$(percent "${bat_capacity_max}" "${bat_capacity_design}")"
-
-    bat_percent="$(round "1" "${bat_percent}")"
-    bat_condition="$(round "1" "${bat_condition}")"
-
-    if [[ "${bat_is_charging}" == "true" ]]; then
-        bat_time="$(div "$((bat_capacity_max - bat_capacity_now))" "${bat_current}")"
-    else
-        bat_is_charging="false"
-        bat_time="$(div "${bat_capacity_now}" "${bat_current}")"
-    fi
-    bat_time="$(round "0" "$(multi "${bat_time}" "3600")")"
-
-    if ((bat_time != 0)); then
-        hours="$((bat_time / 60 / 60 % 24))"
-        mins="$((bat_time / 60 % 60))"
-        secs="$(((bat_time % 60) % 60))"
-
-        ((hours == 0)) && unset hours
-        ((mins == 0)) && unset mins
-
-        bat_time="${hours:+${hours}h }${mins:+${mins}m }${secs}s"
-    else
-        bat_time="0h 0m 0s"
-    fi
-
-    if [[ ! "${bat_power}" ]]; then
-        bat_power="$(div "$((bat_current * bat_volt))" "$((10 ** 6))")"
-    else
-        bat_power="$(div "${bat_power}" "1000")"
-    fi
-    bat_current="$(div "${bat_current}" "1000")"
-    bat_volt="$(div "${bat_volt}" "1000")"
-
-    bat_power="$(round "2" "${bat_power}")"
-    bat_current="$(round "2" "${bat_current}")"
-    bat_volt="$(round "2" "${bat_volt}")"
-
-    bat_temp="$(div "${bat_temp}" "1000")"
-    bat_temp="$(round "1" "${bat_temp}")"
-
-    if [[ "${bat_is_full}" == "true" ]] || ((${bat_percent/.*} == 100)); then
-        bat_is_full="true"
-    else
-        bat_is_full="false"
-    fi
-
-    bat_info["bat_condition"]="${bat_condition}%"
-    bat_info["bat_current"]="${bat_current}A"
-    bat_info["bat_cycles"]="${bat_cycles} Cycles"
-    bat_info["bat_is_charging"]="${bat_is_charging}"
-    bat_info["bat_is_full"]="${bat_is_full}"
-    bat_info["bat_percent"]="${bat_percent}%"
-    bat_info["bat_power"]="${bat_power}W"
-    bat_info["bat_temp"]="${bat_temp}°C"
-    bat_info["bat_time"]="${bat_time}"
-    bat_info["bat_volt"]="${bat_volt}"
-}
-EOF
 
 print_usage()
 {
