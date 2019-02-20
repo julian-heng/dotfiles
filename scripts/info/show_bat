@@ -431,7 +431,7 @@ get_bat_is_charging()
                 "generic") file="${bat_dir}/status" ;;
             esac
 
-            if [[ ! "$(read_file "${file}")" =~ '(C|c)harging' ]]; then
+            if [[ "$(read_file "${file}")" =~ '(C|c)harging' ]]; then
                 bat_is_charging="true"
             else
                 bat_is_charging="false"
@@ -647,25 +647,58 @@ get_bat_time()
 
     [[ ! "${bat_is_charging}" && ! "${bat_info["bat_is_charging"]}" ]] && \
         get_bat_is_charging
-    [[ ! "${bat_capacity_now}" && ! "${bat_info["bat_capacity_now"]}" ]] && \
-        _get_bat_capacity_now
-    [[ ! "${bat_current}" && ! "${bat_info["bat_current"]}" ]] && \
-        get_bat_current
 
-    tmp_current="$(multi "${bat_info[bat_current]}" "1000")"
+    case "${unit}" in
+        "Watts")
+            [[ ! "${bat_driver}" && ! "${bat_dir}" && ! "${unit}" ]] && \
+                get_prog_out
 
-    if [[ "${bat_info["bat_is_charging"]}" == "true" ]]; then
-        [[ ! "${bat_capacity_max}" && ! "${bat_info["bat_capacity_max"]}" ]] && \
-            _get_bat_capacity_max
+            case "${driver}" in
+                "tp_smapi")
+                    file_1="${bat_dir}/remaining_capacity"
+                    file_2="${bat_dir}/last_full_capacity"
+                ;;
 
-        bat_time="$(
-            div "$((bat_capacity_max - bat_capacity_now))" "${tmp_current}"
-        )"
-    else
-        bat_is_charging="false"
-        bat_info["bat_is_charging"]="${bat_is_charging}"
-        bat_time="$(div "${bat_capacity_now}" "${tmp_current}")"
-    fi
+                "generic")
+                    file_1="${bat_dir}/energy_now"
+                    file_2="${bat_dir}/energy_full"
+                ;;
+            esac
+
+            tmp_capacity_now="$(read_file "${file_1}")"
+            tmp_capacity_full="$(read_file "${file_2}")"
+            tmp_power="$(read_file "${bat_dir}/power_now")"
+            tmp_power="${tmp_power/'-'}"
+
+            if [[ "${bat_info["bat_is_charging"]}" == "true" ]]; then
+                ((tmp_capacity = tmp_capacity_full - tmp_capacity_now))
+            else
+                tmp_capacity="${tmp_capacity_now}"
+            fi
+
+            bat_time="$(div "${tmp_capacity}" "${tmp_power}")"
+        ;;
+
+        *)
+            [[ ! "${bat_capacity_now}" && ! "${bat_info["bat_capacity_now"]}" ]] && \
+                _get_bat_capacity_now
+            [[ ! "${bat_current}" && ! "${bat_info["bat_current"]}" ]] && \
+                get_bat_current
+
+            tmp_current="$(multi "${bat_info[bat_current]}" "1000")"
+
+            if [[ "${bat_info["bat_is_charging"]}" == "true" ]]; then
+                [[ ! "${bat_capacity_max}" && ! "${bat_info["bat_capacity_max"]}" ]] && \
+                    _get_bat_capacity_max
+
+                ((tmp_capacity = bat_info[bat_capacity_max] - bat_info[bat_capacity_now]))
+            else
+                tmp_capacity="${bat_info["bat_capacity_now"]}"
+            fi
+
+            bat_time="$(div "${tmp_capacity}" "${tmp_current}")"
+        ;;
+    esac
 
     bat_time="$(multi "${bat_time}" "3600")"
     bat_time="$(round "0" "${bat_time}")"
@@ -850,9 +883,9 @@ main()
                     message_parts+=("Unknown")
                 fi
             [[ "${bat_info["bat_current"]}" ]] && \
-                message_parts+=("|" "${bat_info["bat_current"]}A")
+                message_parts+=("|" "${bat_info["bat_current"]}")
             [[ "${bat_info["bat_power"]}" ]] && \
-                message_parts+=("|" "${bat_info["bat_power"]}W")
+                message_parts+=("|" "${bat_info["bat_power"]}")
 
             notify
         ;;
