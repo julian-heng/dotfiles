@@ -441,7 +441,7 @@ get_bat_is_charging()
                 "generic") file="${bat_dir}/status" ;;
             esac
 
-            if [[ "$(read_file "${file}")" =~ '(C|c)harging' ]]; then
+            if [[ "$(read_file "${file}")" =~ (C|c)harging ]]; then
                 bat_is_charging="true"
             else
                 bat_is_charging="false"
@@ -481,7 +481,7 @@ get_bat_is_full()
                 "generic") file="${bat_dir}/status" ;;
             esac
 
-            if [[ "$(read_file "${file}")" =~ 'Full|idle' ]]; then
+            if [[ "$(read_file "${file}")" =~ Full|idle ]]; then
                 bat_is_full="true"
             else
                 bat_is_full="false"
