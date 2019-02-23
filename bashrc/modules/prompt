@@ -40,11 +40,13 @@ prompter()
 
     _git_prompt()
     {
-        unset _git_status
-        unset num_stages
-        unset num_changed
-        unset num_conflicts
-        unset num_untracked
+        local _git_branch
+        local _git_prompt
+        local num_staged
+        local num_changed
+        local num_conflicts
+        local num_untracked
+        local git_prompt
 
         # Git status symbols and algorithm referenced from
         #   - https://github.com/magicmonty/bash-git-prompt/blob/master/gitstatus.sh
@@ -75,30 +77,23 @@ prompter()
                 done
             done < <(git status --porcelain --branch)
 
-            git_prompt="-[${c2}${_git_branch}${reset}"
+            _git_branch="${_git_branch:+-[${c2}${_git_branch}${reset}}"
+            _git_prompt=(
+                "${_git_behind:+${fb[7]}↓${_git_behind}}"
+                "${_git_ahead:+${fb[7]}↑${_git_ahead}}"
+                "${num_conflicts:+${f[1]}✖${num_conflicts}}"
+                "${num_changed:+${f[4]}✚${num_changed}}"
+                "${num_staged:+${f[6]}●${num_staged}}"
+                "${num_untracked:+${reset}${bold}…${num_untracked}}"
+            )
 
-            [[ "${_git_behind}" ]] && \
-                git_prompt+="${fb[7]}↓${_git_behind}${reset}"
+            IFS="" _git_prompt="${_git_prompt[*]}"
 
-            [[ "${_git_ahead}" ]] && \
-                git_prompt+="${fb[7]}↑${_git_ahead}${reset}"
+            ((BASH_VERSINFO[0] < 5)) && \
+                _git_prompt="${_git_prompt//$'\n'}"
 
-            ((num_conflicts > 0)) && \
-                _git_status+="${f[1]}✖${num_conflicts}${reset}"
-
-            ((num_changed > 0)) && \
-                _git_status+="${f[4]}✚${num_changed}${reset}"
-
-            ((num_staged > 0)) && \
-                _git_status+="${f[6]}●${num_staged}${reset}"
-
-            ((num_untracked > 0)) && \
-                _git_status+="${bold}…${num_untracked}${reset}"
-
-            [[ "${_git_status}" ]] && \
-                git_prompt+="|${_git_status}"
-
-            git_prompt+="]"
+            IFS="" \
+            git_prompt="${_git_branch}${_git_prompt:+|${_git_prompt}}${reset}]"
         }
 
         printf "%s" "${git_prompt}"
@@ -106,22 +101,20 @@ prompter()
 
     dir_prompt()
     {
-        unset _PWD
-        cwd="${PWD}"
-        cwd="${cwd//${HOME}/'~'}"
+        local _PWD
+        cwd="\\w"
+        cwd="${cwd@P}"
         cwd="${cwd#/}"
 
         mapfile -d "/" -t parts < <(printf "%s" "${cwd:-/}")
 
-        for part in "${parts[@]::${#parts[@]}-1}"; do
-            count="0"
+        for part in "${parts[@]:0:${#parts[@]}-1}"; do
             unset in_PWD
             unset in_part
-            mapfile -d ' ' -t in_part <<< "${part}"
+            IFS=" " read -ra in_part <<< "${part}"
             for i in "${in_part[@]}"; do
-                if [[ "${i:0:1}" == "." ]] && ((count == 0)); then
+                if [[ "$i" =~ ^"." ]]; then
                     in_PWD="${in_PWD}${i:0:2}"
-                    ((count++))
                 else
                     in_PWD="${in_PWD}${i:0:1}"
                 fi
@@ -131,21 +124,20 @@ prompter()
 
         _PWD="${_PWD}/${parts[-1]}"
 
-        [[ "${_PWD:1:1}" == "~" ]] && \
-            _PWD="${_PWD#/}"
+        [[ "${_PWD}" =~ ^"/~" ]] && \
+            _PWD="${_PWD:1}"
 
-        ((${#_PWD} > 20)) && \
+        ((${#_PWD} > 24)) && \
             _PWD="${parts[-1]}"
 
         printf "%s" "${_PWD:-/}"
     }
 
-    local c1
-    local c2
-    local userhost
-    local head
     local dir
     local git
+    local c1
+    local c2
+    local head
     local -a prompt_line
 
     unset prompt_line
@@ -162,12 +154,16 @@ prompter()
     fi
 
     ((exit != 0)) && \
-        head="[${exit}]${head}"
+        head="[\[${fb[1]}\]${exit}\[${reset}\]]${head}"
 
-    user="${USER:-\\u}"
-    host="${HOSTNAME:-\\w}"
-    host="${host%%.*}"
-    userhost="${c1}${user}${reset}@${c1}${host}${reset}"
+    [[ ! "${userhost}" ]] && {
+        user="${USER:-\\u}"
+        host="${HOSTNAME:-\\w}"
+        host="${host%%.*}"
+        userhost="${c1}${user}${reset}@${c1}${host}${reset}"
+        export userhost
+    }
+
     dir="${c2}$(dir_prompt)${reset}"
     git="$(_git_prompt)"
 
@@ -176,10 +172,10 @@ prompter()
     IFS=$'\n' PS1="${prompt_line[*]}"
     export PS1
 
-    unset __get_git_branch_status
-    unset __get_git_branch
-    unset _git_prompt
-    unset dir_prompt
+    unset -f __get_git_branch_status
+    unset -f __get_git_branch
+    unset -f _git_prompt
+    unset -f dir_prompt
 }
 
 PROMPT_COMMAND="prompter; history -a"

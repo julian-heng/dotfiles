@@ -4,11 +4,11 @@ render: (output) ->
   ""
 
 style: """
-    bottom: 0
+    bottom: 20px
     left: 0
-    height: 20px
+    height: 2px
     width: 100%
-    background-color: #1d1f21
+    background-color: #a0a0a0
     z-index: -1
     opacity: 1
 """

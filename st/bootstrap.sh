@@ -218,7 +218,7 @@ main()
         "https://st.suckless.org/patches/scrollback/st-scrollback-mouse-altscreen-0.8.diff"
     )
 
-    download_url="https://dl.suckless.org/st/st-0.8.1.tar.gz"
+    download_url="https://dl.suckless.org/st/st-0.8.2.tar.gz"
 
     get_args "$@"
 

@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+
+_qsort()
+{
+    (($# == 0)) && {
+        unset qreturn
+        return
+    }
+
+    local pivot="$1"; shift
+    local i
+    local -a higher
+    local -a lower
+
+    for i in "$@"; do
+        if [[ "$i" < "${pivot}" ]]; then
+            lower+=("$i")
+        else
+            higher+=("$i")
+        fi
+    done
+
+    _qsort "${higher[@]}"
+    higher=("${qreturn[@]}")
+
+    _qsort "${lower[@]}"
+    qreturn+=("${pivot}" "${higher[@]}")
+}
+
+qsort()
+(
+    qreturn=()
+    _qsort "$@"
+    printf "%s\\n" "${qreturn[@]}"
+)
+
+get_git_version()
+{
+    [[ ! "${git_version[*]}" ]] && {
+        _git="$(git --version)"
+        _git="${_git/* }"
+        IFS=$'\n' read -d '' -ra git_version <<< "${_git//\./$'\n'}"
+    }
+
+    [[ ! "${old_git}" ]] && \
+        if ((git_version[0] == 1 && git_version[1] == 8 && git_version[2] < 5)); then
+            old_git="true"
+        else
+            old_git="false"
+        fi
+}
+
+git_run()
+{
+    local dir="$1"
+    local old_pwd
+    local status
+    local -a cmds
+    cmds=("${@:2}")
+
+    [[ ! "${old_git}" ]] && get_git_version
+
+    case "${old_git}" in
+        "true")
+            old_pwd="${PWD:-$(pwd)}"
+            cd "${dir}" || return 1
+            git "${cmds[@]}"
+            status="$?"
+            cd "${old_pwd}" || return 1
+        ;;
+
+        "false")
+            git -C "${dir}" "${cmds[@]}"
+            status="$?"
+        ;;
+    esac
+
+    return "${status:-1}"
+}
+
+get_repos()
+{
+    declare -A table
+
+    shopt -s nullglob
+    while (($# > 0)); do
+        for dir in "${1%/}/"*; do
+            { [[ -d "${dir}/.git" ]] || git_run "${dir}" rev-parse --git-dir > /dev/null 2>&1; } && \
+                table[$(git_run "${dir}" rev-parse --show-toplevel)]="1"
+        done
+        shift
+    done
+    shopt -u nullglob
+
+    mapfile -t git_repos < <(qsort "${!table[@]}")
+}
+
+main()
+{
+    get_repos "$@"
+    get_git_version
+
+    [[ ! "${COLUMNS}" ]] && \
+        shopt -s checkwinsize; (:;:)
+
+    eval printf -v line "%0.s=" "{1..${COLUMNS:-$(tput cols)}}"
+
+    [[ "${git_repos[*]}" ]] && \
+        for repo in "${git_repos[@]}"; do
+            printf "Updating %s... " "${repo}"
+
+            git_run "${repo}" fetch --quiet
+            local_ref="$(git_run "${repo}" rev-parse HEAD)"
+            remote_ref="$(git_run "${repo}" rev-parse '@{u}')"
+
+            if [[ "${local_ref}" == "${remote_ref}" ]]; then
+                printf "%s\\n" "Already up to date."
+            else
+                printf "\\n%s\\n" "${line}"
+                git_run "${repo}" pull
+                printf "%s\\n" "${line}"
+            fi
+        done
+}
+
+main "$@"

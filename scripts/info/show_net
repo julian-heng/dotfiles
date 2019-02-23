@@ -1,0 +1,506 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2048,SC2086
+
+has()
+{
+    if type -p "$1" > /dev/null 2>&1; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+print_stdout()
+{
+    [[ "${title}" ]] && printf "%s\\n" "${title}"
+    [[ "${subtitle}" ]] && printf "%s\\n" "${subtitle}"
+    [[ "${message}" ]] && printf "%s\\n" "${message}"
+}
+
+notify()
+{
+    title="${title_parts[*]}"
+    subtitle="${subtitle_parts[*]}"
+    message="${message_parts[*]}"
+
+    [[ "${title:0:1}" == "|" ]] && \
+        title="${title##'| '}"
+
+    [[ "${title:(-1):1}" == "|" ]] && \
+        title="${title%%' |'}"
+
+    [[ "${subtitle:0:1}" == "|" ]] && \
+        subtitle="${subtitle##'| '}"
+
+    [[ "${subtitle:(-1):1}" == "|" ]] && \
+        subtitle="${subtitle%%' |'}"
+
+    [[ "${message:0:1}" == "|" ]] && \
+        message="${message##'| '}"
+
+    [[ "${message:(-1):1}" == "|" ]] && \
+        message="${message%%' |'}"
+
+    if [[ "${out}" == "stdout" ]]; then
+        print_stdout
+    else
+        if has "notify-send" || has "osascript"; then
+            if [[ "${subtitle}" && "${message}" ]]; then
+                body="${subtitle}\\n${message}"
+            elif [[ ! "${subtitle}" || ! "${message}" ]]; then
+                body+="${subtitle}"
+                body+="${message}"
+            else
+                body=""
+            fi
+
+            case "${os}" in
+                "MacOS")
+                    script="display notification \"${message}\" \
+                            with title \"${title}\" \
+                            subtitle \"${subtitle}\""
+                    /usr/bin/env osascript <<< "${script}"
+                ;;
+
+                "Linux")
+                    notify-send --icon=dialog-information "${title}" "${body}"
+                ;;
+            esac
+        else
+            print_stdout
+        fi
+    fi
+}
+
+trim()
+{
+    [[ "$*" ]] && {
+        set -f
+        set -- $*
+        printf "%s" "${*//\"}"
+        set +f
+    }
+}
+
+read_file()
+{
+    local file="$1"
+    [[ -f "${file}" ]] && \
+        printf "%s" "$(< "${file}")"
+}
+
+_get_real_time()
+{
+    if [[ "${EPOCHREALTIME}" ]]; then
+        printf "%s" "${EPOCHREALTIME}"
+    else
+        case "${os}" in
+            "MacOS")
+                if has gdate; then
+                    gdate '+%s.%N'
+                else
+                    python -c 'import time; print(time.time())'
+                fi
+            ;;
+
+            "Linux")
+                date '+%s.%N'
+            ;;
+        esac
+    fi
+}
+
+percent()
+{
+    [[ "$1" && "$2" ]] && (($(awk -v a="$2" 'BEGIN { printf "%d", (a > 0) }'))) && \
+        awk -v a="$1" -v b="$2" 'BEGIN { printf "%f", (a / b) * 100 }'
+}
+
+minus()
+{
+    [[ "$1" && "$2" ]] && \
+        awk -v a="$1" -v b="$2" 'BEGIN { printf "%f", a - b }'
+}
+
+div()
+{
+    [[ "$1" && "$2" ]] && (($(awk -v a="$2" 'BEGIN { printf "%d", (a != 0) }'))) && \
+        awk -v a="$1" -v b="$2" 'BEGIN { printf "%f", a / b }'
+}
+
+multi()
+{
+    [[ "$1" && "$2" ]] && \
+        awk -v a="$1" -v b="$2" 'BEGIN { printf "%f", a * b }'
+}
+
+round()
+{
+    [[ "$1" && "$2" ]] && \
+        printf "%.*f" "$1" "$2"
+}
+
+get_os()
+{
+    case "${OSTYPE:-$(uname -s)}" in
+        "Darwin"|"darwin"*)
+            os="MacOS"
+        ;;
+
+        "Linux"|"linux"*)
+            os="Linux"
+        ;;
+    esac
+}
+
+get_network_device()
+{
+    [[ "${network_device}" && "${net_info[network_device]}" ]] && \
+        return
+
+    case "${os}" in
+        "MacOS")
+            while [[ ! "${network_device}" ]] && read -r line; do
+                [[ "${line}" =~ ^'Device:' ]] && {
+                    device="$(trim "${line##*:}")"
+                    [[ "$(ifconfig "${device}")" =~ 'status: active' ]] && \
+                        network_device="${device}"
+                }
+            done < <(networksetup -listallhardwareports)
+        ;;
+
+        "Linux")
+            net_dir="/sys/class/net"
+            while [[ ! "${network_device}" ]] && read -r device; do
+                [[ "$(read_file "${device}/operstate")" == "up" ]] &&\
+                    network_device="${device##*/}"
+            done < <(printf "%s\\n" "${net_dir}/"*)
+        ;;
+    esac
+
+    net_info[network_device]="${network_device}"
+}
+
+get_network_ssid()
+{
+    [[ "${network_ssid}" && "${net_info[network_ssid]}" ]] && \
+        return
+
+    case "${os}" in
+        "MacOS")
+            exe="/System/Library/PrivateFrameworks/Apple80211.framework"
+            exe="${exe}/Versions/Current/Resources/airport"
+            cmd=("${exe}" "--getinfo")
+            regex=" SSID"
+        ;;
+
+        "Linux")
+            [[ ! "${network_device}" && ! "${net_info[network_device]}" ]] && \
+                get_network_device
+
+            mapfile -t proc_file < "/proc/net/wireless"
+            ((${#proc_file[@]} < 3)) && \
+                return
+
+            ! has "iw" && \
+                return
+
+            cmd=("iw" "dev" "${net_info[network_device]}" "link")
+            regex="SSID"
+        ;;
+    esac
+
+    while [[ ! "${network_ssid}" ]] && IFS=":" read -r a b; do
+        [[ "$a" =~ ${regex} ]] && \
+            network_ssid="$b"
+    done < <("${cmd[@]}")
+
+    network_ssid="$(trim "${network_ssid}")"
+    net_info[network_ssid]="${network_ssid}"
+}
+
+get_network_local_ip()
+{
+    [[ "${network_local_ip}" && "${net_info[network_local_ip]}" ]] && \
+        return
+
+    [[ ! "${network_device}" && ! "${net_info[network_device]}" ]] && \
+        get_network_device
+
+    case "${os}" in
+        "MacOS") cmd=("ifconfig" "${net_info[network_device]}") ;;
+        "Linux") cmd=("ip" "address" "show" "dev" "${net_info[network_device]}") ;;
+    esac
+
+    while [[ ! "${network_local_ip}" ]] && read -r ip_type ip _; do
+        [[ "${ip_type}" == "inet" ]] && \
+            network_local_ip="${ip%%/*}"
+    done < <("${cmd[@]}")
+
+    net_info[network_local_ip]="${network_local_ip}"
+}
+
+get_network_download()
+{
+    [[ "${network_download}" && "${net_info[network_download]}" ]] && \
+        return
+
+    [[ ! "${network_device}" && ! "${net_info[network_device]}" ]] && \
+        get_network_device
+
+    case "${os}" in
+        "MacOS")
+            _get_bytes()
+            {
+                unset delta
+                while [[ ! "${delta}" ]] && read -r _ _ _ _ _ _ rx _; do
+                    [[ "${rx}" =~ ^[0-9]+$ ]] && \
+                        delta="${rx}"
+                done < <(netstat -nbiI "${net_info[network_device]}")
+                printf "%s" "${delta}"
+            }
+        ;;
+
+        "Linux")
+            _get_bytes()
+            {
+                net_dir="/sys/class/net/${net_info[network_device]}/statistics"
+                read_file "${net_dir}/rx_bytes"
+            }
+        ;;
+    esac
+
+    rx_1="$(_get_bytes)"
+    time_1="$(_get_real_time)"
+
+    until (($(_get_bytes) > rx_1)); do
+        read -rst "0.05" -N 999
+    done
+
+    rx_2="$(_get_bytes)"
+    time_2="$(_get_real_time)"
+
+    ((rx_delta = rx_2 - rx_1))
+    time_delta="$(minus "${time_2}" "${time_1}")"
+    multiplier="$(div "1" "${time_delta}")"
+
+    rx_delta="$(multi "${rx_delta}" "${multiplier}")"
+    network_download="$(round "0" "${rx_delta}")"
+
+    network_download="$(div "${network_download}" "1024")"
+    network_download="$(round "2" "${network_download}")"
+    unit="KiB/s"
+
+    ((${network_download/.*} > 1024)) && {
+        network_download="$(div "${network_download}" "1024")"
+        network_download="$(round "2" "${network_download}")"
+        unit="MiB/s"
+    }
+
+    net_info[network_download]="${network_download} ${unit}"
+}
+
+get_network_upload()
+{
+    [[ "${network_upload}" && "${net_info[network_upload]}" ]] && \
+        return
+
+    [[ ! "${network_device}" && ! "${net_info[network_device]}" ]] && \
+        get_network_device
+
+    case "${os}" in
+        "MacOS")
+            _get_bytes()
+            {
+                unset delta
+                while [[ ! "${delta}" ]] && read -r _ _ _ _ _ _ _ _ _ tx _; do
+                    [[ "${tx}" =~ ^[0-9]+$ ]] && \
+                        delta="${tx}"
+                done < <(netstat -nbiI "${net_info[network_device]}")
+                printf "%s" "${delta}"
+            }
+        ;;
+
+        "Linux")
+            _get_bytes()
+            {
+                net_dir="/sys/class/net/${net_info[network_device]}/statistics"
+                read_file "${net_dir}/tx_bytes"
+            }
+        ;;
+    esac
+
+    tx_1="$(_get_bytes)"
+    time_1="$(_get_real_time)"
+
+    until (($(_get_bytes) > tx_1)); do
+        read -rst "0.05" -N 999
+    done
+
+    tx_2="$(_get_bytes)"
+    time_2="$(_get_real_time)"
+
+    ((tx_delta = tx_2 - tx_1))
+    time_delta="$(minus "${time_2}" "${time_1}")"
+    multiplier="$(div "1" "${time_delta}")"
+
+    tx_delta="$(multi "${tx_delta}" "${multiplier}")"
+    network_upload="$(round "0" "${tx_delta}")"
+
+    network_upload="$(div "${network_upload}" "1024")"
+    network_upload="$(round "2" "${network_upload}")"
+    unit="KiB/s"
+
+    ((${network_upload/.*} > 1024)) && {
+        network_upload="$(div "${network_upload}" "1024")"
+        network_upload="$(round "2" "${network_upload}")"
+        unit="MiB/s"
+    }
+
+    net_info[network_upload]="${network_upload} ${unit}"
+}
+
+print_usage()
+{
+    printf "%s\\n" "
+Usage: ${0##*/} info_name --option --option [value] ...
+
+Options:
+    --stdout            Print to stdout
+    --json              Print in json format
+    -r, --raw           Print in csv format
+    -h, --help          Show this message
+
+Info:
+    info_name           Print the output of func_name
+
+Valid Names:
+    network_device
+    network_ssid
+    network_local_ip
+    network_download
+    network_upload
+
+Output:
+    -f, --format \"str\"    Print info_name in a formatted string
+                          Used in conjuction with info_name
+
+Syntax:
+    {}  Output of info_name
+
+Examples:
+    Print all information as a notification:
+    \$ ${0##*/}
+
+    Print to standard out:
+    \$ ${0##*/} --stdout
+
+    Print local ip address:
+    \$ ${0##*/} network_local_ip
+
+    Print download and upload speed:
+    \$ ${0##*/} --format '{} | {}' network_download network_upload
+
+Misc:
+    If notify-send is not installed, then the script will
+    print to standard output.
+"
+}
+
+get_args()
+{
+    while (($# > 0)); do
+        case "$1" in
+            "--stdout") : "${out:=stdout}" ;;
+            "--json") : "${out:=json}" ;;
+            "-r"|"--raw") : "${out:=raw}" ;;
+            "-f"|"--format") [[ "$2" ]] && { str_format="$2"; shift; } ;;
+            "-h"|"--help") print_usage; exit ;;
+            *)
+                [[ ! "${out}" ]] && out="string"
+                : "${out:=string}"
+                func+=("$1")
+            ;;
+        esac
+        shift
+    done
+}
+
+main()
+{
+    declare -A net_info
+    get_args "$@"
+    get_os
+
+    [[ ! "${func[*]}" ]] && \
+        func=(
+            "network_device" "network_ssid" "network_local_ip"
+            "network_download" "network_upload"
+        )
+
+    for function in "${func[@]}"; do
+        [[ "$(type -t "get_${function}")" == "function" ]] && \
+            "get_${function}"
+    done
+
+    for i in "${!func[@]}"; do
+        [[ ! "${net_info[${func[$i]}]}" ]] && \
+            unset 'func[$i]'
+    done
+
+    [[ ! "${func[*]}" ]] && \
+        exit 1
+
+    case "${out}" in
+        "raw")
+            raw="${func[0]}:${net_info[${func[0]}]}"
+            for function in "${func[@]:1}"; do
+                raw="${raw},${function}:${net_info[${function}]}"
+            done
+            printf "%s\\n" "${raw}"
+        ;;
+
+        "json")
+            printf "{\\n"
+            for function in "${func[@]::${#func[@]} - 1}"; do
+                printf "    \"%s\": \"%s\",\\n" "${function}" "${net_info[${function}]}"
+            done
+
+            last="${func[*]:(-1):1}"
+            printf "    \"%s\": \"%s\"\\n" "${last}" "${net_info[${last}]}"
+            printf "}\\n"
+        ;;
+
+        "string")
+            if [[ "${str_format}" ]]; then
+                out="${str_format}"
+                for function in "${func[@]}"; do
+                    out="${out/'{}'/${net_info[${function}]}}"
+                done
+                printf "%s" "${out}"
+            else
+                for function in "${func[@]}"; do
+                    printf "%s\\n" "${net_info[${function}]}"
+                done
+            fi
+        ;;
+
+        *)
+            title_parts+=("${net_info[network_ssid]:-Network}")
+            [[ "${net_info[network_device]}" ]] && \
+                title_parts+=("(${net_info[network_device]})")
+
+            [[ "${net_info[network_download]}" ]] && \
+                subtitle_parts+=("Down:" "${net_info[network_download]}")
+            [[ "${net_info[network_upload]}" ]] && \
+                subtitle_parts+=("|" "Up:" "${net_info[network_upload]}")
+
+            [[ "${net_info[network_local_ip]}" ]] && \
+                message_parts+=("Local IP:" "${net_info[network_local_ip]}")
+
+            notify
+        ;;
+    esac
+}
+
+main "$@"

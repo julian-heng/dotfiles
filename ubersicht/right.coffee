@@ -1,4 +1,4 @@
-command: "/usr/local/bin/bash ${HOME}/.dotfiles/scripts/mac/ubersicht/right.sh"
+command: "/usr/local/bin/bash ${HOME}/.dotfiles/ubersicht/info.bash"
 
 refreshFrequency: 5000 # ms
 
@@ -9,6 +9,6 @@ style: """
   webkit-font-smoothing: antialiased
   color: #c5c8c6
   font: 14px inconsolata
-  right: 12px
-  bottom: 5px
+  right: 5px
+  bottom: 2.5px
 """

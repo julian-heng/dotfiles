@@ -1,0 +1,233 @@
+#!/usr/bin/env bash
+
+check_apps()
+{
+    if ! type -p curl > /dev/null 2>&1; then
+        err "Curl is not installed"
+    fi
+}
+
+init_colors()
+{
+    faint=$'\e[2m'
+    bold=$'\e[1m'
+    reset=$'\e[0m'
+
+    for i in {0..7}; do
+        printf -v "f[$i]" "%s" $'\e[3'"$i"'m'
+        printf -v "b[$i]" "%s" $'\e[4'"$i"'m'
+        printf -v "fb[$i]" "%s" $'\e[1m\e[3'"$i"'m'
+        printf -v "bb[$i]" "%s" $'\e[1m\e[4'"$i"'m'
+    done
+}
+
+trim()
+{
+    [[ "$*" ]] && {
+        set -f
+        set -- $*
+        printf "%s" "$*"
+        set +f
+    }
+}
+
+return_match()
+{
+    local regex="$1"
+    local i="-1"
+    local -a words
+    read -ra words <<< "$2"
+
+    while ((++i < ${#words[@]})); do
+        [[ "${words[$i]}" =~ ${regex} ]] && \
+            printf "%s\\n" "${BASH_REMATCH[0]}"
+        shift
+    done
+}
+
+strip_tag()
+{
+    str="$1"
+    str="${str#*>}"
+    str="${str%<*}"
+    printf "%s" "${str}"
+}
+
+replace_symbols()
+{
+    str="$1"
+
+    while [[ "${str}" != "${_str}" ]]; do
+        _str="${str}"
+        case "${_str}" in
+            *"&quot;"*) str="${str//'&quot;'/\"}" ;;
+            *"&amp;"*) str="${str//'&amp;'/\&}" ;;
+            *"&#"[0-9][0-9][0-9]";"*)
+                while read -r match; do
+                    replace="${match/'&#'}"
+                    replace="${replace/';'}"
+                    replace="${replace#"${replace%%[!0]*}"}"
+                    str="${str//${match}/$(printf "\x$(printf "%x" "${replace}")")}"
+                done < <(return_match "&#[0-9][0-9][0-9];" "${str}")
+            ;;
+        esac
+    done
+    printf "%s" "${str}"
+}
+
+err()
+{
+    printf "Error: %s\\n" "$*" >&2
+}
+
+format_title()
+{
+    local title="$1"
+    local regex='\$([0-9]+((,[0-9]+)+)?(.[0-9][0-9])?)'
+
+    [[ "${title}" =~ ${regex} ]] && \
+        while read -r match; do
+            title="${title/${match}/${fb[2]}${match}${reset}${bold}}"
+        done < <(return_match "${regex}" "${title}")
+
+    printf "%s" "${title}"
+}
+
+display_deal()
+{
+    url="https://www.ozbargain.com.au"
+    printf "%s\\r" "Loading deals from ${url}/$1..."
+
+    raw_xml="$(curl -L "${url}/$1/feed" 2> /dev/null)"
+    [[ "${raw_xml}" =~ '404 Not Found' ]] && {
+        printf "\\e[2K"
+        err "$1: 404 Not Found"
+        return
+    }
+
+    mapfile -t xml < <(printf "%s" "${raw_xml}")
+
+    count="1"
+    i="0"
+    while ((i < ${#xml[@]} && count <= ${num_show:=10})); do
+        [[ "${xml[$i]}" =~ "<item>" ]] && {
+            until [[ "${xml[$i]}" == "</item>" ]]; do
+                case "${xml[$i]}" in
+                    *"<title>"*)
+                        title="$(strip_tag "${xml[$i]}")"
+                        title="$(replace_symbols "${title}")"
+                        title="$(trim "${title}")"
+                    ;;
+
+                    *"<link>"*) page_link="$(strip_tag "${xml[$i]}")" ;;
+                    *"<description>"*) desc="${xml[$i]}" ;;
+
+                    *"<ozb:meta"*)
+                        read -ra vars <<< "${xml[$i]}"
+                        for var in "${vars[@]}"; do
+                            IFS="=" read -r var_name var_value <<< "${var}"
+                            var_value="${var_value//\"}"
+                            case "${var_name}" in
+                                "comment-count") num_comments="${var_value}" ;;
+                                "click-count") clicks="${var_value}" ;;
+                                "expiry") expiry="${var_value}" ;;
+                                "votes-pos") votes_pos="${var_value}" ;;
+                                "votes-neg") votes_neg="${var_value}" ;;
+                                "url") deal_link="${var_value}" ;;
+                            esac
+                        done
+                    ;;
+
+                    *"<pubDate>"*) date_posted="$(strip_tag "${xml[$i]}")" ;;
+                    *"<dc:creator>"*) author="$(strip_tag "${xml[$i]}")" ;;
+                esac
+                ((i++))
+            done
+
+            line_1="${bold}$((count++)). $(format_title "${title}")"
+
+            line_2="Posted By ${fb[4]}${author}${reset}"
+            line_2="${line_2} on ${fb[4]}${date_posted}${reset}"
+            line_2="${line_2} [${f[2]}${votes_pos}↑${reset}|${f[1]}${votes_neg}↓${reset}]"
+            line_2="${line_2} ${faint}- ${clicks} Clicks - ${num_comments} Comments${reset}"
+
+            [[ "${expiry}" ]] && \
+                line_3="Expires on ${fb[4]}${expiry}${reset}"
+
+            printf "\\e[2K"
+            for line in "${line_1}" "${line_2}" "${line_3}"; do
+                [[ "${line}" ]] && \
+                    printf "%s\\n" "${line}"
+            done
+
+            printf "\\n"
+            printf "  - %s\\n" "${deal_link}" "${page_link}"
+            printf "\\n"
+
+            unset title
+            unset page_link
+            unset num_comments
+            unset clicks
+            unset expiry
+            unset votes_pos
+            unset votes_neg
+            unset deal_link
+
+            unset line_1
+            unset line_2
+            unset line_3
+        }
+        ((i++))
+    done
+}
+
+show_usage()
+{
+    printf "%s\\n" "
+Usage: ${0##*/} -o option --option \"value\"
+
+    Options:
+
+    [-t|--tag \"name\"]           Search for tags
+    [-c|--category \"name\"]      Search for categories
+    [-n|--count \"num\"]          Show \"num\" amount
+    [-h|--help]                 Show this message
+"
+}
+
+get_args()
+{
+    (($# == 0)) && {
+        err "No arguments passed"
+        exit 1
+    }
+
+    while (($# > 0)); do
+        case "$1" in
+            "tag/"*) tags+=("${1//'tag/'}") ;;
+            "cat/"*) categories+=("${1//'cat/'}") ;;
+            "-t"|"--tag") [[ "$2" ]] && { tags+=("$2"); shift; } ;;
+            "-c"|"--category") [[ "$2" ]] && { categories+=("$2"); shift; } ;;
+            "-n"|"--count") [[ $2 ]] && (($2 > 0)) && { num_show="$2"; shift; } ;;
+            "-h"|"--help") show_usage; exit ;;
+            *) err "Unknown Argument: $1"; exit 1 ;;
+        esac
+        shift
+    done
+}
+
+main()
+{
+    init_colors
+    get_args "$@"
+
+    for tag in "${tags[@]}"; do
+        display_deal "tag/${tag}"
+    done
+
+    for category in "${categories[@]}"; do
+        display_deal "cat/${category}"
+    done
+}
+
+check_apps && main "$@"

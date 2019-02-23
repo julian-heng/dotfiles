@@ -21,15 +21,18 @@ get_distro()
         ;;
 
         "Linux"|"linux"*)
-            if type -p lsb_release > /dev/null; then
-                distro="$(lsb_release -si)"
-            elif [[ -f "/etc/lsb-release" ]]; then
-                distro="$(awk '/DISTRIB_ID/ {print $1}' /etc/lsb-release)"
-                distro="${_/DISTRIB_ID=/}"
+            if [[ -f "/etc/lsb-release" ]]; then
+                while read -r line && [[ ! "${distro}" ]]; do
+                    [[ "${line}" =~ 'DISTRIB_ID' ]] && \
+                        distro="${line/'DISTRIB_ID='}"
+                done < /etc/lsb-release
             elif [[ -f "/etc/os-release" ]]; then
-                distro="$(awk -F "=" '/NAME/ {print $2; exit}' /etc/os-release)"
-                distro="${distro/NAME=/}"
-                distro="${distro//\"/}"
+                while read -r line && [[ ! "${distro}" ]]; do
+                    [[ "${line}" =~ ^'NAME' ]] && {
+                        distro="${line/'NAME='}"
+                        distro="${distro//\"}"
+                    }
+                done < /etc/os-release
             fi
         ;;
 
@@ -69,12 +72,21 @@ get_full_path()
 
 get_module_dir()
 {
-    if [[ "${distro}" != "Windows" ]]; then
-        module_dir="$(awk -F' -> ' '{printf "%s", $2}' <(ls -l "${BASH_SOURCE[0]}"))"
+    if type -p readlink > /dev/null 2>&1; then
+        exe="readlink"
+    elif type -p greadlink > /dev/null 2>&1; then
+        exe="greadlink"
+    elif type -p realpath > /dev/null 2>&1; then
+        exe="realpath"
+    fi
+
+    if [[ "${exe}" ]]; then
+        module_dir="$({ "${exe}" -f "${BASH_SOURCE[0]}" || "${exe}" "${BASH_SOURCE[0]}"; } 2> /dev/null)"
         module_dir="${module_dir%/*}/modules"
     else
         module_dir="${HOME}/.dotfiles/bashrc/modules"
     fi
+
     printf "%s" "${module_dir}"
 }
 
@@ -90,13 +102,16 @@ main()
         "${module_dir}/prompt"
     )
 
-    ! type -p __load_completion > /dev/null && {
+    ! type -p __load_completion > /dev/null && \
         if [[ -f "/usr/local/share/bash-completion/bash_completion" ]]; then
             modules+=("/usr/local/share/bash-completion/bash_completion")
         elif [[ -f "/usr/share/bash-completion/bash_completion" ]]; then
             modules+=("/usr/share/bash-completion/bash_completion")
         fi
-    }
+
+    ! type -p command_not_found_handle > /dev/null && \
+        [[ -f "${module_dir}/command_not_found" ]] && \
+            modules+=("${module_dir}/command_not_found")
 
     for i in "${modules[@]}"; do
         secure_source "${i}"
@@ -109,4 +124,4 @@ main()
     unset main
 }
 
-main
+[[ "$-" == *"i"* ]] && main

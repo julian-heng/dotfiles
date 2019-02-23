@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+shopt -s nullglob
+for i in /sys/kernel/iommu_groups/*/devices/*; do
+    (
+        IFS='/' read -r _ _ _ _ group _ pci_id <<< "$i"
+        printf "IOMMU Group %02d: %s\\n" "${group}" "$(lspci -nns "${pci_id}")"
+    ) &
+done | sort --numeric-sort
+shopt -u nullglob
+wait

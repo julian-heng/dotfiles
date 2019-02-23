@@ -3,33 +3,6 @@
 #############################
 # shellcheck disable=2139,2148,2154
 
-upgit()
-{
-    local -f header > /dev/null 2>&1
-    local -a git_dirs
-    local item
-    local git_dir
-
-    header()
-    {
-        eval printf -v line "%0.s=" "{1..${#1}}"
-        printf "%s\\n" "${line}" "$1" "${line}"
-    }
-
-    [[ "$1" ]] && dir="${1%/}" || dir="${PWD}"
-
-    for item in "${dir}/"*; do
-        { [[ -d "${item}/.git" ]] || git -C "${item}" rev-parse --git-dir > /dev/null 2>&1; } && \
-            git_dirs+=("${item}")
-    done
-
-    for git_dir in "${git_dirs[@]}"; do
-        header "Updating ${git_dir}"
-        git -C "${git_dir}" pull
-        printf "\\n"
-    done
-}
-
 gcll()
 {
     local -a args
@@ -38,13 +11,8 @@ gcll()
 
     while (($# > 0)); do
         case "$1" in
-            "http"*)
-                repo_list+=("$1")
-            ;;
-
-            *)
-                args+=("$1")
-            ;;
+            "http"*) repo_list+=("$1") ;;
+            *) args+=("$1") ;;
         esac
         shift
     done
@@ -153,7 +121,7 @@ glog4()
 
 cb()
 {
-    cd "$@" "${OLDPWD}" || exit
+    cd "$@" "${OLDPWD}" || return
 }
 
 man()
@@ -161,9 +129,36 @@ man()
     MANWIDTH="$((${COLUMNS:-100} > 100 ? 100 : COLUMNS))" command man "$@"
 }
 
+mpv-loop()
+{
+    (($# > 2)) && \
+        if (($# > 3)); then
+            mpv "$1" --start "$2" \
+                     --ab-loop-a "$2" \
+                     --ab-loop-b "$3" \
+                     --audio-pitch-correction=no \
+                     --af-add=scaletempo=speed=both \
+                     --speed="$4" \
+                     "${@:4}"
+        else
+            mpv "$1" --start "$2" --ab-loop-a "$2" --ab-loop-b "$3" "${@:3}"
+        fi
+}
+
+mpv-speed()
+{
+    (($# > 1)) && \
+        mpv "$1" --audio-pitch-correction=no \
+                 --af-add=scaletempo=speed=both \
+                 --speed="$2" \
+                 "${@:2}"
+}
+
 alias dl="aria2c --dir=${HOME}/Downloads/"
 
 alias gp="git pull"
+alias gpp="git push"
+alias grm="git rm"
 alias gcl="git clone"
 alias gstat="git status --branch"
 
@@ -210,7 +205,10 @@ esac
 
 case "${distro}" in
     "MacOS") alias update="brew -v update && brew -v upgrade" ;;
-    "Ubuntu"*|"Debian"*) alias update="sudo apt update && sudo apt upgrade" ;;
+    "Ubuntu"*|"Debian"*|"Raspbian"*|"LinuxMint"*)
+        alias update="sudo apt update && sudo apt upgrade"
+    ;;
+
     "Antergos"*|"Arch"*)
         if type -p yay > /dev/null; then
             alias update="yay"
@@ -231,13 +229,15 @@ case "${distro}" in
 
     "VoidLinux") alias update="sudo xbps-install -Su" ;;
     "Gentoo")
-        alias update="
-            printf \"%s\\n\" \"Do it yourself\"
-            printf \"%s\\n\" \"# emerge --sync\"
-            printf \"%s\\n\" \"# emerge-webrsync\"
-            printf \"%s\\n\" \"# emerge --update --changed-use --deep --ask --with-bdeps=y @world\"
-            printf \"%s\\n\" \"# emerge --ask --verbose --depclean\""
+        alias update='
+            printf "%s\\n" "Do it yourself"
+            printf "%s\\n" "=============="
+            printf "%s\\n" "# emerge --sync"
+            printf "%s\\n" "# emerge-webrsync"
+            printf "%s\\n" "# emerge --update --changed-use --deep --ask --with-bdeps=y @world"
+            printf "%s\\n" "# emerge --ask --verbose --depclean"'
     ;;
+
     "FreeBSD") alias update="sudo pkg update && sudo pkg upgrade" ;;
     "Windows") alias update="choco upgrade all" ;;
     "") printf "%s\\n" "${fb[1]}Error:${reset} Cannot detect distro, 'update' alias not set" >&2 ;;

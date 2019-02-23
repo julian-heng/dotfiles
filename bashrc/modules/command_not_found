@@ -1,0 +1,41 @@
+command_not_found_handle()
+{
+    local package_manager
+    local -a pkgs
+    local pkg
+    local cmd
+
+    cmd="$1"
+
+    printf "bash: %s: command not found\\n" "${cmd}" 1>&2
+
+    case "${distro}" in
+        "Ubuntu"*|"Debian"*|"Raspbian"*)
+            package_manager="sudo apt install"
+            type -p apt-file > /dev/null 2>&1 && \
+                mapfile -t pkgs < <(apt-file --package-only search -- "bin/${cmd}")
+        ;;
+
+        "Antergos"*|"Arch"*)
+            package_manager="sudo pacman -S"
+            if type -p pkgfile > /dev/null 2>&1; then
+                mapfile -t pkgs < <(pkgfile --binaries -- "${cmd}")
+            else
+                while IFS="" read -r line; do
+                    [[ ! "${line}" =~ ^'    ' ]] && \
+                        pkgs+=("${line%% *}")
+                done < <(pacman -Fs -- "${cmd}")
+            fi
+        ;;
+    esac
+
+    [[ "${pkgs[*]}" ]] && {
+        printf "\\n%s\\n" "${cmd} can be installed by running:"
+        for pkg in "${pkgs[@]}"; do
+            printf "    %s\\n" "${package_manager} ${pkg}"
+        done
+        printf "\\n"
+    }
+
+    return 127
+}
