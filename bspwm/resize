@@ -52,45 +52,25 @@ main()
 
     get_coords
 
-    case "${dir}" in
-        "left")
-            if ((a < screen_width - b)); then
-                args1=("left" "${size}" "0")
-                args2=("right" "-${size}" "0")
-            else
-                args1=("right" "${size}" "0")
-                args2=("left" "-${size}" "0")
-            fi
+    case "${dir}:$((a < screen_width - b)):$((c < screen_length - d))" in
+        "left:1"*|"right:0"*)
+            args1=("left" "${size}" "0")
+            args2=("right" "-${size}" "0")
         ;;
 
-        "down")
-            if ((c < screen_length - d)); then
-                args1=("top" "0" "-${size}")
-                args2=("bottom" "0" "${size}")
-            else
-                args1=("bottom" "0" "-${size}")
-                args2=("top" "0" "${size}")
-            fi
+        "left:0"*|"right:1"*)
+            args1=("right" "${size}" "0")
+            args2=("left" "-${size}" "0")
         ;;
 
-        "up")
-            if ((c < screen_length - d)); then
-                args1=("bottom" "0" "-${size}")
-                args2=("top" "0" "${size}")
-            else
-                args1=("top" "0" "-${size}")
-                args2=("bottom" "0" "${size}")
-            fi
+        "down:"*":1"|"up:"*":0")
+            args1=("top" "0" "-${size}")
+            args2=("bottom" "0" "${size}")
         ;;
 
-        "right")
-            if ((a < screen_width - b)); then
-                args1=("right" "${size}" "0")
-                args2=("left" "-${size}" "0")
-            else
-                args1=("left" "${size}" "0")
-                args2=("right" "-${size}" "0")
-            fi
+        "down:"*":0"|"up:"*":1")
+            args1=("bottom" "0" "-${size}")
+            args2=("top" "0" "${size}")
         ;;
     esac
 
