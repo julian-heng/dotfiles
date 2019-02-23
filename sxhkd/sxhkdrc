@@ -6,30 +6,21 @@ alt + Return
 alt + {_,shift + }{h,j,k,l}
     bspc node -{f,s} {west,south,north,east}
 
+# Resize windows
+alt + control + {h,j,k,l}
+    bash "${HOME}/.config/bspwm/resize" {left,down,up,right} 30
+
+# Preselection
+alt + control + shift + {h,j,k,l}
+    bspc node -p {west,south,north,east}
+
+
 # Move focus container to workspace
 alt + {_,shift + }{1-9,0}
     bspc {desktop -f,node -d} '^{1-9,10}'
 
-# Resize windows
-alt + control + h
-    bspc node -z left 20 0; \
-    bspc node -z right -20 0
-
-alt + control + j
-    bspc node -z top 0 -20; \
-    bspc node -z bottom 0 20
-
-alt + control + k
-    bspc node -z top 0 20; \
-    bspc node -z bottom 0 -20
-
-alt + control + l
-    bspc node -z left -20 0; \
-    bspc node -z right 20 0
-
-
 # Equalize size of windows
-alt + shift + e
+alt + control + e
     bspc node @/ --equalize
 
 # Rotate windows clockwise and anticlockwise

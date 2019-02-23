@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+
+get_screen_res()
+{
+    if type -p xrandr > /dev/null 2>&1; then
+        IFS="x+" \
+        read -r screen_width \
+                screen_length _\
+                < <(xrandr --nograb --current |\
+                    awk '/connected/ && $2 == "connected" { printf $4 }')
+
+    elif type -p xwininfo > /dev/null 2>&1; then
+        read -r screen_width \
+                screen_length \
+                < <(xwininfo -root |\
+                    awk -F':' '/Width|Height/ { printf $2 }')
+
+    elif type -p xdpyinfo > /dev/null 2>&1; then
+        IFS="x" \
+        read -r screen_width \
+                screen_length \
+                < <(xdpyinfo |\
+                    awk '/dimesions:/ { printf $2 }')
+    fi
+}
+
+get_coords()
+{
+    node="$(bspc query --nodes -n)"
+    bspc_out="$(bspc query --tree -n "${node}")"
+    bspc_out="${bspc_out##*'rectangle":{'}"
+    bspc_out="${bspc_out%%\}*}"
+    IFS=':,' read -r _ x _ y _ width _ height <<< "${bspc_out//\"}"
+
+    ((a = x, b = a + width, c = y, d = y + height))
+}
+
+main()
+{
+    dir="$1"
+    size="${2:-20}"
+
+    [[ ! "${dir}" ]] && \
+        exit 1
+
+    { ! pgrep -x bspwm || ! type -p bspc; } > /dev/null 2>&1 && \
+        exit 1
+
+    get_screen_res
+    [[ ! "${screen_width}" || ! "${screen_length}" ]] && \
+        exit 1
+
+    get_coords
+
+    case "${dir}" in
+        "left")
+            if ((a < screen_width - b)); then
+                args1=("left" "${size}" "0")
+                args2=("right" "-${size}" "0")
+            else
+                args1=("right" "${size}" "0")
+                args2=("left" "-${size}" "0")
+            fi
+        ;;
+
+        "down")
+            if ((c < screen_length - d)); then
+                args1=("top" "0" "-${size}")
+                args2=("bottom" "0" "${size}")
+            else
+                args1=("bottom" "0" "-${size}")
+                args2=("top" "0" "${size}")
+            fi
+        ;;
+
+        "up")
+            if ((c < screen_length - d)); then
+                args1=("bottom" "0" "-${size}")
+                args2=("top" "0" "${size}")
+            else
+                args1=("top" "0" "-${size}")
+                args2=("bottom" "0" "${size}")
+            fi
+        ;;
+
+        "right")
+            if ((a < screen_width - b)); then
+                args1=("right" "${size}" "0")
+                args2=("left" "-${size}" "0")
+            else
+                args1=("left" "${size}" "0")
+                args2=("right" "-${size}" "0")
+            fi
+        ;;
+    esac
+
+    bspc node -z "${args1[@]}"
+    bspc node -z "${args2[@]}"
+}
+
+main "$@"
