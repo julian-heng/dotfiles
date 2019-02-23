@@ -1,12 +1,12 @@
 # opens iTerm2
-alt - return : "${HOME}"/.dotfiles/scripts/utils/open_iterm2.sh
+alt - return : "${HOME}"/.dotfiles/scripts/utils/open_iterm2
 
 # Show system statistics
-fn + lalt - 1 : "${HOME}"/.dotfiles/scripts/info/show_cpu.bash
-fn + lalt - 2 : "${HOME}"/.dotfiles/scripts/info/show_mem.bash
-fn + lalt - 3 : "${HOME}"/.dotfiles/scripts/info/show_bat.bash
-fn + lalt - 4 : "${HOME}"/.dotfiles/scripts/info/show_disk.bash
-fn + lalt - 5 : "${HOME}"/.dotfiles/scripts/info/show_song.bash
+fn + lalt - 1 : "${HOME}"/.dotfiles/scripts/info/show_cpu
+fn + lalt - 2 : "${HOME}"/.dotfiles/scripts/info/show_mem
+fn + lalt - 3 : "${HOME}"/.dotfiles/scripts/info/show_bat
+fn + lalt - 4 : "${HOME}"/.dotfiles/scripts/info/show_disk
+fn + lalt - 5 : "${HOME}"/.dotfiles/scripts/info/show_song
 
 # Navigation
 alt - h : chunkc tiling::window --focus west
