@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+main()
+{
+    dir="${1:-/usr/share/wal}"
+
+    shopt -s globstar nocaseglob
+    for i in "${dir}/"**/*.{jpg,png}; do
+        file_list+=("$i")
+    done
+    shopt -u globstar nocaseglob
+
+    [[ "${file_list[*]}" ]] && \
+        feh --bg-fill "${file_list[$((RANDOM % ${#file_list[@]}))]}"
+}
+
+main "$@"
