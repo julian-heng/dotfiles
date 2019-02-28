@@ -100,7 +100,7 @@ draw_line()
     [[ ! "${COLUMNS}" ]] && \
         shopt -s checkwinsize; (:;:)
 
-    eval printf -v line "%0.s=" "{1..${COLUMNS:-$(tput cols)}}"
+    eval printf "%0.s=" "{1..${COLUMNS:-$(tput cols)}}"
 }
 
 main()
