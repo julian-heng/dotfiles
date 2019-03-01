@@ -1,0 +1,18 @@
+[url "ssh://git@gitlab.com/"]
+    insteadOf = gitlab://
+
+[url "ssh://git@github.com/"]
+    insteadOf = github://
+
+[color "branch"]
+    current = white reverse
+    local = white
+    remote = blue
+
+[color "diff"]
+    meta = yellow bold
+    frag = cyan bold
+
+[color "status"]
+    added = yellow
+    changed = green
