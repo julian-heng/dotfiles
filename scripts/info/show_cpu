@@ -3,6 +3,7 @@
 
 has()
 {
+    # Check if system has a program installed
     if type -p "$1" > /dev/null 2>&1; then
         return 0
     else
@@ -12,6 +13,7 @@ has()
 
 print_stdout()
 {
+    # Print to stdout
     [[ "${title}" ]] && printf "%s\\n" "${title}"
     [[ "${subtitle}" ]] && printf "%s\\n" "${subtitle}"
     [[ "${message}" ]] && printf "%s\\n" "${message}"
@@ -19,10 +21,12 @@ print_stdout()
 
 notify()
 {
+    # Sends a notification
     title="${title_parts[*]}"
     subtitle="${subtitle_parts[*]}"
     message="${message_parts[*]}"
 
+    # Check to see if any leading or trailing separajjtors
     [[ "${title:0:1}" == "|" ]] && \
         title="${title##'| '}"
 
@@ -41,9 +45,11 @@ notify()
     [[ "${message:(-1):1}" == "|" ]] && \
         message="${message%%' |'}"
 
+    # Check if we're printing to stdout or a notification program
     if [[ "${out}" == "stdout" ]]; then
         print_stdout
     else
+        # If no notification program is found, print to stdout
         if has "notify-send" || has "osascript"; then
             if [[ "${subtitle}" && "${message}" ]]; then
                 body="${subtitle}\\n${message}"
@@ -54,6 +60,7 @@ notify()
                 body=""
             fi
 
+            # Call notification program
             case "${os}" in
                 "MacOS")
                     script="display notification \"${message}\" \
@@ -74,6 +81,7 @@ notify()
 
 trim()
 {
+    # Trims a string
     [[ "$*" ]] && {
         set -f
         set -- $*
@@ -84,6 +92,7 @@ trim()
 
 read_file()
 {
+    # Check if file exist and reads it
     local file="$1"
     [[ -f "${file}" ]] && \
         printf "%s" "$(< "${file}")"
@@ -91,24 +100,28 @@ read_file()
 
 percent()
 {
+    # Calculates percentage
     [[ "$1" && "$2" ]] && (($(awk -v a="$2" 'BEGIN { printf "%d", (a > 0) }'))) && \
         awk -v a="$1" -v b="$2" 'BEGIN { printf "%f", (a / b) * 100 }'
 }
 
 div()
 {
+    # Calculates division as a float
     [[ "$1" && "$2" ]] && (($(awk -v a="$2" 'BEGIN { printf "%d", (a != 0) }'))) && \
         awk -v a="$1" -v b="$2" 'BEGIN { printf "%f", a / b }'
 }
 
 round()
 {
+    # Rounds number to certain places
     [[ "$1" && "$2" ]] && \
         printf "%.*f" "$1" "$2"
 }
 
 get_os()
 {
+    # Determine os on machine
     case "${OSTYPE:-$(uname -s)}" in
         "Darwin"|"darwin"*)
             os="MacOS"
@@ -122,6 +135,7 @@ get_os()
 
 get_cores()
 {
+    # Get number of cores on the cpu
     cores="0"
     case "${os}" in
         "MacOS")
@@ -140,6 +154,7 @@ get_cores()
 
 get_cpu()
 {
+    # Get the cpu model and speed
     case "${os}" in
         "MacOS")
             cpu="$(sysctl -n machdep.cpu.brand_string)"
@@ -172,6 +187,7 @@ get_cpu()
 
     [[ ! "${cores}" ]] && get_cores
 
+    # Format string
     cpu="${cpu//CPU}"
     cpu="${cpu//(R)}"
     cpu="${cpu//(TM)}"
@@ -189,6 +205,7 @@ get_cpu()
 
 get_load()
 {
+    # Get load avgerages
     case "${os}" in
         "MacOS")
             read -r _ a b c _ < <(sysctl -n vm.loadavg)
@@ -205,6 +222,7 @@ get_load()
 
 get_cpu_usage()
 {
+    # Calculate the cpu usage using ps
     read -rd '' awk_script <<'EOF'
         { sum += $3 }
         END {
@@ -220,13 +238,17 @@ EOF
 
 get_temp()
 {
+    # Get cpu temperature
     case "${os}" in
         "MacOS")
-            has /usr/local/bin/osx-cpu-temp && {
+            # Workaround for ubersicht which requires the full path
+            # of the executable
+            exe="/usr/local/bin/osx-cpu-temp"
+            has "${exe}" && {
                 while read -r line; do
                     [[ "${line}" =~ 'CPU' ]] && \
                         temp="${line#*:}"
-                done < <(/usr/local/bin/osx-cpu-temp -f -c)
+                done < <("${exe}" -f -c)
 
                 temp="$(round "1" "${temp/'°C'}")"
             }
@@ -252,11 +274,14 @@ get_fan()
 {
     case "${os}" in
         "MacOS")
-            has /usr/local/bin/osx-cpu-temp && {
+            # Workaround for ubersicht which requires the full path
+            # of the executable
+            exe="/usr/local/bin/osx-cpu-temp"
+            has "${exe}" && {
                 while read -r line; do
                     [[ "${line}" =~ 'Fan '[0-9] ]] && \
                         fan="${line/'Fan '}"
-                done < <(/usr/local/bin/osx-cpu-temp -f -c)
+                done < <("${exe}" -f -c)
 
                 fan="${fan/*at }"
                 fan="${fan/ RPM*}"
@@ -281,6 +306,7 @@ get_fan()
 
 get_uptime()
 {
+    # Get system uptime
     case "${os}" in
         "MacOS")
             boot="$(sysctl -n kern.boottime)"
@@ -310,6 +336,7 @@ get_uptime()
 
 print_usage()
 {
+    # Print usage message
     printf "%s\\n" "
 Usage: ${0##*/} info_name --option --option [value] ...
 
@@ -359,6 +386,7 @@ Misc:
 
 get_args()
 {
+    # Parse arguments
     while (($# > 0)); do
         case "$1" in
             "--stdout") : "${out:=stdout}" ;;
@@ -377,10 +405,14 @@ get_args()
 
 main()
 {
+    # Declare an associative table for storing info
     declare -A cpu_info
+
+    # Parse arguments and detect os
     get_args "$@"
     get_os
 
+    # If no specific function is selected, then run all functions
     [[ ! "${func[*]}" ]] && \
         func=(
             "cores" "cpu" "load"
@@ -388,21 +420,26 @@ main()
             "uptime"
         )
 
+    # For every entry in func, check if it exists and execute it
     for function in "${func[@]}"; do
         [[ "$(type -t "get_${function}")" == "function" ]] && \
             "get_${function}"
     done
 
+    # For every entry in func, check if the information returns an empty string
+    # and remove it
     for i in "${!func[@]}"; do
         [[ ! "${cpu_info[${func[$i]}]}" ]] && \
             unset 'func[$i]'
     done
 
+    # If there are no entries in func, then exit script
     [[ ! "${func[*]}" ]] && \
         exit 1
 
     case "${out}" in
         "raw")
+            # Print in csv/colon delimited form
             raw="${func[0]}:${cpu_info[${func[0]}]}"
             for function in "${func[@]:1}"; do
                 raw="${raw},${function}:${cpu_info[${function}]}"
@@ -411,6 +448,7 @@ main()
         ;;
 
         "json")
+            # Print in JSON form
             printf "{\\n"
             for function in "${func[@]::${#func[@]} - 1}"; do
                 printf "    \"%s\": \"%s\",\\n" "${function}" "${cpu_info[${function}]}"
@@ -422,6 +460,7 @@ main()
         ;;
 
         "string")
+            # Print in a formated string form
             if [[ "${str_format}" ]]; then
                 out="${str_format}"
                 for function in "${func[@]}"; do
@@ -436,6 +475,7 @@ main()
         ;;
 
         *)
+            # Print standard
             title_parts+=("${cpu_info["cpu"]:-CPU}")
 
             [[ "${cpu_info["load"]}" ]] && \
