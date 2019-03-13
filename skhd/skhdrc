@@ -21,8 +21,7 @@ shift + alt - k : chunkc tiling::window --warp north
 shift + alt - l : chunkc tiling::window --warp east
 
 # Move focus container to workspace
-shift + alt - m : chunkc tiling::window --send-to-desktop $(chunkc get _last_active_desktop) || \
-                  chunkc tiling::window --send-to-desktop (chunkc get _last_active_desktop)
+shift + alt - m : chunkc tiling::window --send-to-desktop $(chunkc get _last_active_desktop)
 shift + alt - p : chunkc tiling::window --send-to-desktop prev
 shift + alt - n : chunkc tiling::window --send-to-desktop next
 shift + alt - 1 : chunkc tiling::window --send-to-desktop 1
@@ -59,7 +58,7 @@ shift + alt - c : \
     fi
 
 # Equalize size of windows
-lctrl + alt - 0 : chunkc tiling::desktop --equalize
+lctrl + alt - e : chunkc tiling::desktop --equalize
 
 # Enable / Disable gaps in current workspace
 lctrl + alt - g : chunkc tiling::desktop --toggle offset

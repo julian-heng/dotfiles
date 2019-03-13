@@ -95,30 +95,34 @@ get_repos()
     mapfile -t git_repos < <(qsort "${!table[@]}")
 }
 
-main()
+draw_line()
 {
-    get_repos "$@"
-    get_git_version
-
     [[ ! "${COLUMNS}" ]] && \
         shopt -s checkwinsize; (:;:)
 
-    eval printf -v line "%0.s=" "{1..${COLUMNS:-$(tput cols)}}"
+    eval printf "%0.s=" "{1..${COLUMNS:-$(tput cols)}}"
+}
+
+main()
+{
+    get_git_version
+    get_repos "$@"
 
     [[ "${git_repos[*]}" ]] && \
         for repo in "${git_repos[@]}"; do
             printf "Updating %s... " "${repo}"
 
-            git_run "${repo}" fetch --quiet
+            git_run "${repo}" fetch --quiet > /dev/null 2>&1
             local_ref="$(git_run "${repo}" rev-parse HEAD)"
             remote_ref="$(git_run "${repo}" rev-parse '@{u}')"
 
             if [[ "${local_ref}" == "${remote_ref}" ]]; then
                 printf "%s\\n" "Already up to date."
             else
-                printf "\\n%s\\n" "${line}"
+                printf "\\n"
+                draw_line
                 git_run "${repo}" pull
-                printf "%s\\n" "${line}"
+                draw_line
             fi
         done
 }
