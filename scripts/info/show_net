@@ -270,11 +270,13 @@ get_network_download()
         ;;
     esac
 
+    count="0"
     rx_1="$(_get_bytes)"
     time_1="$(_get_real_time)"
 
-    until (($(_get_bytes) > rx_1)); do
+    while (($(_get_bytes) <= rx_1 && count < 500)); do
         read -rst "0.05" -N 999
+        ((++count))
     done
 
     rx_2="$(_get_bytes)"
@@ -330,11 +332,13 @@ get_network_upload()
         ;;
     esac
 
+    count="0"
     tx_1="$(_get_bytes)"
     time_1="$(_get_real_time)"
 
-    until (($(_get_bytes) > tx_1)); do
+    while (($(_get_bytes) <= tx_1 && count < 500)); do
         read -rst "0.05" -N 999
+        ((++count))
     done
 
     tx_2="$(_get_bytes)"
