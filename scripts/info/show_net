@@ -274,9 +274,8 @@ get_network_download()
     rx_1="$(_get_bytes)"
     time_1="$(_get_real_time)"
 
-    while (($(_get_bytes) <= rx_1 && count < 500)); do
+    while (($(_get_bytes) <= rx_1 && count++ < 500)); do
         read -rst "0.05" -N 999
-        ((++count))
     done
 
     rx_2="$(_get_bytes)"
@@ -336,9 +335,8 @@ get_network_upload()
     tx_1="$(_get_bytes)"
     time_1="$(_get_real_time)"
 
-    while (($(_get_bytes) <= tx_1 && count < 500)); do
+    while (($(_get_bytes) <= tx_1 && count++ < 500)); do
         read -rst "0.05" -N 999
-        ((++count))
     done
 
     tx_2="$(_get_bytes)"
