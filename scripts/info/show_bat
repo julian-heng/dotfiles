@@ -422,7 +422,7 @@ get_bat_is_charging()
             [[ ! "${bat_out[*]}" ]] && \
                 get_prog_out
 
-            while [[ ! "${bat_cycles}" ]] && IFS='="' read -r _ a _ b; do
+            while [[ ! "${bat_is_charging}" ]] && IFS='="' read -r _ a _ b; do
                 [[ "$a" == "IsCharging" ]] && \
                     if [[ "$(trim "$b")" == "Yes" ]]; then
                         bat_is_charging="true"

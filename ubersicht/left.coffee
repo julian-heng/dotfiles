@@ -1,6 +1,6 @@
 command: "/usr/local/bin/bash ${HOME}/.dotfiles/ubersicht/chunkwm.bash"
 
-refreshFrequency: 400 # ms
+refreshFrequency: 750 # ms
 
 render: (output) ->
   "#{output}"
