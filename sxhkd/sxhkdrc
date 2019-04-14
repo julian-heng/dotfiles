@@ -41,6 +41,14 @@ alt + {_,shift + } w
 alt + shift + Escape
     pkill -USR1 -x sxhkd
 
+# Reload bspwm config
+alt + control + shift + Escape
+    bash "${HOME}/.config/bspwm/bspwmrc"
+
+# Reload polybar config
+alt + control + Escape
+    bash "${HOME}/.dotfiles/polybar/reload"
+
 # Exit bspwm
 alt + shift + q
     bspc quit

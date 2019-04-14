@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+main()
+{
+    script="${HOME}/.dotfiles/scripts/info/show_bat"
+    mapfile -t bat_info < <(bash "${script}" bat_is_full bat_percent bat_time)
+
+    if [[ "${bat_info[0]}" == "true" ]]; then
+        printf "[ %s ]" "${bat_info[1]}"
+    else
+        printf "[ %s | %s ]" "${bat_info[@]:1}"
+    fi
+}
+
+main

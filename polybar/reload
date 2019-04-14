@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+main()
+{
+    type -p polybar > /dev/null 2>&1 && {
+        pgrep -x polybar > /dev/null 2>&1 && \
+            pkill -x polybar
+
+        setsid polybar bar &
+    }
+}
+
+main
