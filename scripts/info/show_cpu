@@ -257,7 +257,7 @@ get_temp()
 
         "Linux")
             while [[ ! "${temp_file}" ]] && read -r dir; do
-                [[ "$(< "${dir}/name")" =~ 'temp' ]] && \
+                [[ -e "${dir}/name" && "$(< "${dir}/name")" =~ 'temp' ]] && \
                     while [[ ! "${temp_file}" ]] && read -r file; do
                         temp_file="${file}"
                     done < <(printf "%s\\n" "${dir}/temp"*"_input")
@@ -294,7 +294,8 @@ get_fan()
             shopt -s nullglob
 
             while [[ ! "${fan}" ]] && read -r file; do
-                (($(< "${file}") != 0)) && fan="$(< "${file}")"
+                [[ -e "${file}" ]] &&  (($(< "${file}") != 0)) && \
+                    fan="$(< "${file}")"
             done < <(printf "%s\\n" "/sys/devices/platform/"**"/fan1_input")
             unset file
 
