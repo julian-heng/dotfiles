@@ -137,11 +137,8 @@ get_mem_used()
         "MacOS")
             pow="2"
             while IFS=":" read -r a b; do
-                case "$a" in
-                    *" wired"*|*" active"*|*" occupied"*)
-                        ((mem_used += ${b/.}))
-                    ;;
-                esac
+                [[ "$a" =~ ' '(wired|active|occupied) ]] && \
+                    ((mem_used += ${b/.}))
             done < <(vm_stat)
             ((mem_used *= 4096))
         ;;
