@@ -173,6 +173,7 @@ get_cpu()
             while [[ ! "${speed_file}" ]] && read -r file; do
                 speed_file="${file}"
             done < <(printf "%s\\n" "${dir}/"**/?(bios_limit|?(scaling|cpuinfo)_max_freq))
+            unset file
 
             shopt -u globstar
             shopt -u extglob
@@ -256,12 +257,12 @@ get_temp()
 
         "Linux")
             while [[ ! "${temp_file}" ]] && read -r dir; do
-                [[ "$(read_file "${dir}/name")" =~ 'temp' ]] && \
+                [[ -e "${dir}/name" && "$(< "${dir}/name")" =~ 'temp' ]] && \
                     while [[ ! "${temp_file}" ]] && read -r file; do
-                        [[ "${file}" =~ '_input'$ ]] && \
-                            temp_file="${file}"
-                    done < <(printf "%s\\n" "${dir}/temp"*)
+                        temp_file="${file}"
+                    done < <(printf "%s\\n" "${dir}/temp"*"_input")
             done < <(printf "%s\\n" "/sys/class/hwmon/"*)
+            unset file
 
             [[ "${temp_file}" ]] && \
                 temp="$(($(read_file "${temp_file}") / 1000))"
@@ -292,10 +293,11 @@ get_fan()
             shopt -s globstar
             shopt -s nullglob
 
-            for fan_file in "/sys/devices/platform/"**"/fan1_input"; do
-                fan="$(< "${fan_file}")"
-                ((fan != 0)) && break
-            done
+            while [[ ! "${fan}" ]] && read -r file; do
+                [[ -e "${file}" ]] &&  (($(< "${file}") != 0)) && \
+                    fan="$(< "${file}")"
+            done < <(printf "%s\\n" "/sys/devices/platform/"**"/fan1_input")
+            unset file
 
             shopt -u globstar
             shopt -u nullglob
@@ -316,8 +318,7 @@ get_uptime()
         ;;
 
         "Linux")
-            read -r secs _ < "/proc/uptime"
-            secs="${secs%.*}"
+            IFS="." read -r secs _ < "/proc/uptime"
         ;;
     esac
 

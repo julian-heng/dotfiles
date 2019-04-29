@@ -32,6 +32,11 @@ PS4='+${BASH_SOURCE:+${BASH_SOURCE}:}${LINENO:+${LINENO}:}${FUNCNAME:+${FUNCNAME
     MAKEFLAGS="-j${cores:-1}"
 }
 
+[[ "${distro}" == "MacOS" ]] && type -p Xquartz > /dev/null 2>&1 && \
+    while [[ ! "${DISPLAY}" ]] && read -r line; do
+        [[ -e "${line}" ]] && DISPLAY="${line}"
+    done < <(printf "%s\\n" /private/tmp/com.apple.launchd.**/*xquartz*)
+
 #####################
 ##### Man Pages #####
 #####################
@@ -56,6 +61,9 @@ export PS4
 
 [[ "${MAKEFLAGS}" ]] && \
     export MAKEFLAGS
+
+[[ "${distro}" == "MacOS" && "${DISPLAY}" ]] && \
+    export DISPLAY
 
 export LESS_TERMCAP_mb
 export LESS_TERMCAP_md
