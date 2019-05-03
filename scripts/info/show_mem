@@ -124,7 +124,7 @@ get_mem_percent()
         get_mem_used
 
     mem_percent="$(percent "${mem_info[mem_used]/'MiB'}" "${mem_info[mem_total]/'MiB'}")"
-    mem_percent="$(round "0" "${mem_percent}")"
+    mem_percent="$(round "2" "${mem_percent}")"
     mem_info[mem_percent]="${mem_percent}%"
 }
 
