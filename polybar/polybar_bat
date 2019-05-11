@@ -3,13 +3,14 @@
 main()
 {
     script="${HOME}/.dotfiles/scripts/info/show_bat"
-    mapfile -t bat_info < <(bash "${script}" bat_is_full bat_percent bat_time)
+    mapfile -t bat_info < <(bash "${script}" bat_is_full bat_percent bat_time 2>/dev/null)
 
-    if [[ "${bat_info[0]}" == "true" ]]; then
-        printf "[ %s ]" "${bat_info[1]}"
-    else
-        printf "[ %s | %s ]" "${bat_info[@]:1}"
-    fi
+    [[ "${bat_info[*]}" ]] && \
+        if [[ "${bat_info[0]}" == "true" ]]; then
+            printf "[ %s ]" "${bat_info[1]}"
+        else
+            printf "[ %s | %s ]" "${bat_info[@]:1}"
+        fi
 }
 
 main

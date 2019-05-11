@@ -39,7 +39,7 @@ interval = 0.1
 
 [module/cpu]
 type = custom/script
-exec = bash ~/.dotfiles/scripts/info/show_cpu --format "[ {} | {} | {} ]" load temp fan
+exec = bash ~/.dotfiles/polybar/polybar_cpu
 content-padding = 1
 tail = true
 

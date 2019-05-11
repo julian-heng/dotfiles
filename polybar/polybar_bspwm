@@ -20,10 +20,12 @@ main()
     get_desktop_id
     get_window_name
 
-    if [[ "${window_name}" ]]; then
+    if [[ "${desktop_id}" && "${window_name}" ]]; then
         printf "[ %s | %s ]" "${desktop_id}" "${window_name}"
+    elif [[ "${desktop_id}" || "${window_name}" ]]; then
+        printf "[ %s ]" "${desktop_id:-${window_name}}"
     else
-        printf "[ %s ]" "${desktop_id}"
+        printf ""
     fi
 }
 
