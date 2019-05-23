@@ -251,7 +251,7 @@ get_temp()
                         temp="${line#*:}"
                 done < <("${exe}" -f -c)
 
-                temp="$(round "1" "${temp/'°C'}")"
+                temp="$(round "1" "${temp/' °C'}")"
             }
         ;;
 
