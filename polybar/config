@@ -39,35 +39,35 @@ interval = 0.1
 
 [module/cpu]
 type = custom/script
-exec = bash ~/.dotfiles/polybar/polybar_cpu
+exec = bash ~/.dotfiles/scripts/info/show_cpu --format '[ {load}{temp? | {temp}}{fan? | {fan}} ]'
 content-padding = 1
 tail = true
 
 
 [module/mem]
 type = custom/script
-exec = bash ~/.dotfiles/scripts/info/show_mem --format "[ Mem: {} ]" mem_percent
+exec = bash ~/.dotfiles/scripts/info/show_mem --format "[ Mem: {mem_percent} ]"
 content-padding = 1
 tail = true
 
 
 [module/disk]
 type = custom/script
-exec = bash ~/.dotfiles/scripts/info/show_disk --format "[ Disk: {} ]" disk_percent
+exec = bash ~/.dotfiles/scripts/info/show_disk --format "[ {disk_device}: {disk_percent} ]"
 content-padding = 1
 tail = true
 
 
 [module/bat]
 type = custom/script
-exec = bash ~/.dotfiles/polybar/polybar_bat
+exec = bash ~/.dotfiles/scripts/info/show_bat --format '[ {bat_percent}{bat_time? | {bat_time}} ]'
 content-padding = 1
 tail = true
 
 
 [module/net]
 type = custom/script
-exec = bash ~/.dotfiles/scripts/info/show_net --format "[ {} ]" network_ssid
+exec = bash ~/.dotfiles/scripts/info/show_net --format "[ {network_ssid} ]"
 content-padding = 1
 tail = true
 
