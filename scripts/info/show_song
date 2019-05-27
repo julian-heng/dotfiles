@@ -264,7 +264,7 @@ Examples:
     \$ ${0##*/} track
 
     Print current music player and state:
-    \$ ${0##*/} --format '{} | {}' app app_state
+    \$ ${0##*/} --format '{app} | {app_state}'
 
 Misc:
     If notify-send is not installed, then the script will
@@ -279,7 +279,42 @@ get_args()
             "--stdout") : "${out:=stdout}" ;;
             "--json") : "${out:=json}" ;;
             "-r"|"--raw") : "${out:=raw}" ;;
-            "-f"|"--format") [[ "$2" ]] && { str_format="$2"; shift; } ;;
+            "-f"|"--format")
+                [[ "$2" ]] && {
+                    declare -A uniq
+
+                    : "${out:=string}"
+                    str_format="$2"
+
+                    tmp="${str_format}"
+                    regex_1='{([a-zA-Z]+)\?[^{]*{([a-zA-Z]+)}'
+                    regex_2='({)([a-zA-Z0-9_]+)'
+
+                    # First pass
+                    while [[ "${tmp}" =~ ${regex_1} ]]; do
+                        tmp="${tmp/${BASH_REMATCH[0]}}"
+                        [[ "${BASH_REMATCH[1]}" != "${BASH_REMATCH[2]}" ]] && {
+                            printf "Invalid format: %s != %s\\n" \
+                                   "${BASH_REMATCH[1]}" \
+                                   "${BASH_REMATCH[2]}" >&2
+                            exit 1
+                        }
+                    done
+
+                    tmp="${str_format}"
+
+                    # Second pass
+                    while [[ "${tmp}" =~ ${regex_2} ]]; do
+                        [[ ! "${uniq[${BASH_REMATCH[2]}]}" ]] && {
+                            uniq["${BASH_REMATCH[2]}"]="1"
+                            func+=("${BASH_REMATCH[2]}")
+                        }
+                        tmp="${tmp/${BASH_REMATCH[2]}}"
+                    done
+
+                    shift
+                }
+            ;;
             "-h"|"--help") print_usage; exit ;;
             *)
                 : "${out:=string}"
@@ -304,10 +339,11 @@ main()
             "get_${function}"
     done
 
-    for i in "${!func[@]}"; do
-        [[ ! "${song_info[${func[$i]}]}" ]] && \
-            unset 'func[$i]'
-    done
+    [[ ! "${str_format}" ]] && \
+        for i in "${!func[@]}"; do
+            [[ ! "${song_info[${func[$i]}]}" ]] && \
+                unset 'func[$i]'
+        done
 
     [[ ! "${func[*]}" ]] && \
         exit 1
@@ -340,7 +376,23 @@ main()
             if [[ "${str_format}" ]]; then
                 out="${str_format}"
                 for function in "${func[@]}"; do
-                    out="${out/'{}'/${song_info[${function}]}}"
+                    if [[ "${song_info[${function}]}" ]]; then
+                        prev="${out}"
+                        out="${out/\{${function}\}/${song_info[${function}]}}"
+
+                        [[ "${out}" == "${prev}" ]] && \
+                            out="${out/\{\}/${song_info[${function}]}}"
+
+                        [[ "${str_format}" == *"${function}?"* ]] && {
+                            out="${out/\{${function}\?}"
+                            out="${out/'}'}"
+                        }
+                    else
+                        out="${out//\{${function}}"
+                        out="${out#*\}}"
+                        [[ "${str_format}" == *"${function}?"* ]] && \
+                            out="${out#*\}}"
+                    fi
                 done
                 printf "%s" "${out}"
             else

@@ -377,7 +377,7 @@ Examples:
     \$ ${0##*/} cpu cpu_usage
 
     Print CPU temperature and fan speed with a format string:
-    \$ ${0##*/} --format '{} | {}' temp fan
+    \$ ${0##*/} --format '{temp?{} | }{fan}'
 
 Misc:
     If notify-send is not installed, then the script will
@@ -393,7 +393,43 @@ get_args()
             "--stdout") : "${out:=stdout}" ;;
             "--json") : "${out:=json}" ;;
             "-r"|"--raw") : "${out:=raw}" ;;
-            "-f"|"--format") [[ "$2" ]] && { str_format="$2"; shift; } ;;
+            "-f"|"--format")
+                [[ "$2" ]] && {
+                    declare -A uniq
+
+                    : "${out:=string}"
+                    str_format="$2"
+
+                    tmp="${str_format}"
+                    regex_1='{([a-zA-Z]+)\?[^{]*{([a-zA-Z]+)}'
+                    regex_2='({)([a-zA-Z0-9_]+)'
+
+                    # First pass
+                    while [[ "${tmp}" =~ ${regex_1} ]]; do
+                        tmp="${tmp/${BASH_REMATCH[0]}}"
+                        [[ "${BASH_REMATCH[1]}" != "${BASH_REMATCH[2]}" ]] && {
+                            printf "Invalid format: %s != %s\\n" \
+                                   "${BASH_REMATCH[1]}" \
+                                   "${BASH_REMATCH[2]}" >&2
+                            exit 1
+                        }
+                    done
+
+                    tmp="${str_format}"
+
+                    # Second pass
+                    while [[ "${tmp}" =~ ${regex_2} ]]; do
+                        [[ ! "${uniq[${BASH_REMATCH[2]}]}" ]] && {
+                            uniq["${BASH_REMATCH[2]}"]="1"
+                            func+=("${BASH_REMATCH[2]}")
+                        }
+                        tmp="${tmp/${BASH_REMATCH[2]}}"
+                    done
+
+                    shift
+                }
+            ;;
+
             "-h"|"--help") print_usage; exit ;;
             *)
                 : "${out:=string}"
@@ -428,11 +464,13 @@ main()
     done
 
     # For every entry in func, check if the information returns an empty string
-    # and remove it
-    for i in "${!func[@]}"; do
-        [[ ! "${cpu_info[${func[$i]}]}" ]] && \
-            unset 'func[$i]'
-    done
+    # and remove it. Skip if using the '--format' option because we want to
+    # manually detect if there is an empty entry
+    [[ ! "${str_format}" ]] && \
+        for i in "${!func[@]}"; do
+            [[ ! "${cpu_info[${func[$i]}]}" ]] && \
+                unset 'func[$i]'
+        done
 
     # If there are no entries in func, then exit script
     [[ ! "${func[*]}" ]] && \
@@ -465,7 +503,23 @@ main()
             if [[ "${str_format}" ]]; then
                 out="${str_format}"
                 for function in "${func[@]}"; do
-                    out="${out/'{}'/${cpu_info[${function}]}}"
+                    if [[ "${cpu_info[${function}]}" ]]; then
+                        prev="${out}"
+                        out="${out/\{${function}\}/${cpu_info[${function}]}}"
+
+                        [[ "${out}" == "${prev}" ]] && \
+                            out="${out/\{\}/${cpu_info[${function}]}}"
+
+                        [[ "${str_format}" == *"${function}?"* ]] && {
+                            out="${out/\{${function}\?}"
+                            out="${out/'}'}"
+                        }
+                    else
+                        out="${out//\{${function}}"
+                        out="${out#*\}}"
+                        [[ "${str_format}" == *"${function}?"* ]] && \
+                            out="${out#*\}}"
+                    fi
                 done
                 printf "%s" "${out}"
             else
