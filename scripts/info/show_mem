@@ -123,8 +123,8 @@ get_mem_percent()
     [[ ! "${mem_info[mem_used]}" ]] && \
         get_mem_used
 
-    mem_percent="$(percent "${mem_info[mem_used]/'MiB'}" "${mem_info[mem_total]/'MiB'}")"
-    mem_percent="$(round "0" "${mem_percent}")"
+    mem_percent="$(percent "${mem_info[mem_used]/${prefix:-MiB}}" "${mem_info[mem_total]/${prefix:-MiB}}")"
+    mem_percent="$(round "2" "${mem_percent}")"
     mem_info[mem_percent]="${mem_percent}%"
 }
 
@@ -157,9 +157,14 @@ get_mem_used()
         ;;
     esac
 
+    case "${prefix}" in
+        "GiB") ((pow++)) ;;
+        *) ;;
+    esac
+
     mem_used="$(div "${mem_used}" "$((1024 ** pow))")"
-    mem_used="$(round "0" "${mem_used}")"
-    mem_info["mem_used"]="${mem_used} MiB"
+    mem_used="$(round "${rounding:-0}" "${mem_used}")"
+    mem_info["mem_used"]="${mem_used/'.00'} ${prefix:-MiB}"
 }
 
 get_mem_total()
@@ -182,9 +187,14 @@ get_mem_total()
         ;;
     esac
 
+    case "${prefix}" in
+        "GiB") ((pow++)) ;;
+        *) ;;
+    esac
+
     mem_total="$(div "${mem_total}" "$((1024 ** pow))")"
-    mem_total="$(round "0" "${mem_total}")"
-    mem_info["mem_total"]="${mem_total} MiB"
+    mem_total="$(round "${rounding:-0}" "${mem_total}")"
+    mem_info["mem_total"]="${mem_total/'.00'} ${prefix:-MiB}"
 }
 
 get_swap_percent()
@@ -197,8 +207,8 @@ get_swap_percent()
     [[ ! "${mem_info[swap_used]}" ]] && \
         get_swap_used
 
-    swap_percent="$(percent "${mem_info[swap_used]/'MiB'}" "${mem_info[swap_total]/'MiB'}")"
-    swap_percent="$(round "0" "${swap_percent}")"
+    swap_percent="$(percent "${mem_info[swap_used]/${prefix:-MiB}}" "${mem_info[swap_total]/${prefix:-MiB}}")"
+    swap_percent="$(round "2" "${swap_percent}")"
     mem_info[swap_percent]="${swap_percent}%"
 }
 
@@ -226,9 +236,14 @@ get_swap_used()
         ;;
     esac
 
+    case "${prefix}" in
+        "GiB") ((pow++));;
+        *) ;;
+    esac
+
     swap_used="$(div "${swap_used}" "$((1024 ** pow))")"
-    swap_used="$(round "0" "${swap_used}")"
-    mem_info["swap_used"]="${swap_used} MiB"
+    swap_used="$(round "${rounding:-0}" "${swap_used}")"
+    mem_info["swap_used"]="${swap_used/'.00'} ${prefix:-MiB}"
 }
 
 get_swap_total()
@@ -252,9 +267,14 @@ get_swap_total()
         ;;
     esac
 
+    case "${prefix}" in
+        "GiB") ((pow++));;
+        *) ;;
+    esac
+
     swap_total="$(div "${swap_total}" "$((1024 ** pow))")"
-    swap_total="$(round "0" "${swap_total}")"
-    mem_info["swap_total"]="${swap_total} MiB"
+    swap_total="$(round "${rounding:-0}" "${swap_total}")"
+    mem_info["swap_total"]="${swap_total/'.00'} ${prefix:-MiB}"
 }
 
 print_usage()
@@ -297,7 +317,7 @@ Examples:
     \$ ${0##*/} mem_used mem_total
 
     Print swap usage with a format string:
-    \$ ${0##*/} --format '{} | {}' swap_used swap_total
+    \$ ${0##*/} --format '{swap_used} | {swap_total}'
 
 Misc:
     If notify-send is not installed, then the script will
@@ -311,8 +331,46 @@ get_args()
         case "$1" in
             "--stdout") : "${out:=stdout}" ;;
             "--json") : "${out:=json}" ;;
+            "--GiB") : "${prefix:=GiB}" ;;
+            "--round") [[ "$2" ]] && { : "${rounding:=$2}"; shift; } ;;
             "-r"|"--raw") : "${out:=raw}" ;;
-            "-f"|"--format") [[ "$2" ]] && { str_format="$2"; shift; } ;;
+            "-f"|"--format")
+                [[ "$2" ]] && {
+                    declare -A uniq
+
+                    : "${out:=string}"
+                    str_format="$2"
+
+                    tmp="${str_format}"
+                    regex_1='{([a-zA-Z]+)\?[^{]*{([a-zA-Z]+)}'
+                    regex_2='({)([a-zA-Z0-9_]+)'
+
+                    # First pass
+                    while [[ "${tmp}" =~ ${regex_1} ]]; do
+                        tmp="${tmp/${BASH_REMATCH[0]}}"
+                        [[ "${BASH_REMATCH[1]}" != "${BASH_REMATCH[2]}" ]] && {
+                            printf "Invalid format: %s != %s\\n" \
+                                   "${BASH_REMATCH[1]}" \
+                                   "${BASH_REMATCH[2]}" >&2
+                            exit 1
+                        }
+                    done
+
+                    tmp="${str_format}"
+
+                    # Second pass
+                    while [[ "${tmp}" =~ ${regex_2} ]]; do
+                        [[ ! "${uniq[${BASH_REMATCH[2]}]}" ]] && {
+                            uniq["${BASH_REMATCH[2]}"]="1"
+                            func+=("${BASH_REMATCH[2]}")
+                        }
+                        tmp="${tmp/${BASH_REMATCH[2]}}"
+                    done
+
+                    shift
+                }
+            ;;
+
             "-h"|"--help") print_usage; exit ;;
             *)
                 : "${out:=string}"
@@ -340,10 +398,11 @@ main()
             "get_${function}"
     done
 
-    for i in "${!func[@]}"; do
-        [[ ! "${mem_info[${func[$i]}]}" ]] && \
-            unset 'func[$i]'
-    done
+    [[ ! "${str_format}" ]] && \
+        for i in "${!func[@]}"; do
+            [[ ! "${mem_info[${func[$i]}]}" ]] && \
+                unset 'func[$i]'
+        done
 
     [[ ! "${func[*]}" ]] && \
         exit 1
@@ -372,7 +431,23 @@ main()
             if [[ "${str_format}" ]]; then
                 out="${str_format}"
                 for function in "${func[@]}"; do
-                    out="${out/'{}'/${mem_info[${function}]}}"
+                    if [[ "${mem_info[${function}]}" ]]; then
+                        prev="${out}"
+                        out="${out/\{${function}\}/${mem_info[${function}]}}"
+
+                        [[ "${out}" == "${prev}" ]] && \
+                            out="${out/\{\}/${mem_info[${function}]}}"
+
+                        [[ "${str_format}" == *"${function}?"* ]] && {
+                            out="${out/\{${function}\?}"
+                            out="${out/'}'}"
+                        }
+                    else
+                        out="${out//\{${function}}"
+                        out="${out#*\}}"
+                        [[ "${str_format}" == *"${function}?"* ]] && \
+                            out="${out#*\}}"
+                    fi
                 done
                 printf "%s" "${out}"
             else
