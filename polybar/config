@@ -53,7 +53,7 @@ tail = true
 
 [module/disk]
 type = custom/script
-exec = bash ~/.dotfiles/scripts/info/show_disk --format "[ {disk_device}: {disk_percent} ]"
+exec = bash ~/.dotfiles/scripts/info/show_disk --short-device --format "[ {disk_device}: {disk_percent} ]"
 content-padding = 1
 tail = true
 
