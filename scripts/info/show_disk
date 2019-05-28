@@ -231,6 +231,8 @@ get_disk_device()
         ;;
     esac
 
+    [[ "${short_dev}" ]] && \
+        disk_device="${disk_device##*/}"
     disk_info[disk_device]="${disk_device}"
 }
 
@@ -326,13 +328,16 @@ print_usage()
 Usage: ${0##*/} info_name --option --option [value] ...
 
 Options:
-    --stdout            Print to stdout
-    --json              Print to json format
-    -r, --raw           Print in csv format
-    -h, --help          Show this message
+    --stdout                Print to stdout
+    --json                  Print to json format
+    -r, --raw               Print in csv format
+    -d, --disk \"disk\"     Use the selected disk
+    -m, --mount \"mount\"   Use the selected mount
+    -s, --short-device      Trim disk device path
+    -h, --help              Show this message
 
 Info:
-    info_name           Print the output of func_name
+    info_name               Print the output of func_name
 
 Valid Names:
     disk_name
@@ -390,6 +395,10 @@ get_args()
                     search="${2%/}"
                     shift
                 }
+            ;;
+
+            "-s"|"--short-device")
+                : "${short_dev:=true}"
             ;;
 
             "-f"|"--format")
