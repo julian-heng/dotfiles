@@ -291,8 +291,15 @@ get_disk_used()
 
     check_df_line
     read -r _ _ disk_used _ <<< "${df_line}"
-    disk_used="$(round "2" "$(div "${disk_used}" "$((1024 ** 2))")")"
-    disk_info[disk_used]="${disk_used} GiB"
+
+    pow="2"
+    case "${prefix}" in
+        "MiB") ((pow--)) ;;
+        *) prefix="GiB" ;;
+    esac
+
+    disk_used="$(round "${rounding:-2}" "$(div "${disk_used}" "$((1024 ** pow))")")"
+    disk_info[disk_used]="${disk_used/'.00'} ${prefix:-GiB}"
 }
 
 get_disk_total()
@@ -302,9 +309,16 @@ get_disk_total()
 
     check_df_line
     read -r _ disk_total _ <<< "${df_line}"
-    disk_total="$(div "${disk_total}" "$((1024 ** 2))")"
-    disk_total="$(round "2" "${disk_total}")"
-    disk_info[disk_total]="${disk_total} GiB"
+
+    pow="2"
+    case "${prefix}" in
+        "MiB") ((pow--)) ;;
+        *) prefix="GiB" ;;
+    esac
+
+    disk_total="$(div "${disk_total}" "$((1024 ** pow))")"
+    disk_total="$(round "${rounding:-2}" "${disk_total}")"
+    disk_info[disk_total]="${disk_total/'.00'} ${prefix:-GiB}"
 }
 
 get_disk_percent()
@@ -317,7 +331,7 @@ get_disk_percent()
     [[ ! "${disk_info[disk_total]}" ]] && \
         get_disk_total
 
-    disk_percent="$(percent "${disk_info[disk_used]/'GiB'}" "${disk_info[disk_total]/'GiB'}")"
+    disk_percent="$(percent "${disk_info[disk_used]/${prefix:-GiB}}" "${disk_info[disk_total]/${prefix:-GiB}}")"
     disk_percent="$(round "2" "${disk_percent}")"
     disk_info[disk_percent]="${disk_percent}%"
 }
@@ -330,9 +344,11 @@ Usage: ${0##*/} info_name --option --option [value] ...
 Options:
     --stdout                Print to stdout
     --json                  Print to json format
+    --round \"num\"           Round decimals to \"num\" places
+    --GiB                   Output values using GiB prefix
     -r, --raw               Print in csv format
-    -d, --disk \"disk\"     Use the selected disk
-    -m, --mount \"mount\"   Use the selected mount
+    -d, --disk \"disk\"       Use the selected disk
+    -m, --mount \"mount\"     Use the selected mount
     -s, --short-device      Trim disk device path
     -h, --help              Show this message
 
@@ -380,6 +396,8 @@ get_args()
         case "$1" in
             "--stdout") : "${out:=stdout}" ;;
             "--json") : "${out:=json}" ;;
+            "--prefix") [[ "$2" ]] && { : "${prefix:=$2}"; shift; } ;;
+            "--round") [[ "$2" ]] && { : "${rounding:=$2}"; shift; } ;;
             "-r"|"--raw") : "${out:=raw}" ;;
             "-d"|"--disk")
                 [[ "$2" ]] && {

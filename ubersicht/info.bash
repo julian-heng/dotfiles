@@ -16,14 +16,11 @@ main()
         }
     done < <(ioreg -rc AppleBacklightDisplay)
 
-    printf "[ %s ] " "$("${bash_exec}" "-$-" "${script_dir}/show_cpu" --format '{load}{temp? | {}}{fan? | {}}')"
-    printf "[ Mem: %s ] " "$("${bash_exec}" "-$-" "${script_dir}/show_mem" --format '{mem_percent}')"
-
-    mapfile -t disk < <("${bash_exec}" "-$-" "${script_dir}/show_disk" disk_device disk_percent)
-    printf "[ %s: %.*f%% ] " "${disk[0]##*/}" "0" "${disk[1]/'%'}"
-
-    printf "[ Bat: %s ] " "$("${bash_exec}" "-$-" "${script_dir}/show_bat" --format '{bat_percent}{bat_time? | {}}')"
-    printf "[ %s ] " "$("${bash_exec}" "-$-" "${script_dir}/show_net" network_ssid)"
+    "${bash_exec}" "-$-" "${script_dir}/show_cpu" --format '[ {load}{temp? | {}}{fan? | {}} ] '
+    "${bash_exec}" "-$-" "${script_dir}/show_mem" --format '[ Mem: {mem_percent} ] '
+    "${bash_exec}" "-$-" "${script_dir}/show_disk" --short-device --format '[ {disk_device}: {disk_percent} ] '
+    "${bash_exec}" "-$-" "${script_dir}/show_bat" --format '[ Bat: {bat_percent}{bat_time? | {}} ] '
+    "${bash_exec}" "-$-" "${script_dir}/show_net" --format '[ {network_ssid} ] '
     printf "[ vol: %s%% | scr: %s%% ] " "${vol}" "${bright}"
     printf "[ %(%a, %d %h)T | %(%H:%M)T ]" "-1"
 }

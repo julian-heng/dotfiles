@@ -125,7 +125,7 @@ get_mem_percent()
 
     mem_percent="$(percent "${mem_info[mem_used]/${prefix:-MiB}}" "${mem_info[mem_total]/${prefix:-MiB}}")"
     mem_percent="$(round "2" "${mem_percent}")"
-    mem_info[mem_percent]="${mem_percent}%"
+    mem_info[mem_percent]="${mem_percent/'.00'}%"
 }
 
 get_mem_used()
@@ -159,7 +159,7 @@ get_mem_used()
 
     case "${prefix}" in
         "GiB") ((pow++)) ;;
-        *) ;;
+        *) prefix="MiB" ;;
     esac
 
     mem_used="$(div "${mem_used}" "$((1024 ** pow))")"
@@ -189,7 +189,7 @@ get_mem_total()
 
     case "${prefix}" in
         "GiB") ((pow++)) ;;
-        *) ;;
+        *) prefix="MiB" ;;
     esac
 
     mem_total="$(div "${mem_total}" "$((1024 ** pow))")"
@@ -209,7 +209,7 @@ get_swap_percent()
 
     swap_percent="$(percent "${mem_info[swap_used]/${prefix:-MiB}}" "${mem_info[swap_total]/${prefix:-MiB}}")"
     swap_percent="$(round "2" "${swap_percent}")"
-    mem_info[swap_percent]="${swap_percent}%"
+    mem_info[swap_percent]="${swap_percent/'.00'}%"
 }
 
 get_swap_used()
@@ -238,7 +238,7 @@ get_swap_used()
 
     case "${prefix}" in
         "GiB") ((pow++));;
-        *) ;;
+        *) prefix="MiB" ;;
     esac
 
     swap_used="$(div "${swap_used}" "$((1024 ** pow))")"
@@ -269,7 +269,7 @@ get_swap_total()
 
     case "${prefix}" in
         "GiB") ((pow++));;
-        *) ;;
+        *) prefix="MiB" ;;
     esac
 
     swap_total="$(div "${swap_total}" "$((1024 ** pow))")"
@@ -284,7 +284,9 @@ Usage: ${0##*/} info_name --option --option [value] ...
 
 Options:
     --stdout            Print to stdout
-    --json              Pirnt in json format
+    --json              Print in json format
+    --round \"num\"       Round decimals to \"num\" places
+    --prefix [MiB|GiB]  Output values using selected prefix
     -r, --raw           Print in csv format
     -h, --help          Show this message
 
@@ -331,7 +333,7 @@ get_args()
         case "$1" in
             "--stdout") : "${out:=stdout}" ;;
             "--json") : "${out:=json}" ;;
-            "--GiB") : "${prefix:=GiB}" ;;
+            "--prefix") [[ "$2" ]] && { : "${prefix:=$2}"; shift; } ;;
             "--round") [[ "$2" ]] && { : "${rounding:=$2}"; shift; } ;;
             "-r"|"--raw") : "${out:=raw}" ;;
             "-f"|"--format")
