@@ -18,7 +18,7 @@ main()
 
     "${bash_exec}" "-$-" "${script_dir}/show_cpu" --format '[ {load}{temp? | {}}{fan? | {}} ] '
     "${bash_exec}" "-$-" "${script_dir}/show_mem" --format '[ Mem: {mem_percent} ] '
-    "${bash_exec}" "-$-" "${script_dir}/show_disk" --short-device --format '[ {disk_device}: {disk_percent}% ] '
+    "${bash_exec}" "-$-" "${script_dir}/show_disk" --short-device --format '[ {disk_device}: {disk_percent} ] '
     "${bash_exec}" "-$-" "${script_dir}/show_bat" --format '[ Bat: {bat_percent}{bat_time? | {}} ] '
     "${bash_exec}" "-$-" "${script_dir}/show_net" --format '[ {network_ssid} ] '
     printf "[ vol: %s%% | scr: %s%% ] " "${vol}" "${bright}"
