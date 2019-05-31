@@ -103,13 +103,9 @@ round()
 get_os()
 {
     case "${OSTYPE:-$(uname -s)}" in
-        "Darwin"|"darwin"*)
-            os="MacOS"
-        ;;
-
-        "Linux"|"linux"*)
-            os="Linux"
-        ;;
+        "Darwin"|"darwin"*) os="MacOS" ;;
+        "Linux"|"linux"*) os="Linux" ;;
+        "FreeBSD"|"freebsd"*) os="FreeBSD" ;;
     esac
 }
 
@@ -171,16 +167,13 @@ check_df_line()
     [[ "${df_line}" ]] && \
         return
 
-    [[ ! "${disk_info[disk_mount]}" ]] && \
-        get_disk_mount
-
     [[ ! "${df_flags[*]}" ]] && \
         case "${os}" in
             "MacOS") df_flags=("-P" "-k") ;;
             "Linux") df_flags=("-P") ;;
         esac
 
-    df_line="$(mapfile -t a < <(df "${df_flags[@]}" "${disk_info[disk_mount]}")
+    df_line="$(mapfile -t a < <(df "${df_flags[@]}" "${search}")
                printf "%s" "${a[1]}")"
 }
 
@@ -229,6 +222,11 @@ get_disk_device()
             read -r disk_device _ <<< "${lsblk_line}"
             disk_device="$(trim "${disk_device##*=}")"
         ;;
+
+        "FreeBSD")
+            check_df_line
+            read -r disk_device _ <<< "${df_line}"
+        ;;
     esac
 
     [[ "${short_dev}" ]] && \
@@ -254,6 +252,11 @@ get_disk_mount()
             check_lsblk_line
             read -r _ _ _ _ _ disk_mount <<< "${lsblk_line}"
             disk_mount="$(trim "${disk_mount##*=}")"
+        ;;
+
+        "FreeBSD")
+            check_df_line
+            read -r _ _ _ _ _ disk_mount <<< "${df_line}"
         ;;
     esac
 

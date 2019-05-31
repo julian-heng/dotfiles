@@ -103,13 +103,9 @@ round()
 get_os()
 {
     case "${OSTYPE:-$(uname -s)}" in
-        "Darwin"|"darwin"*)
-            os="MacOS"
-        ;;
-
-        "Linux"|"linux"*)
-            os="Linux"
-        ;;
+        "Darwin"|"darwin"*) os="MacOS" ;;
+        "Linux"|"linux"*) os="Linux" ;;
+        "FreeBSD"|"freebsd"*) os="FreeBSD" ;;
     esac
 }
 
@@ -155,6 +151,20 @@ get_mem_used()
                 esac
             done < /proc/meminfo
         ;;
+
+        "FreeBSD")
+            [[ ! "${mem_info[mem_total]}" ]] && \
+                get_mem_total
+
+            pow="2"
+            pagesize="$(sysctl -n hw.pagesize)"
+            mem_used="$((
+                $(sysctl -n hw.realmem) -
+                ($(sysctl -n vm.stats.vm.v_inactive_count) * pagesize) -
+                ($(sysctl -n vm.stats.vm.v_free_count) * pagesize) -
+                ($(sysctl -n vm.stats.vm.v_cache_count) * pagesize)
+            ))"
+        ;;
     esac
 
     case "${prefix}" in
@@ -184,6 +194,11 @@ get_mem_total()
                 [[ "$a" =~ 'MemTotal' ]] && \
                     mem_total="$b"
             done < /proc/meminfo
+        ;;
+
+        "FreeBSD")
+            pow="2"
+            mem_total="$(sysctl -n hw.realmem)"
         ;;
     esac
 
@@ -234,6 +249,16 @@ get_swap_used()
                 fi
             done < /proc/meminfo
         ;;
+
+        "FreeBSD")
+            pow="2"
+            swap_used="0"
+
+            while read -r _ _ a _; do
+                [[ "$a" == "Used" ]] && \
+                    ((swap_used += a))
+            done < <(pstat -s)
+        ;;
     esac
 
     case "${prefix}" in
@@ -264,6 +289,11 @@ get_swap_total()
                 [[ "$a" =~ 'SwapTotal' ]] && \
                     swap_total="$b"
             done < /proc/meminfo
+        ;;
+
+        "FreeBSD")
+            pow="2"
+            swap_total="$(sysctl -n vm.swap_total)"
         ;;
     esac
 

@@ -123,13 +123,9 @@ get_os()
 {
     # Determine os on machine
     case "${OSTYPE:-$(uname -s)}" in
-        "Darwin"|"darwin"*)
-            os="MacOS"
-        ;;
-
-        "Linux"|"linux"*)
-            os="Linux"
-        ;;
+        "Darwin"|"darwin"*) os="MacOS" ;;
+        "Linux"|"linux"*) os="Linux" ;;
+        "FreeBSD"|"freebsd"*) os="FreeBSD" ;;
     esac
 }
 
@@ -147,6 +143,10 @@ get_cores()
                 [[ "${line}" =~ ^processor ]] && \
                     ((cores++))
             done < /proc/cpuinfo
+        ;;
+
+        "FreeBSD")
+            cores="$(sysctl -n hw.ncpu)"
         ;;
     esac
     cpu_info["cores"]="${cores}"
@@ -184,6 +184,15 @@ get_cpu()
                 speed="$(round "2" "${speed}")"
             }
         ;;
+
+        "FreeBSD")
+            cpu="$(sysctl -n hw.model)"
+
+            speed="$(sysctl -n hw.cpuspeed 2> /dev/null)"
+            speed="${speed:-$(sysctl -n hw.clockrate)}"
+            speed="$(div "${speed}" 1000)"
+            speed="$(round "2" "${speed}")"
+        ;;
     esac
 
     [[ ! "${cores}" ]] && get_cores
@@ -208,7 +217,7 @@ get_load()
 {
     # Get load avgerages
     case "${os}" in
-        "MacOS")
+        "MacOS"|"FreeBSD")
             read -r _ a b c _ < <(sysctl -n vm.loadavg)
         ;;
 
@@ -225,7 +234,8 @@ get_cpu_usage()
 {
     # Calculate the cpu usage using ps
     read -rd '' awk_script <<'EOF'
-        { sum += $3 }
+        # Under FreeBSD, the idle process is listed as using 100% usage
+        /! idle/ { sum += $3 }
         END {
             printf "%f", sum / cores
         }
@@ -267,6 +277,10 @@ get_temp()
             [[ "${temp_file}" ]] && \
                 temp="$(($(read_file "${temp_file}") / 1000))"
         ;;
+
+        "FreeBSD")
+            temp="$(sysctl -n dev.cpu.0.temperature 2> /dev/null)"
+        ;;
     esac
     [[ "${temp}" ]] && cpu_info["temp"]="${temp}°C"
 }
@@ -302,6 +316,11 @@ get_fan()
             shopt -u globstar
             shopt -u nullglob
         ;;
+
+        "FreeBSD")
+            # Stub
+            fan="0"
+        ;;
     esac
     [[ "${fan}" ]] && cpu_info["fan"]="${fan} RPM"
 }
@@ -310,7 +329,7 @@ get_uptime()
 {
     # Get system uptime
     case "${os}" in
-        "MacOS")
+        "MacOS"|"FreeBSD")
             boot="$(sysctl -n kern.boottime)"
             boot="${boot/'{ sec = '}"
             boot="${boot/,*}"

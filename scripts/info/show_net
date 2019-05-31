@@ -143,13 +143,9 @@ round()
 get_os()
 {
     case "${OSTYPE:-$(uname -s)}" in
-        "Darwin"|"darwin"*)
-            os="MacOS"
-        ;;
-
-        "Linux"|"linux"*)
-            os="Linux"
-        ;;
+        "Darwin"|"darwin"*) os="MacOS" ;;
+        "Linux"|"linux"*) os="Linux" ;;
+        "FreeBSD"|"freebsd"*) os="FreeBSD" ;;
     esac
 }
 
@@ -175,6 +171,16 @@ get_network_device()
                 [[ "$(read_file "${device}/operstate")" == "up" ]] &&\
                     network_device="${device##*/}"
             done < <(printf "%s\\n" "${net_dir}/"*)
+        ;;
+
+        "FreeBSD")
+            while [[ ! "${network_device}" ]] && read -r line; do
+                [[ ! "${line}" =~ ^' ' ]] && {
+                    device="$(trim "${line%%:*}")"
+                    [[ "$(ifconfig "${device}")" =~ 'status: active' ]] && \
+                        network_device="${device}"
+                }
+            done < <(ifconfig -a)
         ;;
     esac
 
@@ -228,7 +234,7 @@ get_network_local_ip()
         get_network_device
 
     case "${os}" in
-        "MacOS") cmd=("ifconfig" "${net_info[network_device]}") ;;
+        "MacOS"|"FreeBSD") cmd=("ifconfig" "${net_info[network_device]}") ;;
         "Linux") cmd=("ip" "address" "show" "dev" "${net_info[network_device]}") ;;
     esac
 
@@ -268,13 +274,25 @@ get_network_download()
                 read_file "${net_dir}/rx_bytes"
             }
         ;;
+
+        "FreeBSD")
+            _get_bytes()
+            {
+                unset delta
+                while [[ ! "${delta}" ]] && read -r _ _ _ _ _ _ _ rx _; do
+                    [[ "${rx}" =~ ^[0-9]+$ ]] && \
+                        delta="${rx}"
+                done < <(netstat -nbiI "${net_info[network_device]}")
+                printf "%s" "${delta}"
+            }
+        ;;
     esac
 
     count="0"
     rx_1="$(_get_bytes)"
     time_1="$(_get_real_time)"
 
-    while (($(_get_bytes) <= rx_1 && count++ < 500)); do
+    while (($(_get_bytes) <= rx_1 && count++ < 250)); do
         read -rst "0.05" -N 999
     done
 
@@ -329,13 +347,25 @@ get_network_upload()
                 read_file "${net_dir}/tx_bytes"
             }
         ;;
+
+        "FreeBSD")
+            _get_bytes()
+            {
+                unset delta
+                while [[ ! "${delta}" ]] && read -r _ _ _ _ _ _ _ _ _ tx _; do
+                    [[ "${tx}" =~ ^[0-9]+$ ]] && \
+                        delta="${tx}"
+                done < <(netstat -nbiI "${net_info[network_device]}")
+                printf "%s" "${delta}"
+            }
+        ;;
     esac
 
     count="0"
     tx_1="$(_get_bytes)"
     time_1="$(_get_real_time)"
 
-    while (($(_get_bytes) <= tx_1 && count++ < 500)); do
+    while (($(_get_bytes) <= tx_1 && count++ < 250)); do
         read -rst "0.05" -N 999
     done
 
