@@ -427,8 +427,8 @@ get_args()
                     str_format="$2"
 
                     tmp="${str_format}"
-                    regex_1='{([a-zA-Z]+)\?[^{]*{([a-zA-Z]+)}'
-                    regex_2='({)([a-zA-Z0-9_]+)'
+                    regex_1='\{([a-zA-Z]+)\?[^\{]*\{([a-zA-Z]+)}'
+                    regex_2='(\{)([a-zA-Z0-9_]+)'
 
                     # First pass
                     while [[ "${tmp}" =~ ${regex_1} ]]; do
