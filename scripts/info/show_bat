@@ -441,7 +441,7 @@ get_bat_is_charging()
                 "generic") file="${bat_dir}/status" ;;
             esac
 
-            if [[ "$(read_file "${file}")" =~ (C|c)harging ]]; then
+            if [[ "$(read_file "${file}")" =~ ^(C|c)harging ]]; then
                 bat_is_charging="true"
             else
                 bat_is_charging="false"
@@ -904,22 +904,22 @@ main()
             if [[ "${str_format}" ]]; then
                 out="${str_format}"
                 for function in "${func[@]}"; do
+                    token_match="\\{(${function})((\\?)([^\\{]*(\\{${function}\\})[^\\}]*))?\\}"
+
                     if [[ "${bat_info[${function}]}" ]]; then
-                        prev="${out}"
-                        out="${out/\{${function}\}/${bat_info[${function}]}}"
-
-                        [[ "${out}" == "${prev}" ]] && \
-                            out="${out/\{\}/${bat_info[${function}]}}"
-
-                        [[ "${str_format}" == *"${function}?"* ]] && {
-                            out="${out/\{${function}\?}"
-                            out="${out/'}'}"
-                        }
+                        [[ "${out}" =~ ${token_match} ]]
+                        if [[ "${BASH_REMATCH[2]}" ]]; then
+                            token="${BASH_REMATCH[0]}"
+                            token="${token/${BASH_REMATCH[5]}/${bat_info[${function}]}}"
+                            token="${token/\{${BASH_REMATCH[1]}\?}"
+                            token="${token%\}}"
+                            out="${out/${BASH_REMATCH[0]}/${token}}"
+                        else
+                            out="${out/${BASH_REMATCH[0]}/${bat_info[${function}]}}"
+                        fi
                     else
-                        out="${out//\{${function}}"
-                        out="${out#*\}}"
-                        [[ "${str_format}" == *"${function}?"* ]] && \
-                            out="${out#*\}}"
+                        [[ "${out}" =~ ${token_match} ]]
+                        out="${out/${BASH_REMATCH[0]}}"
                     fi
                 done
                 printf "%s" "${out}"

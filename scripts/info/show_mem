@@ -433,22 +433,22 @@ main()
             if [[ "${str_format}" ]]; then
                 out="${str_format}"
                 for function in "${func[@]}"; do
+                    token_match="\\{(${function})((\\?)([^\\{]*(\\{${function}\\})[^\\}]*))?\\}"
+
                     if [[ "${mem_info[${function}]}" ]]; then
-                        prev="${out}"
-                        out="${out/\{${function}\}/${mem_info[${function}]}}"
-
-                        [[ "${out}" == "${prev}" ]] && \
-                            out="${out/\{\}/${mem_info[${function}]}}"
-
-                        [[ "${str_format}" == *"${function}?"* ]] && {
-                            out="${out/\{${function}\?}"
-                            out="${out/'}'}"
-                        }
+                        [[ "${out}" =~ ${token_match} ]]
+                        if [[ "${BASH_REMATCH[2]}" ]]; then
+                            token="${BASH_REMATCH[0]}"
+                            token="${token/${BASH_REMATCH[5]}/${mem_info[${function}]}}"
+                            token="${token/\{${BASH_REMATCH[1]}\?}"
+                            token="${token%\}}"
+                            out="${out/${BASH_REMATCH[0]}/${token}}"
+                        else
+                            out="${out/${BASH_REMATCH[0]}/${mem_info[${function}]}}"
+                        fi
                     else
-                        out="${out//\{${function}}"
-                        out="${out#*\}}"
-                        [[ "${str_format}" == *"${function}?"* ]] && \
-                            out="${out#*\}}"
+                        [[ "${out}" =~ ${token_match} ]]
+                        out="${out/${BASH_REMATCH[0]}}"
                     fi
                 done
                 printf "%s" "${out}"
