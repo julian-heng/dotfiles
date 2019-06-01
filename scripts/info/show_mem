@@ -433,7 +433,7 @@ main()
             if [[ "${str_format}" ]]; then
                 out="${str_format}"
                 for function in "${func[@]}"; do
-                    token_match="\\{(${function})((\\?)([^\\{]*(\\{${function}\\})[^\\}]*))?\\}"
+                    token_match="\\{(${function})((\\?)([^\\{]*(\\{(${function})?\\})[^\\}]*))?\\}"
 
                     if [[ "${mem_info[${function}]}" ]]; then
                         [[ "${out}" =~ ${token_match} ]]
