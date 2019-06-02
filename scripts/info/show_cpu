@@ -271,12 +271,9 @@ get_temp()
             # of the executable
             exe="/usr/local/bin/osx-cpu-temp"
             has "${exe}" && {
-                while read -r line; do
-                    [[ "${line}" =~ 'CPU' ]] && \
-                        temp="${line#*:}"
-                done < <("${exe}" -f -c)
-
-                temp="$(round "1" "${temp/' °C'}")"
+                regex='CPU: (([0-9]+\.)?[0-9]+)'
+                [[ "$("${exe}" -f -c)" =~ ${regex} ]]
+                temp="$(round "1" "${BASH_REMATCH[1]/' °C'}")"
             }
         ;;
 
@@ -304,13 +301,9 @@ get_fan()
             # of the executable
             exe="/usr/local/bin/osx-cpu-temp"
             has "${exe}" && {
-                while read -r line; do
-                    [[ "${line}" =~ 'Fan '[0-9] ]] && \
-                        fan="${line/'Fan '}"
-                done < <("${exe}" -f -c)
-
-                fan="${fan/*at }"
-                fan="${fan/ RPM*}"
+                regex='([0-9]+) RPM'
+                [[ "$("${exe}" -f -c)" =~ ${regex} ]]
+                fan="${BASH_REMATCH[1]}"
             }
         ;;
 
