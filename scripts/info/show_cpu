@@ -21,30 +21,6 @@ print_stdout()
 
 notify()
 {
-    # Sends a notification
-    title="${title_parts[*]}"
-    subtitle="${subtitle_parts[*]}"
-    message="${message_parts[*]}"
-
-    # Check to see if any leading or trailing separajjtors
-    [[ "${title:0:1}" == "|" ]] && \
-        title="${title##'| '}"
-
-    [[ "${title:(-1):1}" == "|" ]] && \
-        title="${title%%' |'}"
-
-    [[ "${subtitle:0:1}" == "|" ]] && \
-        subtitle="${subtitle##'| '}"
-
-    [[ "${subtitle:(-1):1}" == "|" ]] && \
-        subtitle="${subtitle%%' |'}"
-
-    [[ "${message:0:1}" == "|" ]] && \
-        message="${message##'| '}"
-
-    [[ "${message:(-1):1}" == "|" ]] && \
-        message="${message%%' |'}"
-
     # Check if we're printing to stdout or a notification program
     if [[ "${out}" == "stdout" ]]; then
         print_stdout
@@ -119,6 +95,55 @@ round()
         printf "%.*f" "$1" "$2"
 }
 
+_get_function_from_string()
+{
+    declare -A uniq
+    local regex='(\{)([a-zA-Z_]+)'
+    local str="$1"
+    local -a func
+
+    while [[ "${str}" =~ ${regex} ]]; do
+        [[ ! "${uniq[${BASH_REMATCH[2]}]}" ]] && {
+            uniq[${BASH_REMATCH[2]}]="1"
+            func+=("${BASH_REMATCH[2]}")
+        }
+        str="${str/${BASH_REMATCH[2]}}"
+    done
+
+    printf "%s\\n" "${func[@]}"
+}
+
+make_string()
+{
+    local str="$1"
+    local out="${str}"
+    local -a func
+
+    mapfile -t func < <(_get_function_from_string "${str}")
+
+    for function in "${func[@]}"; do
+        token_match="\\{(${function})((\\?)([^\\{]*(\\{(${function})?\\})[^\\}]*))?\\}"
+
+        if [[ "${cpu_info[${function}]}" ]]; then
+            [[ "${out}" =~ ${token_match} ]]
+            if [[ "${BASH_REMATCH[2]}" ]]; then
+                token="${BASH_REMATCH[0]}"
+                token="${token/${BASH_REMATCH[5]}/${cpu_info[${function}]}}"
+                token="${token/\{${BASH_REMATCH[1]}\?}"
+                token="${token%\}}"
+                out="${out/${BASH_REMATCH[0]}/${token}}"
+            else
+                out="${out/${BASH_REMATCH[0]}/${cpu_info[${function}]}}"
+            fi
+        else
+            [[ "${out}" =~ ${token_match} ]]
+            out="${out/${BASH_REMATCH[0]}}"
+        fi
+    done
+
+    printf "%s" "${out}"
+}
+
 get_os()
 {
     # Determine os on machine
@@ -149,7 +174,7 @@ get_cores()
             done < /proc/cpuinfo
         ;;
     esac
-    cpu_info["cores"]="${cores}"
+    cpu_info[cores]="${cores}"
 }
 
 get_cpu()
@@ -201,7 +226,7 @@ get_cpu()
     fi
 
     cpu="$(trim "${cpu}")"
-    cpu_info["cpu"]="${cpu}"
+    cpu_info[cpu]="${cpu}"
 }
 
 get_load()
@@ -218,7 +243,7 @@ get_load()
     esac
 
     load_avg="$a $b $c"
-    cpu_info["load"]="${load_avg}"
+    cpu_info[load]="${load_avg}"
 }
 
 get_cpu_usage()
@@ -234,7 +259,7 @@ EOF
     cpu_usage="$(awk -v cores="${cores:-1}" \
                      -v sum="0" "${awk_script}" <(ps aux))"
     cpu_usage="$(round "1" "${cpu_usage}")"
-    cpu_info["cpu_usage"]="${cpu_usage}%"
+    cpu_info[cpu_usage]="${cpu_usage}%"
 }
 
 get_temp()
@@ -268,7 +293,7 @@ get_temp()
                 temp="$(($(read_file "${temp_file}") / 1000))"
         ;;
     esac
-    [[ "${temp}" ]] && cpu_info["temp"]="${temp}°C"
+    [[ "${temp}" ]] && cpu_info[temp]="${temp}°C"
 }
 
 get_fan()
@@ -303,7 +328,7 @@ get_fan()
             shopt -u nullglob
         ;;
     esac
-    [[ "${fan}" ]] && cpu_info["fan"]="${fan} RPM"
+    [[ "${fan}" ]] && cpu_info[fan]="${fan} RPM"
 }
 
 get_uptime()
@@ -332,7 +357,7 @@ get_uptime()
     ((mins == 0)) && unset mins
 
     uptime="${days:+${days}d }${hours:+${hours}h }${mins:+${mins}m }${secs}s"
-    cpu_info["uptime"]="${uptime}"
+    cpu_info[uptime]="${uptime}"
 }
 
 print_usage()
@@ -395,17 +420,14 @@ get_args()
             "-r"|"--raw") : "${out:=raw}" ;;
             "-f"|"--format")
                 [[ "$2" ]] && {
-                    declare -A uniq
-
                     : "${out:=string}"
                     str_format="$2"
 
                     tmp="${str_format}"
-                    regex_1='\{([a-zA-Z_]+)\?[^\{]*\{([a-zA-Z_]+)}'
-                    regex_2='(\{)([a-zA-Z_]+)'
+                    regex='\{([a-zA-Z_]+)\?[^\{]*\{([a-zA-Z_]+)}'
 
-                    # First pass
-                    while [[ "${tmp}" =~ ${regex_1} ]]; do
+                    # String validation
+                    while [[ "${tmp}" =~ ${regex} ]]; do
                         tmp="${tmp/${BASH_REMATCH[0]}}"
                         [[ "${BASH_REMATCH[1]}" != "${BASH_REMATCH[2]}" ]] && {
                             printf "Invalid format: %s != %s\\n" \
@@ -415,17 +437,7 @@ get_args()
                         }
                     done
 
-                    tmp="${str_format}"
-
-                    # Second pass
-                    while [[ "${tmp}" =~ ${regex_2} ]]; do
-                        [[ ! "${uniq[${BASH_REMATCH[2]}]}" ]] && {
-                            uniq["${BASH_REMATCH[2]}"]="1"
-                            func+=("${BASH_REMATCH[2]}")
-                        }
-                        tmp="${tmp/${BASH_REMATCH[2]}}"
-                    done
-
+                    mapfile -t func < <(_get_function_from_string "${str_format}")
                     shift
                 }
             ;;
@@ -501,27 +513,7 @@ main()
         "string")
             # Print in a formated string form
             if [[ "${str_format}" ]]; then
-                out="${str_format}"
-                for function in "${func[@]}"; do
-                    token_match="\\{(${function})((\\?)([^\\{]*(\\{(${function})?\\})[^\\}]*))?\\}"
-
-                    if [[ "${cpu_info[${function}]}" ]]; then
-                        [[ "${out}" =~ ${token_match} ]]
-                        if [[ "${BASH_REMATCH[2]}" ]]; then
-                            token="${BASH_REMATCH[0]}"
-                            token="${token/${BASH_REMATCH[5]}/${cpu_info[${function}]}}"
-                            token="${token/\{${BASH_REMATCH[1]}\?}"
-                            token="${token%\}}"
-                            out="${out/${BASH_REMATCH[0]}/${token}}"
-                        else
-                            out="${out/${BASH_REMATCH[0]}/${cpu_info[${function}]}}"
-                        fi
-                    else
-                        [[ "${out}" =~ ${token_match} ]]
-                        out="${out/${BASH_REMATCH[0]}}"
-                    fi
-                done
-                printf "%s" "${out}"
+                printf "%s" "$(make_string "${str_format}")"
             else
                 for function in "${func[@]}"; do
                     printf "%s\\n" "${cpu_info[${function}]}"
@@ -530,20 +522,13 @@ main()
         ;;
 
         *)
-            # Print standard
-            title_parts+=("${cpu_info["cpu"]:-CPU}")
+            title_fmt="{cpu}"
+            subtitle_fmt="{load}{cpu_usage? | {}}{temp? | {}}{fan? | {}}"
+            message_fmt="Uptime: {uptime}"
 
-            [[ "${cpu_info["load"]}" ]] && \
-                subtitle_parts+=("Load avg:" "${cpu_info["load"]}")
-            [[ "${cpu_info["cpu_usage"]}" ]] && \
-                subtitle_parts+=("|" "${cpu_info["cpu_usage"]}")
-            [[ "${cpu_info["temp"]}" ]] && \
-                subtitle_parts+=("|" "${cpu_info["temp"]}")
-            [[ "${cpu_info["fan"]}" ]] && \
-                subtitle_parts+=("|" "${cpu_info["fan"]}")
-
-            [[ "${cpu_info["uptime"]}" ]] && \
-                message_parts+=("Uptime:" "${cpu_info["uptime"]}")
+            title="$(make_string "${title_fmt}")"
+            subtitle="$(make_string "${subtitle_fmt}")"
+            message="$(make_string "${message_fmt}")"
 
             notify
         ;;
