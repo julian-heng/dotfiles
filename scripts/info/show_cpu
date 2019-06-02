@@ -21,6 +21,21 @@ print_stdout()
 
 notify()
 {
+    [[ "${title}" =~ (^(\| ))|(( \|)$) ]] && {
+        title="${title##'| '}"
+        title="${title%%' |'}"
+    }
+
+    [[ "${subtitle}" =~ (^(\| ))|(( \|)$) ]] && {
+        subtitle="${subtitle##'| '}"
+        subtitle="${subtitle%%' |'}"
+    }
+
+    [[ "${message}" =~ (^(\| ))|(( \|)$) ]] && {
+        message="${message##'| '}"
+        message="${message%%' |'}"
+    }
+
     # Check if we're printing to stdout or a notification program
     if [[ "${out}" == "stdout" ]]; then
         print_stdout
@@ -516,7 +531,7 @@ main()
 
         *)
             title_fmt="{cpu}"
-            subtitle_fmt="{load}{cpu_usage? | {}}{temp? | {}}{fan? | {}}"
+            subtitle_fmt="{load?{} | }{cpu_usage?{} | }{temp?{} | }{fan}"
             message_fmt="Uptime: {uptime}"
 
             title="$(make_string "${title_fmt}")"

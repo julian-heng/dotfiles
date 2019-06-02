@@ -19,6 +19,21 @@ print_stdout()
 
 notify()
 {
+    [[ "${title}" =~ (^(\| ))|(( \|)$) ]] && {
+        title="${title##'| '}"
+        title="${title%%' |'}"
+    }
+
+    [[ "${subtitle}" =~ (^(\| ))|(( \|)$) ]] && {
+        subtitle="${subtitle##'| '}"
+        subtitle="${subtitle%%' |'}"
+    }
+
+    [[ "${message}" =~ (^(\| ))|(( \|)$) ]] && {
+        message="${message##'| '}"
+        message="${message%%' |'}"
+    }
+
     if [[ "${out}" == "stdout" ]]; then
         print_stdout
     else
@@ -549,8 +564,8 @@ main()
 
         *)
             title_fmt="{disk_mount? ({})}"
-            subtitle_fmt="{disk_used}{disk_total? | {}}{disk_percent? ({})}"
-            message_fmt="{disk_device}{disk_partition? | {}}"
+            subtitle_fmt="{disk_used?{} | }{disk_total?{} | }{disk_percent?({})}"
+            message_fmt="{disk_device?{} | }{disk_partition}"
 
             title="${disk_info["disk_name"]:-Disk}$(make_string "${title_fmt}")"
             subtitle="$(make_string "${subtitle_fmt}")"

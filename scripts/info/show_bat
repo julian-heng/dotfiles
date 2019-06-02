@@ -19,6 +19,21 @@ print_stdout()
 
 notify()
 {
+    [[ "${title}" =~ (^(\| ))|(( \|)$) ]] && {
+        title="${title##'| '}"
+        title="${title%%' |'}"
+    }
+
+    [[ "${subtitle}" =~ (^(\| ))|(( \|)$) ]] && {
+        subtitle="${subtitle##'| '}"
+        subtitle="${subtitle%%' |'}"
+    }
+
+    [[ "${message}" =~ (^(\| ))|(( \|)$) ]] && {
+        message="${message##'| '}"
+        message="${message%%' |'}"
+    }
+
     if [[ "${out}" == "stdout" ]]; then
         print_stdout
     else
@@ -916,7 +931,7 @@ main()
 
         *)
             title_fmt="Battery ({bat_percent})"
-            subtitle_fmt="{bat_time}{bat_condition? | Condition: {}}{bat_temp? | {}}{bat_cycles? | {}}"
+            subtitle_fmt="{bat_time?{} | }{bat_condition?Condition: {} | }{bat_temp?{} | }{bat_cycles}"
             message_fmt="{bat_current? | {}}{bat_power? | {}}"
 
             title="$(make_string "${title_fmt}")"

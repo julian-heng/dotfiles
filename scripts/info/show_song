@@ -19,6 +19,21 @@ print_stdout()
 
 notify()
 {
+    [[ "${title}" =~ (^(\| ))|(( \|)$) ]] && {
+        title="${title##'| '}"
+        title="${title%%' |'}"
+    }
+
+    [[ "${subtitle}" =~ (^(\| ))|(( \|)$) ]] && {
+        subtitle="${subtitle##'| '}"
+        subtitle="${subtitle%%' |'}"
+    }
+
+    [[ "${message}" =~ (^(\| ))|(( \|)$) ]] && {
+        message="${message##'| '}"
+        message="${message%%' |'}"
+    }
+
     if [[ "${out}" == "stdout" ]]; then
         print_stdout
     else
@@ -59,7 +74,7 @@ _get_function_from_string()
 
     while [[ "${str}" =~ ${regex} ]]; do
         [[ ! "${uniq[${BASH_REMATCH[2]}]}" ]] && {
-            uniq["${BASH_REMATCH[2]}"]="1"
+            uniq[${BASH_REMATCH[2]}]="1"
             func+=("${BASH_REMATCH[2]}")
         }
         str="${str/${BASH_REMATCH[2]}}"
@@ -126,7 +141,7 @@ get_app()
         app="none"
     fi
 
-    song_info["app"]="${app}"
+    song_info[app]="${app}"
 }
 
 get_app_state()
@@ -153,7 +168,7 @@ get_app_state()
         "none") app_state="none" ;;
     esac
 
-    song_info["app_state"]="${app_state}"
+    song_info[app_state]="${app_state}"
 }
 
 get_track()
@@ -184,7 +199,7 @@ get_track()
         ;;
     esac
 
-    song_info["track"]="${track}"
+    song_info[track]="${track}"
 }
 
 get_artist()
@@ -215,7 +230,7 @@ get_artist()
         ;;
     esac
 
-    song_info["artist"]="${artist}"
+    song_info[artist]="${artist}"
 }
 
 get_album()
@@ -246,7 +261,7 @@ get_album()
         ;;
     esac
 
-    song_info["album"]="${album}"
+    song_info[album]="${album}"
 }
 
 print_usage()
@@ -404,7 +419,7 @@ main()
                 subtitle="${song_info[track]}"
             fi
 
-            message="${song_info[album]:+${song_info[album]}}"
+            message="${message:-${song_info[album]:+${song_info[album]}}}"
 
             notify
     esac

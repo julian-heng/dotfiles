@@ -19,6 +19,21 @@ print_stdout()
 
 notify()
 {
+    [[ "${title}" =~ (^(\| ))|(( \|)$) ]] && {
+        title="${title##'| '}"
+        title="${title%%' |'}"
+    }
+
+    [[ "${subtitle}" =~ (^(\| ))|(( \|)$) ]] && {
+        subtitle="${subtitle##'| '}"
+        subtitle="${subtitle%%' |'}"
+    }
+
+    [[ "${message}" =~ (^(\| ))|(( \|)$) ]] && {
+        message="${message##'| '}"
+        message="${message%%' |'}"
+    }
+
     if [[ "${out}" == "stdout" ]]; then
         print_stdout
     else
@@ -455,8 +470,8 @@ main()
 
         *)
             title_fmt="Memory{mem_percent? ({})}"
-            subtitle_fmt="{mem_used}{mem_total? | {}}"
-            message_fmt="{swap_used}{swap_total? | {}}"
+            subtitle_fmt="{mem_used?{} | }{mem_total}"
+            message_fmt="{swap_used?{} | }{swap_total}"
 
             title="$(make_string "${title_fmt}")"
             subtitle="$(make_string "${subtitle_fmt}")"

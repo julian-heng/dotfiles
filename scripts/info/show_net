@@ -19,6 +19,21 @@ print_stdout()
 
 notify()
 {
+    [[ "${title}" =~ (^(\| ))|(( \|)$) ]] && {
+        title="${title##'| '}"
+        title="${title%%' |'}"
+    }
+
+    [[ "${subtitle}" =~ (^(\| ))|(( \|)$) ]] && {
+        subtitle="${subtitle##'| '}"
+        subtitle="${subtitle%%' |'}"
+    }
+
+    [[ "${message}" =~ (^(\| ))|(( \|)$) ]] && {
+        message="${message##'| '}"
+        message="${message%%' |'}"
+    }
+
     if [[ "${out}" == "stdout" ]]; then
         print_stdout
     else
@@ -535,7 +550,7 @@ main()
 
         *)
             title_fmt="{network_device? ({})}"
-            subtitle_fmt="{network_download?Down: {}}{network_upload? | Up: {}}"
+            subtitle_fmt="{network_download?Down: {} | }{network_upload?Up: {}}"
             message_fmt="{network_local_ip?Local IP: {}}"
 
             title="${net_info[network_ssid]:-Network}$(make_string "${title_fmt}")"
