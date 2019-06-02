@@ -916,7 +916,7 @@ main()
 
         "string")
             if [[ "${str_format}" ]]; then
-                printf "%s" "$(make_str "${str_format}")"
+                printf "%s" "$(make_string "${str_format}")"
             else
                 for function in "${func[@]}"; do
                     printf "%s\\n" "${bat_info[${function}]}"
