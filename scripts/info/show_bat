@@ -208,10 +208,9 @@ _get_bat_capacity_max()
             [[ ! "${bat_out[*]}" ]] && \
                 get_prog_out
 
-            while [[ ! "${bat_capacity_max}" ]] && IFS='="' read -r _ a _ b; do
-                [[ "$a" == "MaxCapacity" ]] && \
-                    bat_capacity_max="$(trim "$b")"
-            done < <(printf "%s\\n" "${bat_out[@]}")
+            regex='"(MaxCapacity)" = ([0-9]+)'
+            [[ "${bat_out[*]}" =~ ${regex} ]]
+            bat_capacity_max="${BASH_REMATCH[2]}"
         ;;
 
         "Linux")
@@ -257,10 +256,9 @@ _get_bat_capacity_now()
             [[ ! "${bat_out[*]}" ]] && \
                 get_prog_out
 
-            while [[ ! "${bat_capacity_now}" ]] && IFS='="' read -r _ a _ b; do
-                [[ "$a" == "CurrentCapacity" ]] && \
-                    bat_capacity_now="$(trim "$b")"
-            done < <(printf "%s\\n" "${bat_out[@]}")
+            regex='"(CurrentCapacity)" = ([0-9]+)'
+            [[ "${bat_out[*]}" =~ ${regex} ]]
+            bat_capacity_now="${BASH_REMATCH[2]}"
         ;;
 
         "Linux")
@@ -306,10 +304,9 @@ _get_bat_capacity_design()
             [[ ! "${bat_out[*]}" ]] && \
                 get_prog_out
 
-            while [[ ! "${bat_capacity_design}" ]] && IFS='="' read -r _ a _ b; do
-                [[ "$a" == "DesignCapacity" ]] && \
-                    bat_capacity_design="$(trim "$b")"
-            done < <(printf "%s\\n" "${bat_out[@]}")
+            regex='"(DesignCapacity)" = ([0-9]+)'
+            [[ "${bat_out[*]}" =~ ${regex} ]]
+            bat_capacity_design="${BASH_REMATCH[2]}"
         ;;
 
         "Linux")
@@ -370,10 +367,9 @@ get_bat_current()
             [[ ! "${bat_out[*]}" ]] && \
                 get_prog_out
 
-            while [[ ! "${bat_current}" ]] && IFS='="' read -r _ a _ b; do
-                [[ "$a" == "InstantAmperage" ]] && \
-                    bat_current="$(trim "$b")"
-            done < <(printf "%s\\n" "${bat_out[@]}")
+            regex='"(InstantAmperage)" = ([0-9]+)'
+            [[ "${bat_out[*]}" =~ ${regex} ]]
+            bat_current="${BASH_REMATCH[2]}"
 
             ((${#bat_current} >= 20)) && \
                 bat_current="$(bc <<< "${bat_current} - (2 ^ 64)")"
@@ -422,10 +418,9 @@ get_bat_cycles()
             [[ ! "${bat_out[*]}" ]] && \
                 get_prog_out
 
-            while [[ ! "${bat_cycles}" ]] && IFS='="' read -r _ a _ b; do
-                [[ "$a" == "CycleCount" ]] && \
-                    bat_cycles="$(trim "$b")"
-            done < <(printf "%s\\n" "${bat_out[@]}")
+            regex='"(CycleCount)" = ([0-9]+)'
+            [[ "${bat_out[*]}" =~ ${regex} ]]
+            bat_cycles="${BASH_REMATCH[2]}"
         ;;
 
         "Linux")
@@ -449,14 +444,12 @@ get_bat_is_charging()
             [[ ! "${bat_out[*]}" ]] && \
                 get_prog_out
 
-            while [[ ! "${bat_is_charging}" ]] && IFS='="' read -r _ a _ b; do
-                [[ "$a" == "IsCharging" ]] && \
-                    if [[ "$(trim "$b")" == "Yes" ]]; then
-                        bat_is_charging="true"
-                    else
-                        bat_is_charging="false"
-                    fi
-            done < <(printf "%s\\n" "${bat_out[@]}")
+            regex='"(IsCharging)" = ([a-zA-Z]+)'
+            [[ "${bat_out[*]}" =~ ${regex} ]]
+            case "${BASH_REMATCH[2]}" in
+                "Yes") bat_is_charging="true" ;;
+                *) bat_is_charging="false" ;;
+            esac
         ;;
 
         "Linux")
@@ -489,14 +482,12 @@ get_bat_is_full()
             [[ ! "${bat_out[*]}" ]] && \
                 get_prog_out
 
-            while [[ ! "${bat_is_full}" ]] && IFS='="' read -r _ a _ b; do
-                [[ "$a" == "FullyCharged" ]] && \
-                    if [[ "$(trim "$b")" == "Yes" ]]; then
-                        bat_is_full="true"
-                    else
-                        bat_is_full="false"
-                    fi
-            done < <(printf "%s\\n" "${bat_out[@]}")
+            regex='"(FullyCharged)" = ([a-zA-Z]+)'
+            [[ "${bat_out[*]}" =~ ${regex} ]]
+            case "${BASH_REMATCH[2]}" in
+                "Yes") bat_is_full="true" ;;
+                *) bat_is_full="false" ;;
+            esac
         ;;
 
         "Linux")
@@ -546,10 +537,9 @@ get_bat_volt()
             [[ ! "${bat_out[*]}" ]] && \
                 get_prog_out
 
-            while [[ ! "${bat_volt}" ]] && IFS='="' read -r _ a _ b; do
-                [[ "$a" == "Voltage" ]] && \
-                    bat_volt="$(trim "$b")"
-            done < <(printf "%s\\n" "${bat_out[@]}")
+            regex='"(Voltage)" = ([0-9]+)'
+            [[ "${bat_out[*]}" =~ ${regex} ]]
+            bat_volt="${BASH_REMATCH[2]}"
         ;;
 
         "Linux")
