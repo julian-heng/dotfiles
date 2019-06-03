@@ -21,19 +21,19 @@ print_stdout()
 
 notify()
 {
-    [[ "${title}" =~ (^(\| ))|(( \|)$) ]] && {
-        title="${title##'| '}"
-        title="${title%%' |'}"
+    [[ "${title}" =~ (^( \| ))|(( \| )$) ]] && {
+        title="${title##' | '}"
+        title="${title%%' | '}"
     }
 
-    [[ "${subtitle}" =~ (^(\| ))|(( \|)$) ]] && {
-        subtitle="${subtitle##'| '}"
-        subtitle="${subtitle%%' |'}"
+    [[ "${subtitle}" =~ (^( \| ))|(( \| )$) ]] && {
+        subtitle="${subtitle##' | '}"
+        subtitle="${subtitle%%' | '}"
     }
 
-    [[ "${message}" =~ (^(\| ))|(( \|)$) ]] && {
-        message="${message##'| '}"
-        message="${message%%' |'}"
+    [[ "${message}" =~ (^( \| ))|(( \| )$) ]] && {
+        message="${message##' | '}"
+        message="${message%%' | '}"
     }
 
     # Check if we're printing to stdout or a notification program
@@ -317,6 +317,7 @@ get_temp()
 
         "FreeBSD")
             temp="$(sysctl -n dev.cpu.0.temperature 2> /dev/null)"
+            temp="${temp/'C'}"
         ;;
     esac
     [[ "${temp}" ]] && cpu_info[temp]="${temp}°C"

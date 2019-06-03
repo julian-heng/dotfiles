@@ -19,19 +19,19 @@ print_stdout()
 
 notify()
 {
-    [[ "${title}" =~ (^(\| ))|(( \|)$) ]] && {
-        title="${title##'| '}"
-        title="${title%%' |'}"
+    [[ "${title}" =~ (^( \| ))|(( \| )$) ]] && {
+        title="${title##' | '}"
+        title="${title%%' | '}"
     }
 
-    [[ "${subtitle}" =~ (^(\| ))|(( \|)$) ]] && {
-        subtitle="${subtitle##'| '}"
-        subtitle="${subtitle%%' |'}"
+    [[ "${subtitle}" =~ (^( \| ))|(( \| )$) ]] && {
+        subtitle="${subtitle##' | '}"
+        subtitle="${subtitle%%' | '}"
     }
 
-    [[ "${message}" =~ (^(\| ))|(( \|)$) ]] && {
-        message="${message##'| '}"
-        message="${message%%' |'}"
+    [[ "${message}" =~ (^( \| ))|(( \| )$) ]] && {
+        message="${message##' | '}"
+        message="${message%%' | '}"
     }
 
     if [[ "${out}" == "stdout" ]]; then
