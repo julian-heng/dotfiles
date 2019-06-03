@@ -344,7 +344,10 @@ get_disk_used()
     esac
 
     disk_used="$(round "${rounding:-2}" "$(div "${disk_used}" "$((1024 ** pow))")")"
-    disk_info[disk_used]="${disk_used/'.00'} ${prefix:-GiB}"
+    [[ "${disk_used}" =~ \.(0+)$ ]] && \
+        disk_used="${disk_used/.*}"
+
+    disk_info[disk_used]="${disk_used} ${prefix:-GiB}"
 }
 
 get_disk_total()
@@ -363,6 +366,9 @@ get_disk_total()
 
     disk_total="$(div "${disk_total}" "$((1024 ** pow))")"
     disk_total="$(round "${rounding:-2}" "${disk_total}")"
+    [[ "${disk_total}" =~ \.(0+)$ ]] && \
+        disk_total="${disk_total/.*}"
+
     disk_info[disk_total]="${disk_total/'.00'} ${prefix:-GiB}"
 }
 
@@ -378,6 +384,9 @@ get_disk_percent()
 
     disk_percent="$(percent "${disk_info[disk_used]/${prefix:-GiB}}" "${disk_info[disk_total]/${prefix:-GiB}}")"
     disk_percent="$(round "2" "${disk_percent}")"
+    [[ "${disk_percent}" =~ \.(0+)$ ]] && \
+        disk_percent="${disk_percent/.*}"
+
     disk_info[disk_percent]="${disk_percent}%"
 }
 

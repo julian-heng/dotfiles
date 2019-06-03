@@ -163,7 +163,10 @@ get_mem_percent()
 
     mem_percent="$(percent "${mem_info[mem_used]/${prefix:-MiB}}" "${mem_info[mem_total]/${prefix:-MiB}}")"
     mem_percent="$(round "2" "${mem_percent}")"
-    mem_info[mem_percent]="${mem_percent/'.00'}%"
+    [[ "${mem_percent}" =~ \.(0+)$ ]] && \
+        mem_percent="${mem_percent/.*}"
+
+    mem_info[mem_percent]="${mem_percent}%"
 }
 
 get_mem_used()
@@ -216,7 +219,10 @@ get_mem_used()
 
     mem_used="$(div "${mem_used}" "$((1024 ** pow))")"
     mem_used="$(round "${rounding:-0}" "${mem_used}")"
-    mem_info[mem_used]="${mem_used/'.00'} ${prefix:-MiB}"
+    [[ "${mem_used}" =~ \.(0+)$ ]] && \
+        mem_used="${mem_used/.*}"
+
+    mem_info[mem_used]="${mem_used} ${prefix:-MiB}"
 }
 
 get_mem_total()
@@ -251,7 +257,10 @@ get_mem_total()
 
     mem_total="$(div "${mem_total}" "$((1024 ** pow))")"
     mem_total="$(round "${rounding:-0}" "${mem_total}")"
-    mem_info[mem_total]="${mem_total/'.00'} ${prefix:-MiB}"
+    [[ "${mem_total}" =~ \.(0+)$ ]] && \
+        mem_total="${mem_total/.*}"
+
+    mem_info[mem_total]="${mem_total} ${prefix:-MiB}"
 }
 
 get_swap_percent()
@@ -266,7 +275,10 @@ get_swap_percent()
 
     swap_percent="$(percent "${mem_info[swap_used]/${prefix:-MiB}}" "${mem_info[swap_total]/${prefix:-MiB}}")"
     swap_percent="$(round "2" "${swap_percent}")"
-    mem_info[swap_percent]="${swap_percent/'.00'}%"
+    [[ "${swap_percent}" =~ \.(0+)$ ]] && \
+        swap_percent="${swap_percent/.*}"
+
+    mem_info[swap_percent]="${swap_percent}%"
 }
 
 get_swap_used()
@@ -310,7 +322,10 @@ get_swap_used()
 
     swap_used="$(div "${swap_used}" "$((1024 ** pow))")"
     swap_used="$(round "${rounding:-0}" "${swap_used}")"
-    mem_info[swap_used]="${swap_used/'.00'} ${prefix:-MiB}"
+    [[ "${swap_used}" =~ \.(0+)$ ]] && \
+        swap_used="${swap_used/.*}"
+
+    mem_info[swap_used]="${swap_used} ${prefix:-MiB}"
 }
 
 get_swap_total()
@@ -346,7 +361,10 @@ get_swap_total()
 
     swap_total="$(div "${swap_total}" "$((1024 ** pow))")"
     swap_total="$(round "${rounding:-0}" "${swap_total}")"
-    mem_info[swap_total]="${swap_total/'.00'} ${prefix:-MiB}"
+    [[ "${swap_total}" =~ \.(0+)$ ]] && \
+        swap_total="${swap_total/.*}"
+
+    mem_info[swap_total]="${swap_total} ${prefix:-MiB}"
 }
 
 print_usage()
