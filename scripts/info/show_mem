@@ -19,27 +19,20 @@ print_stdout()
 
 notify()
 {
-    title="${title_parts[*]}"
-    subtitle="${subtitle_parts[*]}"
-    message="${message_parts[*]}"
-
-    [[ "${title:0:1}" == "|" ]] && \
+    [[ "${title}" =~ (^(\| ))|(( \|)$) ]] && {
         title="${title##'| '}"
-
-    [[ "${title:(-1):1}" == "|" ]] && \
         title="${title%%' |'}"
+    }
 
-    [[ "${subtitle:0:1}" == "|" ]] && \
+    [[ "${subtitle}" =~ (^(\| ))|(( \|)$) ]] && {
         subtitle="${subtitle##'| '}"
-
-    [[ "${subtitle:(-1):1}" == "|" ]] && \
         subtitle="${subtitle%%' |'}"
+    }
 
-    [[ "${message:0:1}" == "|" ]] && \
+    [[ "${message}" =~ (^(\| ))|(( \|)$) ]] && {
         message="${message##'| '}"
-
-    [[ "${message:(-1):1}" == "|" ]] && \
         message="${message%%' |'}"
+    }
 
     if [[ "${out}" == "stdout" ]]; then
         print_stdout
@@ -98,6 +91,55 @@ round()
 {
     [[ "$1" && "$2" ]] && \
         printf "%.*f" "$1" "$2"
+}
+
+_get_function_from_string()
+{
+    declare -A uniq
+    local regex='(\{)([a-zA-Z_]+)'
+    local str="$1"
+    local -a func
+
+    while [[ "${str}" =~ ${regex} ]]; do
+        [[ ! "${uniq[${BASH_REMATCH[2]}]}" ]] && {
+            uniq[${BASH_REMATCH[2]}]="1"
+            func+=("${BASH_REMATCH[2]}")
+        }
+        str="${str/${BASH_REMATCH[2]}}"
+    done
+
+    printf "%s\\n" "${func[@]}"
+}
+
+make_string()
+{
+    local str="$1"
+    local out="${str}"
+    local -a func
+
+    mapfile -t func < <(_get_function_from_string "${str}")
+
+    for function in "${func[@]}"; do
+        token_match="\\{(${function})((\\?)([^\\{]*(\\{(${function})?\\})[^\\}]*))?\\}"
+
+        if [[ "${mem_info[${function}]}" ]]; then
+            [[ "${out}" =~ ${token_match} ]]
+            if [[ "${BASH_REMATCH[2]}" ]]; then
+                token="${BASH_REMATCH[0]}"
+                token="${token/${BASH_REMATCH[5]}/${mem_info[${function}]}}"
+                token="${token/\{${BASH_REMATCH[1]}\?}"
+                token="${token%\}}"
+                out="${out/${BASH_REMATCH[0]}/${token}}"
+            else
+                out="${out/${BASH_REMATCH[0]}/${mem_info[${function}]}}"
+            fi
+        else
+            [[ "${out}" =~ ${token_match} ]]
+            out="${out/${BASH_REMATCH[0]}}"
+        fi
+    done
+
+    printf "%s" "${out}"
 }
 
 get_os()
@@ -174,7 +216,7 @@ get_mem_used()
 
     mem_used="$(div "${mem_used}" "$((1024 ** pow))")"
     mem_used="$(round "${rounding:-0}" "${mem_used}")"
-    mem_info["mem_used"]="${mem_used/'.00'} ${prefix:-MiB}"
+    mem_info[mem_used]="${mem_used/'.00'} ${prefix:-MiB}"
 }
 
 get_mem_total()
@@ -209,7 +251,7 @@ get_mem_total()
 
     mem_total="$(div "${mem_total}" "$((1024 ** pow))")"
     mem_total="$(round "${rounding:-0}" "${mem_total}")"
-    mem_info["mem_total"]="${mem_total/'.00'} ${prefix:-MiB}"
+    mem_info[mem_total]="${mem_total/'.00'} ${prefix:-MiB}"
 }
 
 get_swap_percent()
@@ -268,7 +310,7 @@ get_swap_used()
 
     swap_used="$(div "${swap_used}" "$((1024 ** pow))")"
     swap_used="$(round "${rounding:-0}" "${swap_used}")"
-    mem_info["swap_used"]="${swap_used/'.00'} ${prefix:-MiB}"
+    mem_info[swap_used]="${swap_used/'.00'} ${prefix:-MiB}"
 }
 
 get_swap_total()
@@ -304,7 +346,7 @@ get_swap_total()
 
     swap_total="$(div "${swap_total}" "$((1024 ** pow))")"
     swap_total="$(round "${rounding:-0}" "${swap_total}")"
-    mem_info["swap_total"]="${swap_total/'.00'} ${prefix:-MiB}"
+    mem_info[swap_total]="${swap_total/'.00'} ${prefix:-MiB}"
 }
 
 print_usage()
@@ -368,17 +410,14 @@ get_args()
             "-r"|"--raw") : "${out:=raw}" ;;
             "-f"|"--format")
                 [[ "$2" ]] && {
-                    declare -A uniq
-
                     : "${out:=string}"
                     str_format="$2"
 
                     tmp="${str_format}"
-                    regex_1='{([a-zA-Z]+)\?[^{]*{([a-zA-Z]+)}'
-                    regex_2='({)([a-zA-Z0-9_]+)'
+                    regex='\{([a-zA-Z_]+)\?[^\{]*\{([a-zA-Z_]+)}'
 
-                    # First pass
-                    while [[ "${tmp}" =~ ${regex_1} ]]; do
+                    # String validation
+                    while [[ "${tmp}" =~ ${regex} ]]; do
                         tmp="${tmp/${BASH_REMATCH[0]}}"
                         [[ "${BASH_REMATCH[1]}" != "${BASH_REMATCH[2]}" ]] && {
                             printf "Invalid format: %s != %s\\n" \
@@ -388,17 +427,7 @@ get_args()
                         }
                     done
 
-                    tmp="${str_format}"
-
-                    # Second pass
-                    while [[ "${tmp}" =~ ${regex_2} ]]; do
-                        [[ ! "${uniq[${BASH_REMATCH[2]}]}" ]] && {
-                            uniq["${BASH_REMATCH[2]}"]="1"
-                            func+=("${BASH_REMATCH[2]}")
-                        }
-                        tmp="${tmp/${BASH_REMATCH[2]}}"
-                    done
-
+                    mapfile -t func < <(_get_function_from_string "${str_format}")
                     shift
                 }
             ;;
@@ -461,27 +490,7 @@ main()
 
         "string")
             if [[ "${str_format}" ]]; then
-                out="${str_format}"
-                for function in "${func[@]}"; do
-                    if [[ "${mem_info[${function}]}" ]]; then
-                        prev="${out}"
-                        out="${out/\{${function}\}/${mem_info[${function}]}}"
-
-                        [[ "${out}" == "${prev}" ]] && \
-                            out="${out/\{\}/${mem_info[${function}]}}"
-
-                        [[ "${str_format}" == *"${function}?"* ]] && {
-                            out="${out/\{${function}\?}"
-                            out="${out/'}'}"
-                        }
-                    else
-                        out="${out//\{${function}}"
-                        out="${out#*\}}"
-                        [[ "${str_format}" == *"${function}?"* ]] && \
-                            out="${out#*\}}"
-                    fi
-                done
-                printf "%s" "${out}"
+                printf "%s" "$(make_string "${str_format}")"
             else
                 for function in "${func[@]}"; do
                     printf "%s\\n" "${mem_info[${function}]}"
@@ -490,19 +499,13 @@ main()
         ;;
 
         *)
-            title_parts=("Memory")
-            [[ "${mem_info["mem_percent"]}" ]] && \
-                title_parts+=("(${mem_info["mem_percent"]})")
+            title_fmt="Memory{mem_percent? ({})}"
+            subtitle_fmt="{mem_used?{} | }{mem_total}"
+            message_fmt="{swap_used?{} | }{swap_total}"
 
-            [[ "${mem_info["mem_used"]}" ]] && \
-                subtitle_parts+=("${mem_info["mem_used"]}")
-            [[ "${mem_info["mem_total"]}" ]] && \
-                subtitle_parts+=("|" "${mem_info["mem_total"]}")
-
-            [[ "${mem_info["swap_used"]}" ]] && \
-                message_parts+=("Swap:" "${mem_info["swap_used"]}")
-            [[ "${mem_info["swap_total"]}" ]] && \
-                message_parts+=("|" "${mem_info["swap_total"]}")
+            title="$(make_string "${title_fmt}")"
+            subtitle="$(make_string "${subtitle_fmt}")"
+            message="$(make_string "${message_fmt}")"
 
             notify
         ;;
