@@ -158,13 +158,9 @@ make_string()
 get_os()
 {
     case "${OSTYPE:-$(uname -s)}" in
-        "Darwin"|"darwin"*)
-            os="MacOS"
-        ;;
-
-        "Linux"|"linux"*)
-            os="Linux"
-        ;;
+        "Darwin"|"darwin"*) os="MacOS" ;;
+        "Linux"|"linux"*) os="Linux" ;;
+        "FreeBSD"|"freebsd"*) os="FreeBSD" ;;
     esac
 }
 
@@ -210,6 +206,8 @@ get_prog_out()
                 exit 1
             }
         ;;
+
+        "FreeBSD") mapfile -t bat_out < <(acpiconf -i 0) ;;
     esac
 }
 
@@ -256,6 +254,17 @@ _get_bat_capacity_max()
                 bat_capacity_max="$(div "${bat_capacity_max}" "1000")"
                 bat_capacity_max="$(round "0" "${bat_capacity_max}")"
             fi
+        ;;
+
+        "FreeBSD")
+            [[ ! "${bat_out[*]}" ]] && \
+                get_prog_out
+
+            while [[ ! "${bat_capacity_max}" ]] && IFS=":" read -r a b; do
+                [[ "$a" =~ 'Last full capacity' ]] && \
+                    bat_capacity_max="$(trim "${b/ *}")"
+            done < <(printf "%s\\n" "${bat_out[@]}")
+        ;;
     esac
 
     bat_info[bat_capacity_max]="${bat_capacity_max}"
@@ -304,6 +313,12 @@ _get_bat_capacity_now()
                 bat_capacity_now="$(div "${bat_capacity_now}" "1000")"
                 bat_capacity_now="$(round "0" "${bat_capacity_now}")"
             fi
+        ;;
+
+        "FreeBSD")
+            # Not sure where to find the current battery capacity
+            # So it will be a stub
+        ;;
     esac
 
     bat_info[bat_capacity_now]="${bat_capacity_now}"
@@ -352,6 +367,17 @@ _get_bat_capacity_design()
                 bat_capacity_design="$(div "${bat_capacity_design}" "1000")"
                 bat_capacity_design="$(round "0" "${bat_capacity_design}")"
             fi
+        ;;
+
+        "FreeBSD")
+            [[ ! "${bat_out[*]}" ]] && \
+                get_prog_out
+
+            while [[ ! "${bat_capacity_design}" ]] && IFS=":" read -r a b; do
+                [[ "$a" =~ 'Design capacity' ]] && \
+                    bat_capacity_design="$(trim "${b/ *}")"
+            done < <(printf "%s\\n" "${bat_out[@]}")
+        ;;
     esac
 
     bat_info[bat_capacity_design]="${bat_capacity_design}"
@@ -415,6 +441,23 @@ get_bat_current()
                     )"
                 ;;
             esac
+        ;;
+
+        "FreeBSD")
+            [[ ! "${bat_out[*]}" ]] && \
+                get_prog_out
+
+            [[ ! "${bat_power}" && ! "${bat_info[bat_power]}" ]] && \
+                get_bat_power
+            [[ ! "${bat_volt_design}" && ! "${bat_info[bat_volt_design]}" ]] && \
+                _get_bat_volt_design
+
+            tmp_power="$(multi "${bat_info[bat_power]}" "$((10 ** 6))")"
+
+            bat_current="$(
+                div "${tmp_power}" "${bat_volt_design}"
+            )"
+        ;;
     esac
 
     bat_current="${bat_current/'-'}"
@@ -443,6 +486,11 @@ get_bat_cycles()
                 get_prog_out
 
             bat_cycles="$(read_file "${bat_dir}/cycle_count")"
+        ;;
+
+        "FreeBSD")
+            # Not sure where to find the cycle count
+            # So it will be a stub
         ;;
     esac
 
@@ -482,6 +530,21 @@ get_bat_is_charging()
                 bat_is_charging="false"
             fi
         ;;
+
+        "FreeBSD")
+            [[ ! "${bat_out[*]}" ]] && \
+                get_prog_out
+
+            while [[ ! "${bat_is_charging}" ]] && IFS=":" read -r a b; do
+                [[ "$a" =~ 'State' ]] && \
+                    bat_is_charging="$(trim "$b")"
+            done < <(printf "%s\\n" "${bat_out[@]}")
+
+            case "${bat_is_charging}" in
+                "charging") bat_is_charging="true" ;;
+                *) bat_is_charging="false" ;;
+            esac
+        ;;
     esac
 
     bat_info[bat_is_charging]="${bat_is_charging}"
@@ -520,6 +583,10 @@ get_bat_is_full()
                 bat_is_full="false"
             fi
         ;;
+
+        "FreeBSD")
+            :
+        ;;
     esac
 
     bat_info[bat_is_full]="${bat_is_full}"
@@ -530,14 +597,26 @@ get_bat_percent()
     [[ "${bat_percent}" && "${bat_info[bat_percent]}" ]] && \
         return
 
-    [[ ! "${bat_capacity_now}" && ! "${bat_info[bat_capacity_now]}" ]] && \
-        _get_bat_capacity_now
-    [[ ! "${bat_capacity_max}" && ! "${bat_info[bat_capacity_max]}" ]] && \
-        _get_bat_capacity_max
+    # Edge case for FreeBSD because we can't get the current battery capacity
+    if [[ "${os}" == "FreeBSD" ]]; then
+        [[ ! "${bat_out[*]}" ]] && \
+            get_prog_out
 
-    bat_percent="$(
-        percent "${bat_info[bat_capacity_now]}" "${bat_info[bat_capacity_max]}"
-    )"
+        while [[ ! "${bat_percent}" ]] && IFS=":" read -r a b; do
+            [[ "$a" =~ 'Remaining capacity' ]] && \
+                bat_percent="$(trim "${b/'%'}")"
+        done < <(printf "%s\\n" "${bat_out[@]}")
+    else
+        [[ ! "${bat_capacity_now}" && ! "${bat_info[bat_capacity_now]}" ]] && \
+            _get_bat_capacity_now
+        [[ ! "${bat_capacity_max}" && ! "${bat_info[bat_capacity_max]}" ]] && \
+            _get_bat_capacity_max
+
+        bat_percent="$(
+            percent "${bat_info[bat_capacity_now]}" "${bat_info[bat_capacity_max]}"
+        )"
+    fi
+
     bat_percent="$(round "1" "${bat_percent}")"
     bat_info[bat_percent]="${bat_percent:+${bat_percent}%}"
 }
@@ -571,6 +650,16 @@ get_bat_volt()
             [[ "${bat_driver}" != "tp_smapi" ]] && \
                 bat_volt="$(div "${bat_volt}" "1000")"
         ;;
+
+        "FreeBSD")
+            [[ ! "${bat_out[*]}" ]] && \
+                get_prog_out
+
+            while [[ ! "${bat_volt}" ]] && IFS=":" read -r a b; do
+                [[ "$a" =~ 'Present voltage' ]] && \
+                    bat_volt="$(trim "${b/'mV'}")"
+            done < <(printf "%s\\n" "${bat_out[@]}")
+        ;;
     esac
 
     bat_volt="$(div "${bat_volt}" "1000")"
@@ -594,6 +683,16 @@ _get_bat_volt_design()
             esac
 
             bat_volt_design="$(read_file "${file}")"
+        ;;
+
+        "FreeBSD")
+            [[ ! "${bat_out[*]}" ]] && \
+                get_prog_out
+
+            while [[ ! "${bat_volt_design}" ]] && IFS=":" read -r a b; do
+                [[ "$a" =~ 'Design voltage' ]] && \
+                    bat_volt_design="$(trim "${b/'mV'}")"
+            done < <(printf "%s\\n" "${bat_out[@]}")
         ;;
     esac
 
@@ -645,6 +744,18 @@ get_bat_power()
 
             bat_power="$(div "${bat_power}" "1000")"
         ;;
+
+        "FreeBSD")
+            [[ ! "${bat_out[*]}" ]] && \
+                get_prog_out
+
+            while [[ ! "${bat_power}" ]] && IFS=":" read -r a b; do
+                [[ "$a" =~ 'Present rate' ]] && \
+                    bat_power="$(trim "${b/'mW'}")"
+            done < <(printf "%s\\n" "${bat_out[@]}")
+
+            bat_power="$(div "${bat_power}" "1000")"
+        ;;
     esac
 
     bat_power="${bat_power/'-'}"
@@ -688,6 +799,11 @@ get_bat_temp()
 
             bat_temp="$(read_file "${file}")"
         ;;
+
+        "FreeBSD")
+            # Not sure where to find the current battery temperature
+            # So it will be a stub
+        ;;
     esac
 
     bat_temp="$(div "${bat_temp}" "$((10 ** pow))")"
@@ -702,6 +818,21 @@ get_bat_time()
 
     [[ ! "${bat_is_charging}" && ! "${bat_info[bat_is_charging]}" ]] && \
         get_bat_is_charging
+
+    # Edge case for FreeBSD because we can't get the current battery capacity
+    [[ "${os}" == "FreeBSD" ]] && {
+        [[ ! "${bat_out[*]}" ]] && \
+            get_prog_out
+
+        while [[ ! "${bat_time}" ]] && IFS=":" read -r a b; do
+            [[ "$a" =~ 'Remaining time' ]] && \
+                bat_time="$(trim "$b")"
+        done < <(printf "%s\\n" "${bat_out[@]}")
+
+        [[ "${bat_time}" != "unknown" ]] && \
+            bat_info[bat_time]="${bat_time}"
+        return
+    }
 
     case "${unit}" in
         "Watts")
@@ -948,7 +1079,6 @@ main()
                 else
                     message="Unknown${message}"
                 fi
-
 
             notify
         ;;
