@@ -40,6 +40,9 @@ main()
 
     chunkc_exec="/usr/local/bin/chunkc"
 
+    ! type -p "${chunkc_exec}" && \
+        exit 1
+
     get_desktop
     get_window
 
