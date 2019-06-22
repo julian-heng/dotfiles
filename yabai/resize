@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+main()
+{
+    dir="$1"
+    size="${2:-50}"
+
+    [[ ! "${dir}" ]] && \
+        exit 1
+
+    { ! pgrep -x yabai || ! type -p yabai; } > /dev/null 2>&1 && \
+        exit 1
+
+    screen_width="1680"
+    screen_length="1050"
+
+    regex='"(x|y|w|h)":'
+    while read -r line; do
+        [[ "${line}" =~ ${regex} ]] && {
+            IFS="\":," read -r _ var _ value <<< "${line}"
+            case "${var}" in
+                "x") x="${value%%\.*}" ;;
+                "y") y="${value%%\.*}" ;;
+                "w") width="${value%%\.*}" ;;
+                "h") height="${value%%\.*}" ;;
+            esac
+        }
+    done < <(yabai -m query --windows --window)
+
+    ((a = x, b = a + width, c = y, d = y + height))
+
+    case "${dir}:$((a < screen_width - b)):$((c < screen_length - d))" in
+        "left:1"*|"right:0"*)
+            _args1=("left" "${size}" "0")
+            _args2=("right" "-${size}" "0")
+        ;;
+
+        "left:0"*|"right:1"*)
+            _args1=("right" "${size}" "0")
+            _args2=("left" "-${size}" "0")
+        ;;
+
+        "down:"*":1"|"up:"*":0")
+            _args1=("top" "0" "-${size}")
+            _args2=("bottom" "0" "${size}")
+        ;;
+
+        "down:"*":0"|"up:"*":1")
+            _args1=("bottom" "0" "-${size}")
+            _args2=("top" "0" "${size}")
+        ;;
+    esac
+
+    IFS=":" args1="${_args1[*]}"
+    IFS=":" args2="${_args2[*]}"
+
+    yabai -m window --resize "${args1}"
+    yabai -m window --resize "${args2}"
+}
+
+main "$@"

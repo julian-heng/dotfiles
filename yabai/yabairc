@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+
+set -x
+# ====== Variables =============================
+
+gaps_top="4"
+gaps_bottom="24"
+gaps_left="4"
+gaps_right="4"
+gaps_inner="4"
+
+focused_border_color="808080"
+preselect_border_color="2d74da"
+
+# ===== Tiling setting =========================
+
+yabai -m config layout                       bsp
+
+yabai -m config top_padding                  "${gaps_top}"
+yabai -m config bottom_padding               "${gaps_bottom}"
+yabai -m config left_padding                 "${gaps_left}"
+yabai -m config right_padding                "${gaps_right}"
+yabai -m config window_gap                   "${gaps_inner}"
+
+yabai -m config mouse_follows_focus          off
+yabai -m config focus_follows_mouse          off
+
+yabai -m config window_topmost               off
+yabai -m config window_opacity               off
+yabai -m config window_shadow                on
+
+yabai -m config window_border                on
+yabai -m config window_border_width          3
+yabai -m config active_window_border_color   "0xE0${focused_border_color}"
+yabai -m config normal_window_border_color   "0xE0${focused_border_color}"
+yabai -m config insert_window_border_color   "0xE0${preselect_border_color}"
+
+yabai -m config active_window_opacity        1.0
+yabai -m config normal_window_opacity        0.90
+yabai -m config split_ratio                  0.50
+
+yabai -m config auto_balance                 off
+
+yabai -m config mouse_modifier               fn
+yabai -m config mouse_action1                move
+yabai -m config mouse_action2                resize
+
+# ===== Rules =========================
+# WIP Not working atm
+
+yabai -m rule --add label=Finder-Copy app=Finder title=Copy manage=false
+yabai -m rule --add label=Finder-Move app=Finder title=Move manage=false
+yabai -m rule --add label=Finder-Info app=Finder title=Info manage=false
+yabai -m rule --add label=Finder-Connect app=Finder title=Connect manage=false
+
+yabai -m rule --add label='App Store' app='App Store' manage=false
+yabai -m rule --add label='System Preferences' app='System Preferences' manage=false
+yabai -m rule --add label='Activity Monitor' app='Activity Monitor' manage=false
+yabai -m rule --add label='The Unarchiver' app='The Unarchiver' manage=false
+yabai -m rule --add label=KeePassX app=KeePassX manage=false
+yabai -m rule --add label=Calculator app=Calculator manage=false
+yabai -m rule --add label=Dictionary app=Dictionary manage=false
+yabai -m rule --add label=mpv app=mpv manage=false
+
+printf "yabai configuration loaded..\\n"
+set +x

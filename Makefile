@@ -15,12 +15,12 @@ TMUX_DIR := $(SCRIPT_DIR)/tmux/tmux.conf
 UBERSICHT_DIR := $(SCRIPT_DIR)/ubersicht
 VIM_DIR := $(SCRIPT_DIR)/vimrc
 
-CHUNKWM_FILE := $(SCRIPT_DIR)/chunkwm/chunkwmrc
+YABAI_FILE := $(SCRIPT_DIR)/yabai/yabairc
 SKHD_FILE := $(SCRIPT_DIR)/skhd/skhdrc
 
 BASHRC_DEST := ${HOME}
 COMPTON_DEST := $(CONFIG_DIR)/compton.conf
-CHUNKWM_DEST := ${HOME}/.chunkwmrc
+YABAI_DEST := ${HOME}/.yabairc
 MPV_DEST := $(CONFIG_DIR)/mpv
 NEOFETCH_DEST := $(CONFIG_DIR)/neofetch
 RANGER_DEST := $(CONFIG_DIR)/ranger
@@ -116,12 +116,12 @@ neofetch:
 ranger:
 	$(call link,$(RANGER_DIR),$(RANGER_DEST))
 
-   ###################
-######## Chunkwm ########
-   ###################
+   #################
+######## Yabai ########
+   #################
 
-chunkwm:
-	$(call link,$(CHUNKWM_FILE),$(CHUNKWM_DEST))
+yabai:
+	$(call link,$(YABAI_FILE),$(YABAI_DEST))
 
    ################
 ######## Skhd ########
@@ -153,4 +153,5 @@ vim:
 
 .PHONY: submodule_init submodule_update linux_headless linux_lite linux mac \
 		windows bashrc_linux bashrc_macos bashrc_common compton_blur \
-		compton_noblur mpv neofetch ranger chunkwm skhd tmux ubersicht vim
+		compton_noblur mpv neofetch ranger yabai skhd tmux ubersicht \
+		vim
