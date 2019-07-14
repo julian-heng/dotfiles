@@ -1,5 +1,31 @@
 #!/usr/bin/env bash
 
+get_res()
+{
+    while [[ ! "${screen_width}" || ! "${screen_length}" ]] && read -r line; do
+        IFS="\":," read -r _ var _ value <<< "${line}"
+        case "${var}" in
+            "w") screen_width="${value%%\.*}" ;;
+            "h") screen_length="${value%%\.*}" ;;
+        esac
+    done < <(yabai -m query --displays --display)
+}
+
+get_window_size()
+{
+    while { ! [[ "$x" && "$y" && "${width}" && "${height}" ]]; } && read -r line; do
+        IFS="\":," read -r _ var _ value <<< "${line}"
+        case "${var}" in
+            "x") x="${value%%\.*}" ;;
+            "y") y="${value%%\.*}" ;;
+            "w") width="${value%%\.*}" ;;
+            "h") height="${value%%\.*}" ;;
+        esac
+    done < <(yabai -m query --windows --window)
+
+    ((a = x, b = a + width, c = y, d = y + height))
+}
+
 main()
 {
     dir="$1"
@@ -11,23 +37,11 @@ main()
     { ! pgrep -x yabai || ! type -p yabai; } > /dev/null 2>&1 && \
         exit 1
 
-    screen_width="1680"
-    screen_length="1050"
+    get_res
+    get_window_size
 
-    regex='"(x|y|w|h)":'
-    while read -r line; do
-        [[ "${line}" =~ ${regex} ]] && {
-            IFS="\":," read -r _ var _ value <<< "${line}"
-            case "${var}" in
-                "x") x="${value%%\.*}" ;;
-                "y") y="${value%%\.*}" ;;
-                "w") width="${value%%\.*}" ;;
-                "h") height="${value%%\.*}" ;;
-            esac
-        }
-    done < <(yabai -m query --windows --window)
-
-    ((a = x, b = a + width, c = y, d = y + height))
+    ! [[ "${screen_width}" && "${screen_length}" && "$a" && "$b" && "$c" && "$d" ]] && \
+        exit 1
 
     case "${dir}:$((a < screen_width - b)):$((c < screen_length - d))" in
         "left:1"*|"right:0"*)
