@@ -15,7 +15,7 @@ get_desktop()
     while [[ ! "${desktop_index}" ]] && IFS=":," read -r k v; do
         [[ "$k" =~ 'index' ]] && \
             desktop_index="$v"
-    done < <("${yabai_exe}" -m query --displays --display)
+    done < <("${yabai_exe}" -m query --spaces --space)
 }
 
 get_window()
