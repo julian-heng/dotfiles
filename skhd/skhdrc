@@ -30,10 +30,14 @@ shift + alt - 3 : yabai -m window --space 3
 shift + alt - 4 : yabai -m window --space 4
 
 # Resize windows
-lctrl + alt - h : bash ${HOME}/.dotfiles/yabai/resize left 50
-lctrl + alt - j : bash ${HOME}/.dotfiles/yabai/resize down 50
-lctrl + alt - k : bash ${HOME}/.dotfiles/yabai/resize up 50
-lctrl + alt - l : bash ${HOME}/.dotfiles/yabai/resize right 50
+lctrl + alt - h : yabai -m window --resize left:-50:0 ; \
+                  yabai -m window --resize right:-50:0
+lctrl + alt - j : yabai -m window --resize bottom:0:50 ; \
+                  yabai -m window --resize top:0:50
+lctrl + alt - k : yabai -m window --resize top:0:-50 ; \
+                  yabai -m window --resize bottom:0:-50
+lctrl + alt - l : yabai -m window --resize right:50:0 ; \
+                  yabai -m window --resize left:50:0
 
 # Equalize size of windows
 lctrl + alt - e : yabai -m space --balance
