@@ -22,7 +22,7 @@ prompter()
     {
         case "$1" in
             *"No commits"*|*"Initial commit"*)
-                branch="NA"
+                branch="master"
             ;;
 
             *"no branch"*)
@@ -87,13 +87,13 @@ prompter()
                 "${num_untracked:+${reset}${bold}…${num_untracked}}"
             )
 
-            IFS="" _git_prompt="${_git_prompt[*]}"
+            IFS="" git_prompt="${_git_prompt[*]}"
 
             ((BASH_VERSINFO[0] < 5)) && \
-                _git_prompt="${_git_prompt//$'\n'}"
+                git_prompt="${git_prompt//$'\n'}"
 
             IFS="" \
-            git_prompt="${_git_branch}${_git_prompt:+|${_git_prompt}}${reset}]"
+            git_prompt="${_git_branch}${git_prompt:+|${git_prompt}}${reset}]"
         }
 
         printf "%s" "${git_prompt}"
@@ -106,18 +106,17 @@ prompter()
         cwd="${cwd@P}"
         cwd="${cwd#/}"
 
-        mapfile -d "/" -t parts < <(printf "%s" "${cwd:-/}")
+        IFS='/' read -ra parts <<< "${cwd:-/}"
 
         for part in "${parts[@]:0:${#parts[@]}-1}"; do
             unset in_PWD
             unset in_part
             IFS=" " read -ra in_part <<< "${part}"
             for i in "${in_part[@]}"; do
-                if [[ "$i" =~ ^"." ]]; then
-                    in_PWD="${in_PWD}${i:0:2}"
-                else
-                    in_PWD="${in_PWD}${i:0:1}"
-                fi
+                case "$i" in
+                    "."*) in_PWD="${in_PWD}${i:0:2}" ;;
+                    *) in_PWD="${in_PWD}${i:0:1}" ;;
+                esac
             done
             _PWD="${_PWD}/${in_PWD}"
         done

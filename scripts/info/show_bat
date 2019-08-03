@@ -19,27 +19,20 @@ print_stdout()
 
 notify()
 {
-    title="${title_parts[*]}"
-    subtitle="${subtitle_parts[*]}"
-    message="${message_parts[*]}"
-
-    [[ "${title:0:1}" == "|" ]] && \
+    [[ "${title}" =~ (^(\| ))|(( \|)$) ]] && {
         title="${title##'| '}"
-
-    [[ "${title:(-1):1}" == "|" ]] && \
         title="${title%%' |'}"
+    }
 
-    [[ "${subtitle:0:1}" == "|" ]] && \
+    [[ "${subtitle}" =~ (^(\| ))|(( \|)$) ]] && {
         subtitle="${subtitle##'| '}"
-
-    [[ "${subtitle:(-1):1}" == "|" ]] && \
         subtitle="${subtitle%%' |'}"
+    }
 
-    [[ "${message:0:1}" == "|" ]] && \
+    [[ "${message}" =~ (^(\| ))|(( \|)$) ]] && {
         message="${message##'| '}"
-
-    [[ "${message:(-1):1}" == "|" ]] && \
         message="${message%%' |'}"
+    }
 
     if [[ "${out}" == "stdout" ]]; then
         print_stdout
@@ -113,6 +106,55 @@ round()
         printf "%.*f" "$1" "$2"
 }
 
+_get_function_from_string()
+{
+    declare -A uniq
+    local regex='(\{)([a-zA-Z_]+)'
+    local str="$1"
+    local -a func
+
+    while [[ "${str}" =~ ${regex} ]]; do
+        [[ ! "${uniq[${BASH_REMATCH[2]}]}" ]] && {
+            uniq[${BASH_REMATCH[2]}]="1"
+            func+=("${BASH_REMATCH[2]}")
+        }
+        str="${str/${BASH_REMATCH[2]}}"
+    done
+
+    printf "%s\\n" "${func[@]}"
+}
+
+make_string()
+{
+    local str="$1"
+    local out="${str}"
+    local -a func
+
+    mapfile -t func < <(_get_function_from_string "${str}")
+
+    for function in "${func[@]}"; do
+        token_match="\\{(${function})((\\?)([^\\{]*(\\{(${function})?\\})[^\\}]*))?\\}"
+
+        if [[ "${bat_info[${function}]}" ]]; then
+            [[ "${out}" =~ ${token_match} ]]
+            if [[ "${BASH_REMATCH[2]}" ]]; then
+                token="${BASH_REMATCH[0]}"
+                token="${token/${BASH_REMATCH[5]}/${bat_info[${function}]}}"
+                token="${token/\{${BASH_REMATCH[1]}\?}"
+                token="${token%\}}"
+                out="${out/${BASH_REMATCH[0]}/${token}}"
+            else
+                out="${out/${BASH_REMATCH[0]}/${bat_info[${function}]}}"
+            fi
+        else
+            [[ "${out}" =~ ${token_match} ]]
+            out="${out/${BASH_REMATCH[0]}}"
+        fi
+    done
+
+    printf "%s" "${out}"
+}
+
 get_os()
 {
     case "${OSTYPE:-$(uname -s)}" in
@@ -173,7 +215,7 @@ get_prog_out()
 
 _get_bat_capacity_max()
 {
-    [[ "${bat_capacity_max}" && "${bat_info["bat_capacity_max"]}" ]] && \
+    [[ "${bat_capacity_max}" && "${bat_info[bat_capacity_max]}" ]] && \
         return
 
     case "${os}" in
@@ -181,10 +223,9 @@ _get_bat_capacity_max()
             [[ ! "${bat_out[*]}" ]] && \
                 get_prog_out
 
-            while [[ ! "${bat_capacity_max}" ]] && IFS='="' read -r _ a _ b; do
-                [[ "$a" == "MaxCapacity" ]] && \
-                    bat_capacity_max="$(trim "$b")"
-            done < <(printf "%s\\n" "${bat_out[@]}")
+            regex='"(MaxCapacity)" = ([0-9]+)'
+            [[ "${bat_out[*]}" =~ ${regex} ]]
+            bat_capacity_max="${BASH_REMATCH[2]}"
         ;;
 
         "Linux")
@@ -204,7 +245,7 @@ _get_bat_capacity_max()
             bat_capacity_max="$(read_file "${file}")"
 
             if [[ "${unit}" == "Watts" ]]; then
-                [[ ! "${bat_volt_design}" && ! "${bat_info["bat_volt_design"]}" ]] && \
+                [[ ! "${bat_volt_design}" && ! "${bat_info[bat_volt_design]}" ]] && \
                     _get_bat_volt_design
 
                 bat_capacity_max="$(
@@ -217,12 +258,12 @@ _get_bat_capacity_max()
             fi
     esac
 
-    bat_info["bat_capacity_max"]="${bat_capacity_max}"
+    bat_info[bat_capacity_max]="${bat_capacity_max}"
 }
 
 _get_bat_capacity_now()
 {
-    [[ "${bat_capacity_now}" && "${bat_info["bat_capacity_now"]}" ]] && \
+    [[ "${bat_capacity_now}" && "${bat_info[bat_capacity_now]}" ]] && \
         return
 
     case "${os}" in
@@ -230,10 +271,9 @@ _get_bat_capacity_now()
             [[ ! "${bat_out[*]}" ]] && \
                 get_prog_out
 
-            while [[ ! "${bat_capacity_now}" ]] && IFS='="' read -r _ a _ b; do
-                [[ "$a" == "CurrentCapacity" ]] && \
-                    bat_capacity_now="$(trim "$b")"
-            done < <(printf "%s\\n" "${bat_out[@]}")
+            regex='"(CurrentCapacity)" = ([0-9]+)'
+            [[ "${bat_out[*]}" =~ ${regex} ]]
+            bat_capacity_now="${BASH_REMATCH[2]}"
         ;;
 
         "Linux")
@@ -253,7 +293,7 @@ _get_bat_capacity_now()
             bat_capacity_now="$(read_file "${file}")"
 
             if [[ "${unit}" == "Watts" ]]; then
-                [[ ! "${bat_volt_design}" && ! "${bat_info["bat_volt_design"]}" ]] && \
+                [[ ! "${bat_volt_design}" && ! "${bat_info[bat_volt_design]}" ]] && \
                     _get_bat_volt_design
 
                 bat_capacity_now="$(
@@ -266,12 +306,12 @@ _get_bat_capacity_now()
             fi
     esac
 
-    bat_info["bat_capacity_now"]="${bat_capacity_now}"
+    bat_info[bat_capacity_now]="${bat_capacity_now}"
 }
 
 _get_bat_capacity_design()
 {
-    [[ "${bat_capacity_design}" && "${bat_info["bat_capacity_design"]}" ]] && \
+    [[ "${bat_capacity_design}" && "${bat_info[bat_capacity_design]}" ]] && \
         return
 
     case "${os}" in
@@ -279,10 +319,9 @@ _get_bat_capacity_design()
             [[ ! "${bat_out[*]}" ]] && \
                 get_prog_out
 
-            while [[ ! "${bat_capacity_design}" ]] && IFS='="' read -r _ a _ b; do
-                [[ "$a" == "DesignCapacity" ]] && \
-                    bat_capacity_design="$(trim "$b")"
-            done < <(printf "%s\\n" "${bat_out[@]}")
+            regex='"(DesignCapacity)" = ([0-9]+)'
+            [[ "${bat_out[*]}" =~ ${regex} ]]
+            bat_capacity_design="${BASH_REMATCH[2]}"
         ;;
 
         "Linux")
@@ -302,7 +341,7 @@ _get_bat_capacity_design()
             bat_capacity_design="$(read_file "${file}")"
 
             if [[ "${unit}" == "Watts" ]]; then
-                [[ ! "${bat_volt_design}" && ! "${bat_info["bat_volt_design"]}" ]] && \
+                [[ ! "${bat_volt_design}" && ! "${bat_info[bat_volt_design]}" ]] && \
                     _get_bat_volt_design
 
                 bat_capacity_design="$(
@@ -315,12 +354,12 @@ _get_bat_capacity_design()
             fi
     esac
 
-    bat_info["bat_capacity_design"]="${bat_capacity_design}"
+    bat_info[bat_capacity_design]="${bat_capacity_design}"
 }
 
 get_bat_condition()
 {
-    [[ "${bat_condition}" && "${bat_info["bat_condition"]}" ]] && \
+    [[ "${bat_condition}" && "${bat_info[bat_condition]}" ]] && \
         return
 
     [[ ! "${bat_capacity_max}" && ! "${bat_info[bat_capacity_max]}" ]] && \
@@ -330,12 +369,12 @@ get_bat_condition()
 
     bat_condition="$(percent "${bat_capacity_max}" "${bat_capacity_design}")"
     bat_condition="$(round "1" "${bat_condition}")"
-    bat_info["bat_condition"]="${bat_condition:+${bat_condition}%}"
+    bat_info[bat_condition]="${bat_condition:+${bat_condition}%}"
 }
 
 get_bat_current()
 {
-    [[ "${bat_current}" && "${bat_info["bat_current"]}" ]] && \
+    [[ "${bat_current}" && "${bat_info[bat_current]}" ]] && \
         return
 
     case "${os}" in
@@ -343,10 +382,9 @@ get_bat_current()
             [[ ! "${bat_out[*]}" ]] && \
                 get_prog_out
 
-            while [[ ! "${bat_current}" ]] && IFS='="' read -r _ a _ b; do
-                [[ "$a" == "InstantAmperage" ]] && \
-                    bat_current="$(trim "$b")"
-            done < <(printf "%s\\n" "${bat_out[@]}")
+            regex='"(InstantAmperage)" = ([0-9]+)'
+            [[ "${bat_out[*]}" =~ ${regex} ]]
+            bat_current="${BASH_REMATCH[2]}"
 
             ((${#bat_current} >= 20)) && \
                 bat_current="$(bc <<< "${bat_current} - (2 ^ 64)")"
@@ -365,12 +403,12 @@ get_bat_current()
                 ;;
 
                 "Watts")
-                    [[ ! "${bat_power}" && ! "${bat_info["bat_power"]}" ]] && \
+                    [[ ! "${bat_power}" && ! "${bat_info[bat_power]}" ]] && \
                         get_bat_power
-                    [[ ! "${bat_volt_design}" && ! "${bat_info["bat_volt_design"]}" ]] && \
+                    [[ ! "${bat_volt_design}" && ! "${bat_info[bat_volt_design]}" ]] && \
                         _get_bat_volt_design
 
-                    tmp_power="$(multi "${bat_info["bat_power"]}" "$((10 ** 6))")"
+                    tmp_power="$(multi "${bat_info[bat_power]}" "$((10 ** 6))")"
 
                     bat_current="$(
                         div "${tmp_power}" "${bat_volt_design}"
@@ -382,12 +420,12 @@ get_bat_current()
     bat_current="${bat_current/'-'}"
     bat_current="$(div "${bat_current}" "1000")"
     bat_current="$(round "2" "${bat_current}")"
-    bat_info["bat_current"]="${bat_current:+${bat_current}A}"
+    bat_info[bat_current]="${bat_current:+${bat_current}A}"
 }
 
 get_bat_cycles()
 {
-    [[ "${bat_cycles}" && "${bat_info["bat_cycles"]}" ]] && \
+    [[ "${bat_cycles}" && "${bat_info[bat_cycles]}" ]] && \
         return
 
     case "${os}" in
@@ -395,10 +433,9 @@ get_bat_cycles()
             [[ ! "${bat_out[*]}" ]] && \
                 get_prog_out
 
-            while [[ ! "${bat_cycles}" ]] && IFS='="' read -r _ a _ b; do
-                [[ "$a" == "CycleCount" ]] && \
-                    bat_cycles="$(trim "$b")"
-            done < <(printf "%s\\n" "${bat_out[@]}")
+            regex='"(CycleCount)" = ([0-9]+)'
+            [[ "${bat_out[*]}" =~ ${regex} ]]
+            bat_cycles="${BASH_REMATCH[2]}"
         ;;
 
         "Linux")
@@ -409,12 +446,12 @@ get_bat_cycles()
         ;;
     esac
 
-    bat_info["bat_cycles"]="${bat_cycles:+${bat_cycles} Cycles}"
+    bat_info[bat_cycles]="${bat_cycles:+${bat_cycles} Cycles}"
 }
 
 get_bat_is_charging()
 {
-    [[ "${bat_is_charging}" && "${bat_info["bat_is_charging"]}" ]] && \
+    [[ "${bat_is_charging}" && "${bat_info[bat_is_charging]}" ]] && \
         return
 
     case "${os}" in
@@ -422,14 +459,12 @@ get_bat_is_charging()
             [[ ! "${bat_out[*]}" ]] && \
                 get_prog_out
 
-            while [[ ! "${bat_is_charging}" ]] && IFS='="' read -r _ a _ b; do
-                [[ "$a" == "IsCharging" ]] && \
-                    if [[ "$(trim "$b")" == "Yes" ]]; then
-                        bat_is_charging="true"
-                    else
-                        bat_is_charging="false"
-                    fi
-            done < <(printf "%s\\n" "${bat_out[@]}")
+            regex='"(IsCharging)" = ([a-zA-Z]+)'
+            [[ "${bat_out[*]}" =~ ${regex} ]]
+            case "${BASH_REMATCH[2]}" in
+                "Yes") bat_is_charging="true" ;;
+                *) bat_is_charging="false" ;;
+            esac
         ;;
 
         "Linux")
@@ -449,12 +484,12 @@ get_bat_is_charging()
         ;;
     esac
 
-    bat_info["bat_is_charging"]="${bat_is_charging}"
+    bat_info[bat_is_charging]="${bat_is_charging}"
 }
 
 get_bat_is_full()
 {
-    [[ "${bat_is_full}" && "${bat_info["bat_is_full"]}" ]] && \
+    [[ "${bat_is_full}" && "${bat_info[bat_is_full]}" ]] && \
         return
 
     case "${os}" in
@@ -462,14 +497,12 @@ get_bat_is_full()
             [[ ! "${bat_out[*]}" ]] && \
                 get_prog_out
 
-            while [[ ! "${bat_is_full}" ]] && IFS='="' read -r _ a _ b; do
-                [[ "$a" == "FullyCharged" ]] && \
-                    if [[ "$(trim "$b")" == "Yes" ]]; then
-                        bat_is_full="true"
-                    else
-                        bat_is_full="false"
-                    fi
-            done < <(printf "%s\\n" "${bat_out[@]}")
+            regex='"(FullyCharged)" = ([a-zA-Z]+)'
+            [[ "${bat_out[*]}" =~ ${regex} ]]
+            case "${BASH_REMATCH[2]}" in
+                "Yes") bat_is_full="true" ;;
+                *) bat_is_full="false" ;;
+            esac
         ;;
 
         "Linux")
@@ -489,29 +522,29 @@ get_bat_is_full()
         ;;
     esac
 
-    bat_info["bat_is_full"]="${bat_is_full}"
+    bat_info[bat_is_full]="${bat_is_full}"
 }
 
 get_bat_percent()
 {
-    [[ "${bat_percent}" && "${bat_info["bat_percent"]}" ]] && \
+    [[ "${bat_percent}" && "${bat_info[bat_percent]}" ]] && \
         return
 
-    [[ ! "${bat_capacity_now}" && ! "${bat_info["bat_capacity_now"]}" ]] && \
+    [[ ! "${bat_capacity_now}" && ! "${bat_info[bat_capacity_now]}" ]] && \
         _get_bat_capacity_now
-    [[ ! "${bat_capacity_max}" && ! "${bat_info["bat_capacity_max"]}" ]] && \
+    [[ ! "${bat_capacity_max}" && ! "${bat_info[bat_capacity_max]}" ]] && \
         _get_bat_capacity_max
 
     bat_percent="$(
-        percent "${bat_info["bat_capacity_now"]}" "${bat_info["bat_capacity_max"]}"
+        percent "${bat_info[bat_capacity_now]}" "${bat_info[bat_capacity_max]}"
     )"
     bat_percent="$(round "1" "${bat_percent}")"
-    bat_info["bat_percent"]="${bat_percent:+${bat_percent}%}"
+    bat_info[bat_percent]="${bat_percent:+${bat_percent}%}"
 }
 
 get_bat_volt()
 {
-    [[ "${bat_volt}" && "${bat_info["bat_volt"]}" ]] && \
+    [[ "${bat_volt}" && "${bat_info[bat_volt]}" ]] && \
         return
 
     case "${os}" in
@@ -519,10 +552,9 @@ get_bat_volt()
             [[ ! "${bat_out[*]}" ]] && \
                 get_prog_out
 
-            while [[ ! "${bat_volt}" ]] && IFS='="' read -r _ a _ b; do
-                [[ "$a" == "Voltage" ]] && \
-                    bat_volt="$(trim "$b")"
-            done < <(printf "%s\\n" "${bat_out[@]}")
+            regex='"(Voltage)" = ([0-9]+)'
+            [[ "${bat_out[*]}" =~ ${regex} ]]
+            bat_volt="${BASH_REMATCH[2]}"
         ;;
 
         "Linux")
@@ -543,7 +575,7 @@ get_bat_volt()
 
     bat_volt="$(div "${bat_volt}" "1000")"
     bat_volt="$(round "2" "${bat_volt}")"
-    bat_info["bat_volt"]="${bat_volt:+${bat_volt}V}"
+    bat_info[bat_volt]="${bat_volt:+${bat_volt}V}"
 }
 
 _get_bat_volt_design()
@@ -565,23 +597,23 @@ _get_bat_volt_design()
         ;;
     esac
 
-    bat_info["bat_volt_design"]="${bat_volt_design}"
+    bat_info[bat_volt_design]="${bat_volt_design}"
 }
 
 get_bat_power()
 {
-    [[ "${bat_power}" && "${bat_info["bat_power"]}" ]] && \
+    [[ "${bat_power}" && "${bat_info[bat_power]}" ]] && \
         return
 
     case "${os}" in
         "MacOS")
-            [[ ! "${bat_current}" && ! "${bat_info["bat_current"]}" ]] && \
+            [[ ! "${bat_current}" && ! "${bat_info[bat_current]}" ]] && \
                 get_bat_current
-            [[ ! "${bat_volt}" && ! "${bat_info["bat_volt"]}" ]] && \
+            [[ ! "${bat_volt}" && ! "${bat_info[bat_volt]}" ]] && \
                 get_bat_volt
 
             bat_power="$(
-                multi "${bat_info["bat_current"]}" "${bat_info["bat_volt"]}"
+                multi "${bat_info[bat_current]}" "${bat_info[bat_volt]}"
             )"
         ;;
 
@@ -596,13 +628,13 @@ get_bat_power()
                     if [[ "${bat_power}" ]]; then
                         ((bat_power /= 1000))
                     else
-                        [[ ! "${bat_current}" && ! "${bat_info["bat_current"]}" ]] && \
+                        [[ ! "${bat_current}" && ! "${bat_info[bat_current]}" ]] && \
                             get_bat_current
-                        [[ ! "${bat_volt}" && ! "${bat_info["bat_volt"]}" ]] && \
+                        [[ ! "${bat_volt}" && ! "${bat_info[bat_volt]}" ]] && \
                             get_bat_volt
 
                         bat_power="$(
-                            multi "${bat_info["bat_current"]}" "${bat_info["bat_volt"]}"
+                            multi "${bat_info[bat_current]}" "${bat_info[bat_volt]}"
                         )"
                         bat_power="$(multi "${bat_power}" "1000")"
                     fi
@@ -617,12 +649,12 @@ get_bat_power()
 
     bat_power="${bat_power/'-'}"
     bat_power="$(round "2" "${bat_power}")"
-    bat_info["bat_power"]="${bat_power:+${bat_power}W}"
+    bat_info[bat_power]="${bat_power:+${bat_power}W}"
 }
 
 get_bat_temp()
 {
-    [[ "${bat_temp}" && "${bat_info["bat_temp"]}" ]] && \
+    [[ "${bat_temp}" && "${bat_info[bat_temp]}" ]] && \
         return
 
     case "${os}" in
@@ -660,15 +692,15 @@ get_bat_temp()
 
     bat_temp="$(div "${bat_temp}" "$((10 ** pow))")"
     bat_temp="$(round "1" "${bat_temp}")"
-    bat_info["bat_temp"]="${bat_temp:+${bat_temp}°C}"
+    bat_info[bat_temp]="${bat_temp:+${bat_temp}°C}"
 }
 
 get_bat_time()
 {
-    [[ "${bat_time}" && "${bat_info["bat_time"]}" ]] && \
+    [[ "${bat_time}" && "${bat_info[bat_time]}" ]] && \
         return
 
-    [[ ! "${bat_is_charging}" && ! "${bat_info["bat_is_charging"]}" ]] && \
+    [[ ! "${bat_is_charging}" && ! "${bat_info[bat_is_charging]}" ]] && \
         get_bat_is_charging
 
     case "${unit}" in
@@ -693,7 +725,7 @@ get_bat_time()
             tmp_power="$(read_file "${bat_dir}/power_now")"
             tmp_power="${tmp_power/'-'}"
 
-            if [[ "${bat_info["bat_is_charging"]}" == "true" ]]; then
+            if [[ "${bat_info[bat_is_charging]}" == "true" ]]; then
                 ((tmp_capacity = tmp_capacity_full - tmp_capacity_now))
             else
                 tmp_capacity="${tmp_capacity_now}"
@@ -703,20 +735,20 @@ get_bat_time()
         ;;
 
         *)
-            [[ ! "${bat_capacity_now}" && ! "${bat_info["bat_capacity_now"]}" ]] && \
+            [[ ! "${bat_capacity_now}" && ! "${bat_info[bat_capacity_now]}" ]] && \
                 _get_bat_capacity_now
-            [[ ! "${bat_current}" && ! "${bat_info["bat_current"]}" ]] && \
+            [[ ! "${bat_current}" && ! "${bat_info[bat_current]}" ]] && \
                 get_bat_current
 
             tmp_current="$(multi "${bat_info[bat_current]}" "1000")"
 
-            if [[ "${bat_info["bat_is_charging"]}" == "true" ]]; then
-                [[ ! "${bat_capacity_max}" && ! "${bat_info["bat_capacity_max"]}" ]] && \
+            if [[ "${bat_info[bat_is_charging]}" == "true" ]]; then
+                [[ ! "${bat_capacity_max}" && ! "${bat_info[bat_capacity_max]}" ]] && \
                     _get_bat_capacity_max
 
                 ((tmp_capacity = bat_info[bat_capacity_max] - bat_info[bat_capacity_now]))
             else
-                tmp_capacity="${bat_info["bat_capacity_now"]}"
+                tmp_capacity="${bat_info[bat_capacity_now]}"
             fi
 
             bat_time="$(div "${tmp_capacity}" "${tmp_current}")"
@@ -735,7 +767,7 @@ get_bat_time()
         ((mins == 0)) && unset mins
 
         bat_time="${hours:+${hours}h }${mins:+${mins}m }${secs}s"
-        bat_info["bat_time"]="${bat_time}"
+        bat_info[bat_time]="${bat_time}"
     }
 }
 
@@ -799,17 +831,14 @@ get_args()
             "-r"|"--raw") : "${out:=raw}" ;;
             "-f"|"--format")
                 [[ "$2" ]] && {
-                    declare -A uniq
-
                     : "${out:=string}"
                     str_format="$2"
 
                     tmp="${str_format}"
-                    regex_1='\{([a-zA-Z_]+)\?[^\{]*\{([a-zA-Z_]+)}'
-                    regex_2='(\{)([a-zA-Z_]+)'
+                    regex='\{([a-zA-Z_]+)\?[^\{]*\{([a-zA-Z_]+)}'
 
-                    # First pass
-                    while [[ "${tmp}" =~ ${regex_1} ]]; do
+                    # String validation
+                    while [[ "${tmp}" =~ ${regex} ]]; do
                         tmp="${tmp/${BASH_REMATCH[0]}}"
                         [[ "${BASH_REMATCH[1]}" != "${BASH_REMATCH[2]}" ]] && {
                             printf "Invalid format: %s != %s\\n" \
@@ -819,17 +848,7 @@ get_args()
                         }
                     done
 
-                    tmp="${str_format}"
-
-                    # Second pass
-                    while [[ "${tmp}" =~ ${regex_2} ]]; do
-                        [[ ! "${uniq[${BASH_REMATCH[2]}]}" ]] && {
-                            uniq["${BASH_REMATCH[2]}"]="1"
-                            func+=("${BASH_REMATCH[2]}")
-                        }
-                        tmp="${tmp/${BASH_REMATCH[2]}}"
-                    done
-
+                    mapfile -t func < <(_get_function_from_string "${str_format}")
                     shift
                 }
             ;;
@@ -902,27 +921,7 @@ main()
 
         "string")
             if [[ "${str_format}" ]]; then
-                out="${str_format}"
-                for function in "${func[@]}"; do
-                    token_match="\\{(${function})((\\?)([^\\{]*(\\{${function}\\})[^\\}]*))?\\}"
-
-                    if [[ "${bat_info[${function}]}" ]]; then
-                        [[ "${out}" =~ ${token_match} ]]
-                        if [[ "${BASH_REMATCH[2]}" ]]; then
-                            token="${BASH_REMATCH[0]}"
-                            token="${token/${BASH_REMATCH[5]}/${bat_info[${function}]}}"
-                            token="${token/\{${BASH_REMATCH[1]}\?}"
-                            token="${token%\}}"
-                            out="${out/${BASH_REMATCH[0]}/${token}}"
-                        else
-                            out="${out/${BASH_REMATCH[0]}/${bat_info[${function}]}}"
-                        fi
-                    else
-                        [[ "${out}" =~ ${token_match} ]]
-                        out="${out/${BASH_REMATCH[0]}}"
-                    fi
-                done
-                printf "%s" "${out}"
+                printf "%s" "$(make_string "${str_format}")"
             else
                 for function in "${func[@]}"; do
                     printf "%s\\n" "${bat_info[${function}]}"
@@ -931,34 +930,25 @@ main()
         ;;
 
         *)
-            title_parts+=("Battery")
-            [[ "${bat_info["bat_percent"]}" ]] && \
-                title_parts+=("(${bat_info["bat_percent"]})")
+            title_fmt="Battery ({bat_percent})"
+            subtitle_fmt="{bat_time?{} | }{bat_condition?Condition: {} | }{bat_temp?{} | }{bat_cycles}"
+            message_fmt="{bat_current? | {}}{bat_power? | {}}"
 
-            [[ "${bat_info["bat_time"]}" && \
-               "${bat_info["bat_time"]}" != "0h 0m 0s" ]] && \
-                subtitle_parts+=("${bat_info["bat_time"]}")
-            [[ "${bat_info["bat_condition"]}" ]] && \
-                subtitle_parts+=("|" "Condition: ${bat_info["bat_condition"]}")
-            [[ "${bat_info["bat_temp"]}" ]] && \
-                subtitle_parts+=("|" "${bat_info["bat_temp"]}")
-            [[ "${bat_info["bat_cycles"]}" ]] && \
-                subtitle_parts+=("|" "${bat_info["bat_cycles"]}")
+            title="$(make_string "${title_fmt}")"
+            subtitle="$(make_string "${subtitle_fmt}")"
+            message="$(make_string "${message_fmt}")"
 
-            [[ "${bat_info["bat_is_full"]}" ]] && \
-                if [[ "${bat_info["bat_is_full"]}" == "true" ]]; then
-                    message_parts+=("Full")
-                elif [[ "${bat_info["bat_is_charging"]}" == "true" ]]; then
-                    message_parts+=("Charging")
-                elif [[ "${bat_info["bat_is_charging"]}" == "false" ]]; then
-                    message_parts+=("Discharging")
+            [[ "${bat_info[bat_is_full]}" ]] && \
+                if [[ "${bat_info[bat_is_full]}" == "true" ]]; then
+                    message="Full${message}"
+                elif [[ "${bat_info[bat_is_charging]}" == "true" ]]; then
+                    message="Charging${message}"
+                elif [[ "${bat_info[bat_is_charging]}" == "false" ]]; then
+                    message="Discharging${message}"
                 else
-                    message_parts+=("Unknown")
+                    message="Unknown${message}"
                 fi
-            [[ "${bat_info["bat_current"]}" ]] && \
-                message_parts+=("|" "${bat_info["bat_current"]}")
-            [[ "${bat_info["bat_power"]}" ]] && \
-                message_parts+=("|" "${bat_info["bat_power"]}")
+
 
             notify
         ;;

@@ -1,4 +1,4 @@
-command: "/usr/local/bin/bash ${HOME}/.dotfiles/ubersicht/chunkwm.bash"
+command: "/usr/local/bin/bash ${HOME}/.dotfiles/ubersicht/wm.bash 2>/dev/null"
 
 refreshFrequency: 750 # ms
 

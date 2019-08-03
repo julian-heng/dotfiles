@@ -19,10 +19,11 @@ TMUX_DIR := $(SCRIPT_DIR)/tmux/tmux.conf
 UBERSICHT_DIR := $(SCRIPT_DIR)/ubersicht
 VIM_DIR := $(SCRIPT_DIR)/vimrc
 
+SKHD_FILE := $(SCRIPT_DIR)/skhd/skhdrc
+YABAI_FILE := $(SCRIPT_DIR)/yabai/yabairc
+
 BASHRC_DEST := ${HOME}
 BSPWM_DEST := $(CONFIG_DIR)/bspwm
-CHUNKWM_DEST := ${HOME}/.chunkwmrc
-CHUNKWM_FILE := $(SCRIPT_DIR)/chunkwm/chunkwmrc
 COMPTON_DEST := $(CONFIG_DIR)/compton.conf
 MPV_DEST := $(CONFIG_DIR)/mpv
 NEOFETCH_DEST := $(CONFIG_DIR)/neofetch
@@ -34,6 +35,7 @@ SXHKD_DEST := $(CONFIG_DIR)/sxhkd
 TMUX_DEST := ${HOME}/.tmux.conf
 UBERSICHT_DEST := ${HOME}/Library/Application\ Support/Übersicht/widgets
 VIM_DEST := ${HOME}/.vim
+YABAI_DEST := ${HOME}/.yabairc
 
 $(shell mkdir -p $(CONFIG_DIR))
 
@@ -140,12 +142,12 @@ sxhkd:
 polybar:
 	$(call link,$(POLYBAR_DIR),$(POLYBAR_DEST))
 
-   ###################
-######## Chunkwm ########
-   ###################
+   #################
+######## Yabai ########
+   #################
 
-chunkwm:
-	$(call link,$(CHUNKWM_FILE),$(CHUNKWM_DEST))
+yabai:
+	$(call link,$(YABAI_FILE),$(YABAI_DEST))
 
    ################
 ######## Skhd ########
@@ -177,5 +179,5 @@ vim:
 
 .PHONY: submodule_init submodule_update linux_headless linux_lite linux mac \
 		windows bashrc_linux bashrc_macos bashrc_common compton_blur \
-		compton_noblur mpv neofetch ranger bspwm sxhkd polybar chunkwm skhd \
+		compton_noblur mpv neofetch ranger yabai skhd bspwm sxhkd polybar \
 		tmux ubersicht vim

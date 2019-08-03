@@ -19,27 +19,20 @@ print_stdout()
 
 notify()
 {
-    title="${title_parts[*]}"
-    subtitle="${subtitle_parts[*]}"
-    message="${message_parts[*]}"
-
-    [[ "${title:0:1}" == "|" ]] && \
+    [[ "${title}" =~ (^(\| ))|(( \|)$) ]] && {
         title="${title##'| '}"
-
-    [[ "${title:(-1):1}" == "|" ]] && \
         title="${title%%' |'}"
+    }
 
-    [[ "${subtitle:0:1}" == "|" ]] && \
+    [[ "${subtitle}" =~ (^(\| ))|(( \|)$) ]] && {
         subtitle="${subtitle##'| '}"
-
-    [[ "${subtitle:(-1):1}" == "|" ]] && \
         subtitle="${subtitle%%' |'}"
+    }
 
-    [[ "${message:0:1}" == "|" ]] && \
+    [[ "${message}" =~ (^(\| ))|(( \|)$) ]] && {
         message="${message##'| '}"
-
-    [[ "${message:(-1):1}" == "|" ]] && \
         message="${message%%' |'}"
+    }
 
     if [[ "${out}" == "stdout" ]]; then
         print_stdout
@@ -138,6 +131,55 @@ round()
 {
     [[ "$1" && "$2" ]] && \
         printf "%.*f" "$1" "$2"
+}
+
+_get_function_from_string()
+{
+    declare -A uniq
+    local regex='(\{)([a-zA-Z_]+)'
+    local str="$1"
+    local -a func
+
+    while [[ "${str}" =~ ${regex} ]]; do
+        [[ ! "${uniq[${BASH_REMATCH[2]}]}" ]] && {
+            uniq[${BASH_REMATCH[2]}]="1"
+            func+=("${BASH_REMATCH[2]}")
+        }
+        str="${str/${BASH_REMATCH[2]}}"
+    done
+
+    printf "%s\\n" "${func[@]}"
+}
+
+make_string()
+{
+    local str="$1"
+    local out="${str}"
+    local -a func
+
+    mapfile -t func < <(_get_function_from_string "${str}")
+
+    for function in "${func[@]}"; do
+        token_match="\\{(${function})((\\?)([^\\{]*(\\{(${function})?\\})[^\\}]*))?\\}"
+
+        if [[ "${net_info[${function}]}" ]]; then
+            [[ "${out}" =~ ${token_match} ]]
+            if [[ "${BASH_REMATCH[2]}" ]]; then
+                token="${BASH_REMATCH[0]}"
+                token="${token/${BASH_REMATCH[5]}/${net_info[${function}]}}"
+                token="${token/\{${BASH_REMATCH[1]}\?}"
+                token="${token%\}}"
+                out="${out/${BASH_REMATCH[0]}/${token}}"
+            else
+                out="${out/${BASH_REMATCH[0]}/${net_info[${function}]}}"
+            fi
+        else
+            [[ "${out}" =~ ${token_match} ]]
+            out="${out/${BASH_REMATCH[0]}}"
+        fi
+    done
+
+    printf "%s" "${out}"
 }
 
 get_os()
@@ -418,17 +460,14 @@ get_args()
             "-r"|"--raw") : "${out:=raw}" ;;
             "-f"|"--format")
                 [[ "$2" ]] && {
-                    declare -A uniq
-
                     : "${out:=string}"
                     str_format="$2"
 
                     tmp="${str_format}"
-                    regex_1='\{([a-zA-Z_]+)\?[^\{]*\{([a-zA-Z_]+)}'
-                    regex_2='(\{)([a-zA-Z_]+)'
+                    regex='\{([a-zA-Z_]+)\?[^\{]*\{([a-zA-Z_]+)}'
 
-                    # First pass
-                    while [[ "${tmp}" =~ ${regex_1} ]]; do
+                    # String validation
+                    while [[ "${tmp}" =~ ${regex} ]]; do
                         tmp="${tmp/${BASH_REMATCH[0]}}"
                         [[ "${BASH_REMATCH[1]}" != "${BASH_REMATCH[2]}" ]] && {
                             printf "Invalid format: %s != %s\\n" \
@@ -438,17 +477,7 @@ get_args()
                         }
                     done
 
-                    tmp="${str_format}"
-
-                    # Second pass
-                    while [[ "${tmp}" =~ ${regex_2} ]]; do
-                        [[ ! "${uniq[${BASH_REMATCH[2]}]}" ]] && {
-                            uniq["${BASH_REMATCH[2]}"]="1"
-                            func+=("${BASH_REMATCH[2]}")
-                        }
-                        tmp="${tmp/${BASH_REMATCH[2]}}"
-                    done
-
+                    mapfile -t func < <(_get_function_from_string "${str_format}")
                     shift
                 }
             ;;
@@ -511,27 +540,7 @@ main()
 
         "string")
             if [[ "${str_format}" ]]; then
-                out="${str_format}"
-                for function in "${func[@]}"; do
-                    token_match="\\{(${function})((\\?)([^\\{]*(\\{${function}\\})[^\\}]*))?\\}"
-
-                    if [[ "${net_info[${function}]}" ]]; then
-                        [[ "${out}" =~ ${token_match} ]]
-                        if [[ "${BASH_REMATCH[2]}" ]]; then
-                            token="${BASH_REMATCH[0]}"
-                            token="${token/${BASH_REMATCH[5]}/${net_info[${function}]}}"
-                            token="${token/\{${BASH_REMATCH[1]}\?}"
-                            token="${token%\}}"
-                            out="${out/${BASH_REMATCH[0]}/${token}}"
-                        else
-                            out="${out/${BASH_REMATCH[0]}/${net_info[${function}]}}"
-                        fi
-                    else
-                        [[ "${out}" =~ ${token_match} ]]
-                        out="${out/${BASH_REMATCH[0]}}"
-                    fi
-                done
-                printf "%s" "${out}"
+                printf "%s" "$(make_string "${str_format}")"
             else
                 for function in "${func[@]}"; do
                     printf "%s\\n" "${net_info[${function}]}"
@@ -540,17 +549,13 @@ main()
         ;;
 
         *)
-            title_parts+=("${net_info[network_ssid]:-Network}")
-            [[ "${net_info[network_device]}" ]] && \
-                title_parts+=("(${net_info[network_device]})")
+            title_fmt="{network_device? ({})}"
+            subtitle_fmt="{network_download?Down: {} | }{network_upload?Up: {}}"
+            message_fmt="{network_local_ip?Local IP: {}}"
 
-            [[ "${net_info[network_download]}" ]] && \
-                subtitle_parts+=("Down:" "${net_info[network_download]}")
-            [[ "${net_info[network_upload]}" ]] && \
-                subtitle_parts+=("|" "Up:" "${net_info[network_upload]}")
-
-            [[ "${net_info[network_local_ip]}" ]] && \
-                message_parts+=("Local IP:" "${net_info[network_local_ip]}")
+            title="${net_info[network_ssid]:-Network}$(make_string "${title_fmt}")"
+            subtitle="$(make_string "${subtitle_fmt}")"
+            message="$(make_string "${message_fmt}")"
 
             notify
         ;;
