@@ -576,7 +576,7 @@ main()
 
         *)
             title_fmt="{disk_mount? ({})}"
-            subtitle_fmt="{disk_used?{} | }{disk_total?{} | }{disk_percent?({})}"
+            subtitle_fmt="{disk_used}{disk_total? | {}}{disk_percent? ({})}"
             message_fmt="{disk_device?{} | }{disk_partition}"
 
             title="${disk_info["disk_name"]:-Disk}$(make_string "${title_fmt}")"

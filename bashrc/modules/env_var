@@ -62,8 +62,9 @@ export PS4
 [[ "${MAKEFLAGS}" ]] && \
     export MAKEFLAGS
 
-[[ "${distro}" == "MacOS" && "${DISPLAY}" ]] && \
-    export DISPLAY
+[[ "${distro}" == "MacOS" ]] && \
+    [[ "${DISPLAY}" ]] && \
+        export DISPLAY
 
 export LESS_TERMCAP_mb
 export LESS_TERMCAP_md
