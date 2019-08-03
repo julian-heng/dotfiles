@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-border="4"
-gaps="4"
+border="2"
+gaps="2"
 focus_color="808080"
 normal_color="1d1f21"
 
