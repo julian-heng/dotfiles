@@ -57,10 +57,8 @@ get_file_list()
 get_last_wal()
 {
     mapfile -t feh_file < "${HOME}/.fehbg"
-    last_wal="${feh_file[1]/'feh'}"
-    last_wal="${last_wal/'--bg-fill'}"
+    read -r _ _ last_wal <<< "${feh_file[1]}"
     last_wal="${last_wal//\'}"
-    last_wal="${last_wal//[[:space:]]}"
     printf "%s" "${last_wal}"
 }
 
