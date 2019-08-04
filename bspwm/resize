@@ -3,11 +3,15 @@
 get_screen_res()
 {
     if type -p xrandr > /dev/null 2>&1; then
-        IFS="x+" \
-        read -r screen_width \
-                screen_length _\
-                < <(xrandr --nograb --current |\
-                    awk '/connected/ && $2 == "connected" { printf $4 }')
+        regex='([0-9]+)x([0-9]+)\+[0-9]\+[0-9]'
+        while [[ ! "${screen_width}" && ! "${screen_length}" ]] && read -r line; do
+            [[ "${line}" == *"connected"* && "${line}" != *"disconnected"* ]] && {
+                [[ "${line}" =~ ${regex} ]] && {
+                    screen_width="${BASH_REMATCH[1]}"
+                    screen_length="${BASH_REMATCH[2]}"
+                }
+            }
+        done < <(xrandr --nograb --current)
 
     elif type -p xwininfo > /dev/null 2>&1; then
         read -r screen_width \
