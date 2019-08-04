@@ -62,3 +62,11 @@ alt + Return
 # Opens thunar
 alt + e
     thunar "${HOME}"
+
+# Opens dmenu
+alt + space
+    dmenu_run -fn "Inconsolata-10" \
+              -nb "#1d1f21" \
+              -nf "#c5c8c6" \
+              -sb "#b5bd68" \
+              -sf "#1d1f21"
