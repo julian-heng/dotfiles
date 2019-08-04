@@ -1,0 +1,55 @@
+[bar/bar]
+bottom = true
+width = 100%
+height = 18
+radius = 0.0
+fixed-center = false
+separator = " "
+
+background = ${colors.background}
+foreground = ${colors.foreground}
+
+border-top-size = 2
+border-color = ${colors.foreground_2}
+
+padding-left = 1
+padding-right = 1
+
+module-margin-left = 0
+module-margin-right = 0
+
+font-0 = inconsolata:size=10;3
+
+modules-left = bspwm
+modules-right = info date
+
+cursor-click = pointer
+cursor-scroll = ns-resize
+
+
+[colors]
+background = #1d1f21
+foreground = #c5c8c6
+foreground_2 = #808080
+
+
+[module/bspwm]
+type = custom/script
+exec = bash ~/.dotfiles/polybar/polybar_bspwm
+content-padding = 1
+tail = true
+interval = 0.1
+
+
+[module/info]
+type = custom/script
+exec = /usr/bin/sys-line '[ {cpu.load_avg}{cpu.temp? | {}_C}{cpu.fan? | {} RPM} ]{mem.percent? [ Mem: {}% ]}{disk.percent? [ {disk.dev}: {}% ]}{bat.is_present? [ Bat: {bat.percent}%{bat.time? | {}} ]}{net.ssid? [ {} ]}{misc.vol? [ vol: {}%]}{misc.scr? [ scr: {}% ]}' --disk-short-dev --cpu-temp-round=1 --{mem,disk,bat}-percent-round=1
+content-padding = 1
+tail = true
+
+
+[module/date]
+type = internal/date
+interval = 2
+label = %time%
+time = [ %a, %d %h | %H:%M ]

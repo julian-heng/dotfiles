@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+
+: "${wal_path:=/usr/share/wal}"
+: "${recursive:=true}"
+
+get_full_path()
+(
+    target="$1"
+
+    [[ -f "${target}" ]] && {
+        filename="${target##*/}"
+        [[ "${filename}" == "${target}" ]] && \
+            target="./${target}"
+        target="${target%/*}"
+    }
+
+    cd "${target}" || exit
+    full_path="${PWD}"
+
+    printf "%s" "${full_path%/}"
+)
+
+check_img()
+{
+    ext="${1##*.}"
+    if [[ ! -d "$1" && "${ext,,}" =~ ^(jpg|png)$ ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+get_file_list()
+{
+    dir="$1"
+    if [[ -f "${dir}" ]] && check_img "${dir}"; then
+        printf "%s\\n" "${dir}"
+    elif [[ -d "${dir}" ]]; then
+        if [[ "${recursive}" == "true" ]]; then
+            shopt -s globstar
+            for i in "${dir}"/**/*; do
+                check_img "$i" && \
+                    list+=("$i")
+            done
+            shopt -u globstar
+        else
+            for i in "${dir}"/*/*; do
+                check_img "$i" && \
+                    list+=("$i")
+            done
+        fi
+    fi
+
+    printf "%s\\n" "${list[@]}"
+}
+
+get_last_wal()
+{
+    mapfile -t feh_file < "${HOME}/.fehbg"
+    read -r _ _ last_wal <<< "${feh_file[1]}"
+    last_wal="${last_wal//\'}"
+    printf "%s" "${last_wal}"
+}
+
+print_usage()
+{
+    printf "%s\\n" "
+Usage: ${0##*/} -o --option --option \"value\"
+
+    Options:
+
+    [-i|--image \"path\"]         Image or directory for wallpaper
+    [-r|--recursive]            Search the image directory recursively
+    [-h|--help]                 Show this message
+
+    Settings:
+
+    wal_path:       ${wal_path}
+    recursive:      ${recursive}
+"
+}
+
+get_args()
+{
+    while (($# > 0)); do
+        case "$1" in
+            "-i"|"--image")         wal_path="$(get_full_path "${2%/}")"; shift ;;
+            "-r"|"--recursive")     recursive="true" ;;
+            "-h"|"--help")          print_usage; exit ;;
+        esac
+        shift
+    done
+}
+
+main()
+{
+    get_args "$@"
+
+    ! type -p feh > /dev/null 2>&1 && \
+        exit 1
+
+    mapfile -t file_list < <(get_file_list "${wal_path}")
+
+    [[ -f "${HOME}/.fehbg" ]] && \
+        last_wal="$(get_last_wal)"
+
+    until [[ "${img}" && "${img}" != "${last_wal}" ]]; do
+        index="$((RANDOM % ${#file_list[@]}))"
+        img="${file_list[${index}]}"
+    done
+
+    feh --bg-fill "${img}"
+}
+
+main "$@"

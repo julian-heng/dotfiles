@@ -6,28 +6,36 @@ MODE ?= install
 
 SCRIPT_DIR := ${PWD}
 CONFIG_DIR := ${HOME}/.config
+
 BASHRC_DIR := $(SCRIPT_DIR)/bashrc
+BSPWM_DIR := $(SCRIPT_DIR)/bspwm
 COMPTON_DIR := $(SCRIPT_DIR)/compton
 MPV_DIR := $(SCRIPT_DIR)/mpv
 NEOFETCH_DIR := $(SCRIPT_DIR)/neofetch
+POLYBAR_DIR := $(SCRIPT_DIR)/polybar
 RANGER_DIR := $(SCRIPT_DIR)/ranger
+SXHKD_DIR := $(SCRIPT_DIR)/sxhkd
 TMUX_DIR := $(SCRIPT_DIR)/tmux/tmux.conf
 UBERSICHT_DIR := $(SCRIPT_DIR)/ubersicht
 VIM_DIR := $(SCRIPT_DIR)/vimrc
 
-YABAI_FILE := $(SCRIPT_DIR)/yabai/yabairc
 SKHD_FILE := $(SCRIPT_DIR)/skhd/skhdrc
+YABAI_FILE := $(SCRIPT_DIR)/yabai/yabairc
 
 BASHRC_DEST := ${HOME}
+BSPWM_DEST := $(CONFIG_DIR)/bspwm
 COMPTON_DEST := $(CONFIG_DIR)/compton.conf
-YABAI_DEST := ${HOME}/.yabairc
 MPV_DEST := $(CONFIG_DIR)/mpv
 NEOFETCH_DEST := $(CONFIG_DIR)/neofetch
+POLYBAR_DEST := $(CONFIG_DIR)/polybar
 RANGER_DEST := $(CONFIG_DIR)/ranger
 SKHD_DEST := ${HOME}/.skhdrc
+SKHD_FILE := $(SCRIPT_DIR)/skhd/skhdrc
+SXHKD_DEST := $(CONFIG_DIR)/sxhkd
 TMUX_DEST := ${HOME}/.tmux.conf
 UBERSICHT_DEST := ${HOME}/Library/Application\ Support/Übersicht/widgets
 VIM_DEST := ${HOME}/.vim
+YABAI_DEST := ${HOME}/.yabairc
 
 $(shell mkdir -p $(CONFIG_DIR))
 
@@ -41,6 +49,8 @@ define link
 		ln -svf $(1) $(2); \
 	elif [ "$(MODE)" = "uninstall" ]; then \
 		$(call remove_link,$(2),-v); \
+	else \
+		printf "Unknown mode: %s\n" "$(MODE)"; \
 	fi
 endef
 
@@ -116,6 +126,22 @@ neofetch:
 ranger:
 	$(call link,$(RANGER_DIR),$(RANGER_DEST))
 
+   #########################
+######## Bspwm / Sxhkd ########
+   #########################
+
+bspwm:
+	$(call link,$(BSPWM_DIR),$(BSPWM_DEST))
+
+sxhkd:
+	$(call link,$(SXHKD_DIR),$(SXHKD_DEST))
+
+   ###################
+######## Polybar ########
+   ###################
+polybar:
+	$(call link,$(POLYBAR_DIR),$(POLYBAR_DEST))
+
    #################
 ######## Yabai ########
    #################
@@ -153,5 +179,5 @@ vim:
 
 .PHONY: submodule_init submodule_update linux_headless linux_lite linux mac \
 		windows bashrc_linux bashrc_macos bashrc_common compton_blur \
-		compton_noblur mpv neofetch ranger yabai skhd tmux ubersicht \
-		vim
+		compton_noblur mpv neofetch ranger yabai skhd bspwm sxhkd polybar \
+		tmux ubersicht vim

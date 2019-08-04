@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+get_desktop_id()
+{
+    if type -p xprop > /dev/null 2>&1; then
+        read -r _ _ desktop_id < <(xprop -root -notype _NET_CURRENT_DESKTOP)
+    fi
+}
+
+get_window_name()
+{
+    node="$(bspc query --nodes -n)"
+    bspc_out="$(bspc query --tree -n "${node}")"
+    bspc_out="${bspc_out##*"className\":\""}"
+    window_name="${bspc_out%%\"*}"
+}
+
+main()
+{
+    get_desktop_id
+    get_window_name
+
+    if [[ "${desktop_id}" && "${window_name}" ]]; then
+        printf "[ %s | %s ]" "${desktop_id}" "${window_name}"
+    elif [[ "${desktop_id}" || "${window_name}" ]]; then
+        printf "[ %s ]" "${desktop_id:-${window_name}}"
+    else
+        printf ""
+    fi
+}
+
+main

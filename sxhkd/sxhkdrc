@@ -1,0 +1,64 @@
+# Move / Navigate windows
+alt + {_,shift + }{h,j,k,l}
+    bspc node -{f,s} {west,south,north,east}
+
+# Resize windows
+alt + control + {h,j,k,l}
+    bash "${HOME}/.config/bspwm/resize" {left,down,up,right} 30
+
+# Preselection
+alt + control + shift + {h,j,k,l}
+    bspc node -p {west,south,north,east}
+
+alt + control + shift + c
+    bspc node -p cancel
+
+# Tabbing across windows
+alt + {_,shift +} Tab
+    bspc node -f {next,prev}
+
+# Move focus container to workspace
+alt + {_,shift + }{1-9,0}
+    bspc {desktop -f,node -d} '^{1-9,10}'
+
+# Equalize size of windows
+alt + control + e
+    bspc node @/ --equalize
+
+# Rotate windows clockwise and anticlockwise
+alt + {_,shift + } + r
+    bspc node @/ --circulate {backward,forward}
+
+# Rotate on X and Y axis
+alt + shift + {x,y}
+    bspc node @/ --flip {horizontal,vertical}
+
+# Close / Kill windows
+alt + {_,shift + } w
+    bspc node -{c,k}
+
+# Restart sxhkd
+alt + shift + Escape
+    pkill -USR1 -x sxhkd
+
+# Reload bspwm config
+alt + control + shift + Escape
+    bash "${HOME}/.config/bspwm/bspwmrc"
+
+# Reload polybar config
+alt + control + Escape
+    bash "${HOME}/.dotfiles/polybar/reload"
+
+# Exit bspwm
+alt + shift + q
+    bspc quit
+
+# WM unspecific
+
+# Opens terminal
+alt + Return
+    st
+
+# Opens thunar
+alt + e
+    thunar "${HOME}"
