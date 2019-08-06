@@ -113,10 +113,7 @@ prompter()
             unset in_part
             IFS=" " read -ra in_part <<< "${part}"
             for i in "${in_part[@]}"; do
-                case "$i" in
-                    "."*) in_PWD="${in_PWD}${i:0:2}" ;;
-                    *) in_PWD="${in_PWD}${i:0:1}" ;;
-                esac
+                [[ "$i" == "."* ]] && in_PWD="${in_PWD}${i:0:2}" || in_PWD="${in_PWD}${i:0:1}"
             done
             _PWD="${_PWD}/${in_PWD}"
         done
