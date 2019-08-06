@@ -1,4 +1,4 @@
-command: "sys-line '[ {cpu.load_avg}{cpu.temp? | {}_C}{cpu.fan? | {} RPM} ]{mem.percent? [ Mem: {}% ]}{disk.percent? [ {disk.dev}: {}% ]}{bat.is_present? [ Bat: {bat.percent}%{bat.time? | {}} ]}{net.ssid? [ {} ]} [ {misc.vol?vol: {}%}{misc.scr? | scr: {}%} ] [ {date.date} | {date.time} ]' --disk-short-dev --cpu-temp-round=1 --{mem,disk,bat}-percent-round=1"
+command: "sys-line '[ {cpu.load_avg}{cpu.temp? | {}°C}{cpu.fan? | {} RPM} ]{mem.percent? [ Mem: {}% ]}{disk.percent? [ {disk.dev}: {}% ]}{bat.is_present? [ Bat: {bat.percent}%{bat.time? | {}} ]}{net.ssid? [ {} ]} [ {misc.vol?vol: {}%}{misc.scr? | scr: {}%} ] [ {date.date} | {date.time} ]' --disk-short-dev --cpu-temp-round=1 --{mem,disk,bat}-percent-round=1"
 
 refreshFrequency: 5000 # ms
 
