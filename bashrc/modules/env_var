@@ -4,7 +4,15 @@
 # shellcheck disable=2148,2154
 
 script_dir="${module_dir/'bashrc/modules'/'scripts'}"
-PATH="${PATH}:${HOME}/.local/bin:${script_dir}/info:${script_dir}/utils"
+
+PATH="${PATH}:${script_dir}/info:${script_dir}/utils"
+if [[ "${distro}" == "MacOS" ]]; then
+    PATH="${PATH}:${HOME}/Library/Python/3.7/bin"
+else
+    PATH="${PATH}:${HOME}/.local/bin"
+fi
+
+
 RANGER_LOAD_DEFAULT_RC="FALSE"
 HISTCONTROL="ignoreboth"
 EDITOR="vim"
