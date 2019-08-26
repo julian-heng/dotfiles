@@ -25,7 +25,8 @@ main()
     if type -p sys-line > /dev/null 2>&1; then
         out_1_fmt=$'| {cpu.load_avg}{cpu.temp? | {}°C}{mem.percent? | Mem: {mem.used} ({}%)}{disk.percent? | {disk.dev}: {disk.used} ({}%)} | {date.date} | {date.time} |'
         out_2_fmt=$'| {cpu.load_avg}{cpu.temp? | {}°C}{mem.percent? | Mem: {}%}{disk.percent? | Disk: {}%} | {date.date} | {date.time} |'
-        out_1="$(sys-line --{mem,disk}-percent-round=0 \
+        out_1="$(sys-line --{mem,disk}-used-round=2 \
+                          --{mem,disk}-percent-round=0 \
                           --{mem,disk}-used-prefix=GiB \
                           --disk-short-dev \
                           "${out_1_fmt}")"
