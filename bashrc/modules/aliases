@@ -129,6 +129,29 @@ man()
     MANWIDTH="$((${COLUMNS:-100} > 100 ? 100 : COLUMNS))" command man "$@"
 }
 
+catm()
+{
+    [[ ! "${COLUMNS}" ]] && \
+        shopt -s checkwinsize; (:;:)
+
+    eval printf "%0.s=" "{1..${COLUMNS:-$(tput cols)}}"
+    printf "%s\\n" "$1"
+    eval printf "%0.s=" "{1..${COLUMNS:-$(tput cols)}}"
+    cat "$1"
+    eval printf "%0.s=" "{1..${COLUMNS:-$(tput cols)}}"
+
+    for i in "${@:1}"; do
+        printf "\\n"
+        eval printf "%0.s=" "{1..${COLUMNS:-$(tput cols)}}"
+        printf "%s\\n" "$i"
+        eval printf "%0.s=" "{1..${COLUMNS:-$(tput cols)}}"
+        printf "\\n"
+        cat "$i"
+        eval printf "%0.s=" "{1..${COLUMNS:-$(tput cols)}}"
+        printf "\\n"
+    done
+}
+
 mpv-loop()
 {
     (($# > 2)) && \
