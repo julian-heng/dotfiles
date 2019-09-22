@@ -134,19 +134,26 @@ catm()
     [[ ! "${COLUMNS}" ]] && \
         shopt -s checkwinsize; (:;:)
 
+    printf "\\n"
     eval printf "%0.s=" "{1..${COLUMNS:-$(tput cols)}}"
     printf "%s\\n" "$1"
     eval printf "%0.s=" "{1..${COLUMNS:-$(tput cols)}}"
+    printf "\\n"
     cat "$1"
+
+    printf "\\n"
     eval printf "%0.s=" "{1..${COLUMNS:-$(tput cols)}}"
+    printf "\\n"
 
     for i in "${@:1}"; do
         printf "\\n"
         eval printf "%0.s=" "{1..${COLUMNS:-$(tput cols)}}"
-        printf "%s\\n" "$i"
+        printf "\\n%s\\n" "$i"
         eval printf "%0.s=" "{1..${COLUMNS:-$(tput cols)}}"
         printf "\\n"
         cat "$i"
+
+        printf "\\n"
         eval printf "%0.s=" "{1..${COLUMNS:-$(tput cols)}}"
         printf "\\n"
     done
