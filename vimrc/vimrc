@@ -128,9 +128,5 @@ function! LightlineFilename()
     return filename . modified
 endfunction
 
-" NerdTree
-map <C-n> :NERDTreeToggle<CR>
-let NERDTreeWinSize = 36
-
 " vim-markdown-preview
 let vim_markdown_preview_github=1
