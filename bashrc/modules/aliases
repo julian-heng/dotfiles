@@ -141,7 +141,6 @@ catm()
     printf "\\n"
     cat "$1"
 
-    printf "\\n"
     eval printf "%0.s=" "{1..${COLUMNS:-$(tput cols)}}"
     printf "\\n"
 
@@ -153,7 +152,6 @@ catm()
         printf "\\n"
         cat "$i"
 
-        printf "\\n"
         eval printf "%0.s=" "{1..${COLUMNS:-$(tput cols)}}"
         printf "\\n"
     done
