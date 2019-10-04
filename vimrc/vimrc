@@ -1,6 +1,3 @@
-" Disabled plugins
-let g:pathogen_disabled = ['vim-devicons']
-
 runtime bundle/vim-pathogen/autoload/pathogen.vim
 execute pathogen#infect()
 filetype plugin indent on

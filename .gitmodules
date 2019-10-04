@@ -4,9 +4,6 @@
 [submodule "vimrc/bundle/lightline.vim"]
 	path = vimrc/bundle/lightline.vim
 	url = https://github.com/itchyny/lightline.vim
-[submodule "vimrc/bundle/vim-devicons"]
-	path = vimrc/bundle/vim-devicons
-	url = https://github.com/ryanoasis/vim-devicons.git
 [submodule "/home/julian/.dotfiles/vimrc/bundle/indentLine"]
 	path = vimrc/bundle/indentLine
 	url = https://github.com/Yggdroot/indentLine.git
