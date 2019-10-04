@@ -4,12 +4,6 @@
 [submodule "vimrc/bundle/lightline.vim"]
 	path = vimrc/bundle/lightline.vim
 	url = https://github.com/itchyny/lightline.vim
-[submodule "vimrc/bundle/nerdtree"]
-	path = vimrc/bundle/nerdtree
-	url = https://github.com/scrooloose/nerdtree.git
-[submodule "vimrc/bundle/nerdtree-git-plugin"]
-	path = vimrc/bundle/nerdtree-git-plugin
-	url = https://github.com/Xuyuanp/nerdtree-git-plugin.git
 [submodule "vimrc/bundle/vim-devicons"]
 	path = vimrc/bundle/vim-devicons
 	url = https://github.com/ryanoasis/vim-devicons.git
