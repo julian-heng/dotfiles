@@ -1,6 +1,3 @@
-" Disabled plugins
-let g:pathogen_disabled = ['vim-devicons']
-
 runtime bundle/vim-pathogen/autoload/pathogen.vim
 execute pathogen#infect()
 filetype plugin indent on
@@ -127,10 +124,6 @@ function! LightlineFilename()
     let modified = &modified ? ' +' : ''
     return filename . modified
 endfunction
-
-" NerdTree
-map <C-n> :NERDTreeToggle<CR>
-let NERDTreeWinSize = 36
 
 " vim-markdown-preview
 let vim_markdown_preview_github=1
