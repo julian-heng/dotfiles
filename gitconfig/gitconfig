@@ -4,6 +4,12 @@
 [url "ssh://git@github.com/"]
     insteadOf = github://
 
+[url "https://www.gitlab.com/"]
+    insteadOf = gitlab-https://
+
+[url "https://www.github.com/"]
+    insteadOf = github-https://
+
 [color "branch"]
     current = white reverse
     local = white
