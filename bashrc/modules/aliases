@@ -22,101 +22,22 @@ gcll()
     done
 }
 
-gdiff()
-{
-    local -a args
-
-    args=("--color=always" "$@")
-
-    if (($(wc -l < <(git --no-pager diff "${args[@]}")) > LINES)); then
-        less -RSK < <(git --no-pager diff "${args[@]}")
-    else
-        less -RSFXK < <(git --no-pager diff "${args[@]}")
-    fi
-}
-
 glog()
 {
-    local -a format
-    local -a args
+    [[ ! ${GIT_LOG_FORMAT} ]] && {
+        GIT_LOG_FORMAT=(
+            "┌[%C(bold blue)%H%C(reset)]%C(auto)%d%C(reset)%n"
+            "└──[%C(bold cyan)%aD%C(reset)]: %C(bold green)%ar%C(reset)%n%n"
+            "%w(0,4,4)Author:  %an %C(dim white)<%ae>%C(reset)%n"
+            "%w(0,4,4)Subject: %s%n"
+            "%w(0,4,4)%+b%n"
+        )
 
-    format=(
-        "┌[%C(bold blue)%H%C(reset)]%C(auto)%d%C(reset)%n"
-        "└──[%C(bold cyan)%aD%C(reset)]: %C(bold green)%ar%C(reset)%n%n"
-        "%w(0,4,4)Author:  %an %C(dim white)<%ae>%C(reset)%n"
-        "%w(0,4,4)Subject: %s%n"
-        "%w(0,4,4)%+b%n"
-    )
+        IFS="" GIT_LOG_FORMAT="${GIT_LOG_FORMAT[*]}"
+        export GIT_LOG_FORMAT
+    }
 
-    IFS="" format_str="${format[*]}"
-    args=("--color=always" "--graph" "--format=format:${format_str}" "$@")
-
-    git_out="$(git --no-pager log "${args[@]}" | awk 'NF > 0 {blank=0} NF == 0 {blank++} blank < 2')"
-
-    if (($(wc -l <<< "${git_out}") > LINES)); then
-        less -RS <<< "${git_out}"
-    else
-        less -RSFX <<< "${git_out}"
-    fi
-}
-
-glog2()
-{
-    local -a format
-    local -a args
-
-    format=(
-        "%C(bold blue)%h%C(reset) %C(bold yellow)%ar%C(reset)%x09| "
-        "%C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)"
-    )
-
-    IFS="" format_str="${format[*]}"
-    args=("--color=always" "--format=format:${format_str}" "$@")
-
-    git_out="$(git --no-pager log "${args[@]}")"
-
-    if (($(wc -l <<< "${git_out}") > LINES)); then
-        less -RS <<< "${git_out}"
-    else
-        less -RSFX <<< "${git_out}"
-    fi
-}
-
-glog3()
-{
-    local -a format
-    local -a args
-
-    format=(
-        "%C(bold blue)%h%C(reset) %C(bold yellow)%ar%C(reset) | "
-        "%C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)"
-    )
-
-    IFS="" format_str="${format[*]}"
-    args=("--color=always" "--graph" "--format=format:${format_str}" "$@")
-
-    git_out="$(git --no-pager log "${args[@]}")"
-
-    if (($(wc -l <<< "${git_out}") > LINES)); then
-        less -RS <<< "${git_out}"
-    else
-        less -RSFX <<< "${git_out}"
-    fi
-}
-
-glog4()
-{
-    local -a args
-
-    args=("--color=always" "--graph" "$@")
-
-    git_out="$(git --no-pager log "${args[@]}")"
-
-    if (($(wc -l <<< "${git_out}") > LINES)); then
-        less -RS <<< "${git_out}"
-    else
-        less -RSFX <<< "${git_out}"
-    fi
+    git log --color=always --graph --format=format:"${GIT_LOG_FORMAT}" "$@"
 }
 
 cb()
@@ -189,6 +110,7 @@ alias gpp="git push"
 alias grm="git rm"
 alias gcl="git clone"
 alias gstat="git status --branch"
+alias gdiff="git diff --color=always"
 
 alias grep="grep --color=always"
 
