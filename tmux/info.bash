@@ -30,13 +30,12 @@ main()
                           --{mem,disk}-used-prefix=GiB \
                           --disk-short-dev \
                           "${out_1_fmt}")"
-        out_2="$(sys-line --cpu-load-short \
-                          --{mem,disk}-percent-round=0 \
-                          "${out_2_fmt}")"
-
         if ((${#out_1} < (window_size / 2))); then
             printf "%s" "${out_1}"
         else
+            out_2="$(sys-line --cpu-load-short \
+                              --{mem,disk}-percent-round=0 \
+                              "${out_2_fmt}")"
             printf "%s" "${out_2}"
         fi
     else

@@ -45,6 +45,16 @@ PS4='+${BASH_SOURCE:+${BASH_SOURCE}:}${LINENO:+${LINENO}:}${FUNCNAME:+${FUNCNAME
         [[ -e "${line}" ]] && DISPLAY="${line}"
     done < <(printf "%s\\n" /private/tmp/com.apple.launchd.**/*xquartz*)
 
+GIT_LOG_FORMAT=(
+    "┌[%C(bold blue)%H%C(reset)]%C(auto)%d%C(reset)%n"
+    "└──[%C(bold cyan)%aD%C(reset)]: %C(bold green)%ar%C(reset)%n%n"
+    "%w(0,4,4)Author:  %an %C(dim white)<%ae>%C(reset)%n"
+    "%w(0,4,4)Subject: %s%n"
+    "%w(0,4,4)%+b%n"
+)
+
+IFS="" GIT_LOG_FORMAT="${GIT_LOG_FORMAT[*]}"
+
 #####################
 ##### Man Pages #####
 #####################
@@ -73,6 +83,8 @@ export PS4
 [[ "${distro}" == "MacOS" ]] && \
     [[ "${DISPLAY}" ]] && \
         export DISPLAY
+
+export GIT_LOG_FORMAT
 
 export LESS_TERMCAP_mb
 export LESS_TERMCAP_md
