@@ -1,0 +1,128 @@
+#!/usr/bin/env -S python3 -B
+
+from os import chdir, devnull
+from pathlib import Path
+from re import findall
+from shutil import get_terminal_size
+from subprocess import call, PIPE, run
+from sys import argv, stdout
+from typing import List, Tuple, Callable
+
+
+class Git():
+
+    def __init__(self):
+        cmd = ["git", "--version"]
+        keys = ["major", "minor", "patch"]
+        vals = [int(i) for i in findall(r"\d+", run_cmd(cmd)[1])]
+        version = dict(zip(keys, vals))
+
+        check = lambda i: i["major"] == 1 and i["minor"] == 8 and i["patch"] < 5
+        self.run = GitRunnerOld() if check(version) else GitRunnerNew()
+        self.version = version
+
+
+    def is_repo(self, path: Path) -> bool:
+        check = lambda p: p.exists() and p.is_dir()
+        return (check(Path("{}/.git".format(path))) or
+                len(self.run.rev_parse(path, ["--git-dir"]).split("\n")) > 0)
+
+
+    def fetch(self, path: Path) -> int:
+        self.run.fetch(path)
+
+
+    def pull(self, path: Path) -> int:
+        self.run.pull(path)
+
+
+    def rev_parse(self, path: Path, args: List[str]) -> str:
+        return self.run.rev_parse(path, args)
+
+
+class GitRunnerNew():
+
+    def fetch(self, path: Path) -> int:
+        return call(["git", "-C", path, "fetch", "--quiet"])
+
+
+    def pull(self, path: Path) -> int:
+        return call(["git", "-C", path, "pull"])
+
+
+    def rev_parse(self, path: Path, args: List[str]) -> str:
+        return run_cmd(["git", "-C", str(path), "rev-parse"] + args)[1]
+
+
+class GitRunnerOld():
+
+    def execute_in_directory(path: Path, func: Callable, *args, **kwargs):
+        prev_cwd = Path.cwd()
+        try:
+            chdir(str(path))
+            return func(*args, **kwargs)
+        except NotADirectoryError:
+            pass
+        finally:
+            chdir(str(prev_cwd))
+
+
+    def fetch(self, path: Path) -> int:
+        cmd = ["git", "fetch", "--quiet"]
+        return self.execute_in_directory(path, call, cmd)
+
+
+    def pull(self, path: Path) -> int:
+        cmd = ["git", "pull"]
+        return self.execute_in_directory(path, call, cmd)
+
+
+    def rev_parse(self, path: Path, args: List[str]) -> str:
+        cmd = ["git", "rev-parse"] + args
+        ret = self.execute_in_directory(path, run_cmd, cmd)
+        return ret[1] if ret else None
+
+
+def run_cmd(cmd: List[str]) -> Tuple[int, str]:
+    out = PIPE
+    err = open(devnull, "w")
+    proc = run(cmd, stdout=out, stderr=err)
+    return proc.returncode, proc.stdout.decode("utf-8").strip()
+
+
+def main():
+    repos = dict()
+    git = Git()
+
+    paths = argv[1:] if argv[1:] else ["."]
+
+    for i in paths:
+        for j in Path(i).glob("*"):
+            repo_path = git.rev_parse(j, ["--show-toplevel"])
+            if repo_path:
+                if repo_path in repos:
+                    break
+                elif git.is_repo(j):
+                    repos[repo_path] = "1"
+
+    repos = sorted(repos.keys())
+
+    for i in repos:
+        cols, _ = get_terminal_size(fallback=(80, 0))
+
+        print("Updating {}... ".format(i), end="")
+        stdout.flush()
+
+        git.fetch(i)
+        local_ref = git.rev_parse(i, ["HEAD"])
+        remote_ref = git.rev_parse(i, ["@{u}"])
+
+        if not remote_ref or local_ref == remote_ref:
+            print("Already up to date.")
+        else:
+            print("\n{}".format("=" * cols))
+            git.pull(i)
+            print("{}".format("=" * cols))
+
+
+main()
