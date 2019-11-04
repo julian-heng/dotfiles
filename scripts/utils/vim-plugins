@@ -69,7 +69,7 @@ get_plugins()
     for i in "${plugin_managers[@]}"; do
         case "${i,,}" in
             "pathogen")
-                count="0"
+                count="-1"
 
                 while [[ ! "${pathogen_dir}" ]] && \
                       ((++count < ${#vimrc_contents[@]})); do
@@ -98,7 +98,7 @@ get_plugins()
             ;;
 
             "plug")
-                count="0"
+                count="-1"
                 unset start
                 unset end
 
@@ -132,7 +132,7 @@ get_plugins()
             ;;
 
             "vundle")
-                count="0"
+                count="-1"
                 unset start
                 unset end
 
@@ -157,7 +157,7 @@ get_plugins()
             ;;
 
             "neobundle")
-                count="0"
+                count="-1"
                 unset start
                 unset end
 
