@@ -1,4 +1,5 @@
 #!/usr/bin/env -S python3 -B
+# vim: syntax=python
 
 from os import chdir, devnull
 from pathlib import Path
