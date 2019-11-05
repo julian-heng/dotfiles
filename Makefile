@@ -8,34 +8,47 @@ SCRIPT_DIR := ${PWD}
 CONFIG_DIR := ${HOME}/.config
 
 BASHRC_DIR := $(SCRIPT_DIR)/bashrc
-BSPWM_DIR := $(SCRIPT_DIR)/bspwm
-COMPTON_DIR := $(SCRIPT_DIR)/compton
-MPV_DIR := $(SCRIPT_DIR)/mpv
-NEOFETCH_DIR := $(SCRIPT_DIR)/neofetch
-POLYBAR_DIR := $(SCRIPT_DIR)/polybar
-RANGER_DIR := $(SCRIPT_DIR)/ranger
-SXHKD_DIR := $(SCRIPT_DIR)/sxhkd
-TMUX_DIR := $(SCRIPT_DIR)/tmux/tmux.conf
-UBERSICHT_DIR := $(SCRIPT_DIR)/ubersicht
-VIM_DIR := $(SCRIPT_DIR)/vimrc
-
-SKHD_FILE := $(SCRIPT_DIR)/skhd/skhdrc
-YABAI_FILE := $(SCRIPT_DIR)/yabai/yabairc
-
 BASHRC_DEST := ${HOME}
+
+BSPWM_DIR := $(SCRIPT_DIR)/bspwm
 BSPWM_DEST := $(CONFIG_DIR)/bspwm
+
+COMPTON_DIR := $(SCRIPT_DIR)/compton
 COMPTON_DEST := $(CONFIG_DIR)/compton.conf
+
+MPV_DIR := $(SCRIPT_DIR)/mpv
 MPV_DEST := $(CONFIG_DIR)/mpv
+
+NEOFETCH_DIR := $(SCRIPT_DIR)/neofetch
 NEOFETCH_DEST := $(CONFIG_DIR)/neofetch
+
+POLYBAR_DIR := $(SCRIPT_DIR)/polybar
 POLYBAR_DEST := $(CONFIG_DIR)/polybar
+
+QUTEBROWSER_DIR := $(SCRIPT_DIR)/qutebrowser
+QUTEBROWSER_DEST := $(CONFIG_DIR)/qutebrowser
+
+RANGER_DIR := $(SCRIPT_DIR)/ranger
 RANGER_DEST := $(CONFIG_DIR)/ranger
-SKHD_DEST := ${HOME}/.skhdrc
+
 SKHD_FILE := $(SCRIPT_DIR)/skhd/skhdrc
+SKHD_DEST := ${HOME}/.skhdrc
+
+SXHKD_DIR := $(SCRIPT_DIR)/sxhkd
 SXHKD_DEST := $(CONFIG_DIR)/sxhkd
+
+TMUX_DIR := $(SCRIPT_DIR)/tmux/tmux.conf
 TMUX_DEST := ${HOME}/.tmux.conf
+
+UBERSICHT_DIR := $(SCRIPT_DIR)/ubersicht
 UBERSICHT_DEST := ${HOME}/Library/Application\ Support/Übersicht/widgets
+
+VIM_DIR := $(SCRIPT_DIR)/vimrc
 VIM_DEST := ${HOME}/.vim
+
+YABAI_FILE := $(SCRIPT_DIR)/yabai/yabairc
 YABAI_DEST := ${HOME}/.yabairc
+
 
 $(shell mkdir -p $(CONFIG_DIR))
 
@@ -119,6 +132,13 @@ mpv:
 neofetch:
 	$(call link,$(NEOFETCH_DIR),$(NEOFETCH_DEST))
 
+   #######################
+######## Qutebrowser ########
+   #######################
+
+qutebrowser:
+	$(call link,$(QUTEBROWSER_DIR),$(QUTEBROWSER_DEST))
+
    ##################
 ######## Ranger ########
    ##################
@@ -179,5 +199,5 @@ vim:
 
 .PHONY: submodule_init submodule_update linux_headless linux_lite linux mac \
 		windows bashrc_linux bashrc_macos bashrc_common compton_blur \
-		compton_noblur mpv neofetch ranger yabai skhd bspwm sxhkd polybar \
-		tmux ubersicht vim
+		compton_noblur mpv neofetch qutebrowser ranger yabai skhd bspwm sxhkd \
+		polybar tmux ubersicht vim
