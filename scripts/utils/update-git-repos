@@ -30,11 +30,11 @@ class Git():
 
 
     def fetch(self, path: Path) -> int:
-        self.run.fetch(path)
+        return self.run.fetch(path)
 
 
     def pull(self, path: Path) -> int:
-        self.run.pull(path)
+        return self.run.pull(path)
 
 
     def rev_parse(self, path: Path, args: List[str]) -> str:
