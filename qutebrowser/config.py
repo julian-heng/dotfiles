@@ -83,7 +83,7 @@ config.set("tabs.title.alignment", "left")
 config.set("tabs.padding", {"bottom": 2, "left": 4, "right": 4, "top": 2})
 
 # Url settings
-config.set("url.default_page", "julian-heng.github.io")
+config.set("url.default_page", "https://julian-heng.gitlab.io/startpage-new")
 config.set("url.start_pages", [config.get("url.default_page")])
 
 # Set colors
