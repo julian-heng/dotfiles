@@ -3,15 +3,36 @@
 #########################
 # shellcheck disable=2148,2154
 
+# helper function to add paths to the PATH variable
+add_to_path()
+{
+    [[ -e "${2}" && -d "${2}" ]] && \
+        if [[ "${1}" == "append" ]]; then
+            PATH="${PATH}:${2}"
+        elif [[ "${1}" == "prepend" ]]; then
+            PATH="${2}:${PATH}"
+        fi
+}
+
+# Custom scripts
 script_dir="${module_dir/'bashrc/modules'/'scripts'}"
+add_to_path "append" "${script_dir}/info"
+add_to_path "append" "${script_dir}/utils"
 
-PATH="${PATH}:${script_dir}/info:${script_dir}/utils"
 if [[ "${distro}" == "MacOS" ]]; then
-    PATH="${PATH}:${HOME}/Library/Python/3.7/bin"
-else
-    PATH="${PATH}:${HOME}/.local/bin"
-fi
+    # Python binaries
+    shopt -s nullglob
+    for dir in "${HOME}/Library/Python/"*"/bin"; do
+        add_to_path "append" "${dir}"
+    done
+    shopt -u nullglob
 
+    # Qt binaries
+    add_to_path "prepend" "/usr/local/opt/qt/bin"
+else
+    # Local binaries
+    add_to_path "append" "${HOME}/.local/bin"
+fi
 
 RANGER_LOAD_DEFAULT_RC="FALSE"
 HISTCONTROL="ignoreboth"
@@ -59,13 +80,13 @@ IFS="" GIT_LOG_FORMAT="${GIT_LOG_FORMAT[*]}"
 ##### Man Pages #####
 #####################
 
-LESS_TERMCAP_mb="${fb[1]}"          # enter blinking mode - red
-LESS_TERMCAP_md="${fb[5]}"          # enter double-bright mode - bold, magenta
-LESS_TERMCAP_me="${reset}"          # turn off all appearance modes (mb, md, so, us)
-LESS_TERMCAP_se="${reset}"          # leave standout mode
-LESS_TERMCAP_so="${fb[3]}"          # enter standout mode - yellow
-LESS_TERMCAP_ue="${reset}"          # leave underline mode
-LESS_TERMCAP_us="${fb[6]}"          # enter underline mode - cyan
+LESS_TERMCAP_mb="${fb[1]}" # enter blinking mode - red
+LESS_TERMCAP_md="${fb[5]}" # enter double-bright mode - bold, magenta
+LESS_TERMCAP_me="${reset}" # turn off all appearance modes (mb, md, so, us)
+LESS_TERMCAP_se="${reset}" # leave standout mode
+LESS_TERMCAP_so="${fb[3]}" # enter standout mode - yellow
+LESS_TERMCAP_ue="${reset}" # leave underline mode
+LESS_TERMCAP_us="${fb[6]}" # enter underline mode - cyan
 
 ###################
 ##### Exports #####
@@ -80,8 +101,7 @@ export PS4
 [[ "${MAKEFLAGS}" ]] && \
     export MAKEFLAGS
 
-[[ "${distro}" == "MacOS" ]] && \
-    [[ "${DISPLAY}" ]] && \
+[[ "${distro}" == "MacOS" && "${DISPLAY}" ]] && \
         export DISPLAY
 
 export GIT_LOG_FORMAT
