@@ -61,10 +61,13 @@ PS4='+${BASH_SOURCE:+${BASH_SOURCE}:}${LINENO:+${LINENO}:}${FUNCNAME:+${FUNCNAME
     MAKEFLAGS="-j${cores:-1}"
 }
 
-[[ "${distro}" == "MacOS" ]] && type -p Xquartz > /dev/null 2>&1 && \
+[[ "${distro}" == "MacOS" ]] && type -p Xquartz > /dev/null 2>&1 && {
+    shopt -s nullglob
     while [[ ! "${DISPLAY}" ]] && read -r line; do
         [[ -e "${line}" ]] && DISPLAY="${line}"
     done < <(printf "%s\\n" /private/tmp/com.apple.launchd.**/*xquartz*)
+    shopt -u nullglob
+}
 
 GIT_LOG_FORMAT=(
     "┌[%C(bold blue)%H%C(reset)]%C(auto)%d%C(reset)%n"
