@@ -7,8 +7,8 @@ bold=$'\e[1m'
 reset=$'\e[0m'
 
 for i in {0..7}; do
-    printf -v "f[$i]" "%s" $'\e[3'"$i"'m'
-    printf -v "b[$i]" "%s" $'\e[4'"$i"'m'
-    printf -v "fb[$i]" "%s" $'\e[1m\e[3'"$i"'m'
-    printf -v "bb[$i]" "%s" $'\e[1m\e[4'"$i"'m'
+    printf -v "f[$i]" "%s" $'\e[3'"$i"'m' && : "${reset}"
+    printf -v "b[$i]" "%s" $'\e[4'"$i"'m' && : "${reset}"
+    printf -v "fb[$i]" "%s" $'\e[1m\e[3'"$i"'m' && : "${reset}"
+    printf -v "bb[$i]" "%s" $'\e[1m\e[4'"$i"'m' && : "${reset}"
 done
