@@ -4,7 +4,7 @@
 #   qute://help/settings.html
 
 # Uncomment this to still load settings configured via autoconfig.yml
-# config.load_autoconfig()
+config.load_autoconfig()
 
 # Enable JavaScript.
 # Type: Bool
@@ -28,13 +28,21 @@ config.bind("<Ctrl-Shift-Tab>", "tab-prev")
 config.bind("<Ctrl-D>", "scroll-page 0 -1")
 config.bind("<Ctrl-F>", "scroll-page 0 1")
 
+config.unbind("q")
+
 # Set search engines
 config.set("url.searchengines", {
-    "DEFAULT": "https://google.com.au/search?q={}"
+    "DEFAULT": "https://www.google.com.au/search?q={}",
+    "!g": "https://www.google.com.au/search?q={}",
+    "!r": "https://old.reddit.com/r/{}",
+    "!rs": "https://old.reddit.com/search?q={}",
+    "!yt": "https://www.youtube.com/results?search_query={}",
+    "!wiki": "https://en.wikipedia.org/wiki/Search?search={}"
 })
 
 # General settings
 config.set("content.notifications", False)
+config.set("content.pdfjs", True)
 config.set("editor.command", ["vim", "{file}"])
 
 # Font settings
@@ -72,9 +80,10 @@ config.set("tabs.min_width", 60)
 config.set("tabs.position", "top")
 config.set("tabs.show", "multiple")
 config.set("tabs.title.alignment", "left")
+config.set("tabs.padding", {"bottom": 2, "left": 4, "right": 4, "top": 2})
 
 # Url settings
-config.set("url.default_page", "julian-heng.github.io")
+config.set("url.default_page", "https://julian-heng.gitlab.io/startpage")
 config.set("url.start_pages", [config.get("url.default_page")])
 
 # Set colors
