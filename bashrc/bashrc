@@ -116,12 +116,12 @@ main()
     for i in "${modules[@]}"; do
         secure_source "${i}"
     done
-
-    unset secure_source
-    unset get_distro
-    unset get_full_path
-    unset get_module_path
-    unset main
 }
 
 [[ "$-" == *"i"* ]] && main
+
+unset secure_source
+unset get_distro
+unset get_full_path
+unset get_module_path
+unset main
