@@ -10,9 +10,6 @@ CONFIG_DIR := ${HOME}/.config
 BASHRC_DIR := $(SCRIPT_DIR)/bashrc
 BASHRC_DEST := ${HOME}
 
-COMPTON_DIR := $(SCRIPT_DIR)/compton
-COMPTON_DEST := $(CONFIG_DIR)/compton.conf
-
 MPV_DIR := $(SCRIPT_DIR)/mpv
 MPV_DEST := $(CONFIG_DIR)/mpv
 
@@ -87,16 +84,6 @@ bashrc_common:
 	$(call link,$(BASHRC_DIR)/bash_profile,$(BASHRC_DEST)/.bash_profile)
 	$(call link,$(BASHRC_DIR)/bashrc,$(BASHRC_DEST)/.bashrc)
 
-   ###################
-######## Compton ########
-   ###################
-
-compton_blur:
-	$(call link,$(COMPTON_DIR)/blur.conf,$(COMPTON_DEST))
-
-compton_noblur:
-	$(call link,$(COMPTON_DIR)/no-blur.conf,$(COMPTON_DEST))
-
    ###############
 ######## Mpv ########
    ###############
@@ -161,6 +148,5 @@ vim:
 	$(call link,$(VIM_DIR),$(VIM_DEST))
 
 .PHONY: submodule_init submodule_update linux_headless linux_lite linux mac \
-		windows bashrc_linux bashrc_macos bashrc_common compton_blur \
-		compton_noblur mpv neofetch qutebrowser ranger yabai skhd tmux \
-		ubersicht vim
+        windows bashrc_linux bashrc_macos bashrc_common mpv neofetch \
+        qutebrowser ranger yabai skhd tmux ubersicht vim
