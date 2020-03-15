@@ -17,9 +17,6 @@ NEOFETCH_DEST := $(CONFIG_DIR)/neofetch
 QUTEBROWSER_DIR := $(SCRIPT_DIR)/qutebrowser
 QUTEBROWSER_DEST := $(CONFIG_DIR)/qutebrowser
 
-RANGER_DIR := $(SCRIPT_DIR)/ranger
-RANGER_DEST := $(CONFIG_DIR)/ranger
-
 SKHD_FILE := $(SCRIPT_DIR)/skhd/skhdrc
 SKHD_DEST := ${HOME}/.skhdrc
 
@@ -81,9 +78,6 @@ neofetch:
 
 qutebrowser:
 	$(call link,$(QUTEBROWSER_DIR),$(QUTEBROWSER_DEST))
-
-ranger:
-	$(call link,$(RANGER_DIR),$(RANGER_DEST))
 
 yabai:
 	$(call link,$(YABAI_FILE),$(YABAI_DEST))
