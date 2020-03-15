@@ -19,3 +19,7 @@ set convert-meta off
 
 set show-all-if-ambiguous on
 set visible-stats on
+
+set colored-stats on
+set colored-completion-prefix on
+set menu-complete-display-prefix on
