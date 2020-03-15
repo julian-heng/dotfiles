@@ -73,16 +73,6 @@ submodule_init:
 submodule_update:
 	@git submodule update --remote --recursive
 
-   ###################
-######## Profiles ########
-   ###################
-
-linux_headless: bashrc_linux neofetch ranger tmux vim
-linux_lite: bashrc_linux compton_noblur mpv neofetch ranger tmux vim
-linux: bashrc_linux compton_blur mpv neofetch ranger tmux vim
-mac: bashrc_macos mpv neofetch chunkwm skhd ranger tmux ubersicht vim
-windows: bashrc_common neofetch
-
    ##################
 ######## Bashrc ########
    ##################
