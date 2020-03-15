@@ -105,15 +105,15 @@ yabai:
 skhd:
 	$(call link,$(SKHD_FILE),$(SKHD_DEST))
 
-tmux:
-	$(call link,$(TMUX_DIR),$(TMUX_DEST))
-
 ubersicht:
 	$(call link,$(UBERSICHT_DIR),$(UBERSICHT_DEST))
+
+tmux:
+	$(call link,$(TMUX_DIR),$(TMUX_DEST))
 
 vim:
 	$(call link,$(VIM_DIR),$(VIM_DEST))
 
 .PHONY: submodule_init submodule_update bashrc_linux bashrc_macos \
-        bashrc_common mpv neofetch qutebrowser ranger yabai skhd bspwm sxhkd \
-        polybar tmux ubersicht vim
+        bashrc_common mpv neofetch qutebrowser bspwm sxhkd polybar yabai \
+        skhd ubersicht tmux vim
