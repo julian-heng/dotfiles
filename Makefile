@@ -1,119 +1,54 @@
-# Default mode is install
 MODE ?= install
+TARGETS = bash_profile bashrc inputrc_linux inputrc_macos mpv neofetch \
+          qutebrowser bspwm sxhkd polybar yabai skhd ubersicht tmux vim
+.PHONY: $(TARGETS)
+.DEFAULT:;
+all:;
 
-# Source and destination
-SCRIPT_DIR := ${PWD}
-CONFIG_DIR := ${HOME}/.config
-
-BASHRC_DIR := $(SCRIPT_DIR)/bashrc
-BASHRC_DEST := ${HOME}
-
-BSPWM_DIR := $(SCRIPT_DIR)/bspwm
-BSPWM_DEST := $(CONFIG_DIR)/bspwm
-
-MPV_DIR := $(SCRIPT_DIR)/mpv
-MPV_DEST := $(CONFIG_DIR)/mpv
-
-NEOFETCH_DIR := $(SCRIPT_DIR)/neofetch
-NEOFETCH_DEST := $(CONFIG_DIR)/neofetch
-
-POLYBAR_DIR := $(SCRIPT_DIR)/polybar
-POLYBAR_DEST := $(CONFIG_DIR)/polybar
-
-QUTEBROWSER_DIR := $(SCRIPT_DIR)/qutebrowser
-QUTEBROWSER_DEST := $(CONFIG_DIR)/qutebrowser
-
-SKHD_FILE := $(SCRIPT_DIR)/skhd/skhdrc
-SKHD_DEST := ${HOME}/.skhdrc
-
-SXHKD_DIR := $(SCRIPT_DIR)/sxhkd
-SXHKD_DEST := $(CONFIG_DIR)/sxhkd
-
-TMUX_DIR := $(SCRIPT_DIR)/tmux/tmux.conf
-TMUX_DEST := ${HOME}/.tmux.conf
-
-UBERSICHT_DIR := $(SCRIPT_DIR)/ubersicht
-UBERSICHT_DEST := ${HOME}/Library/Application\ Support/Übersicht/widgets
-
-VIM_DIR := $(SCRIPT_DIR)/vimrc
-VIM_DEST := ${HOME}/.vim
-
-YABAI_FILE := $(SCRIPT_DIR)/yabai/yabairc
-YABAI_DEST := ${HOME}/.yabairc
-
-# Make config dir if it does not exist
-$(shell mkdir -p $(CONFIG_DIR))
-
-# Functions
-define link
-	@if [ "$(MODE)" = "install" ]; then \
-		$(call remove_link,$(2),); \
-		ln -svf $(1) $(2); \
-	elif [ "$(MODE)" = "uninstall" ]; then \
-		$(call remove_link,$(2),-v); \
-	else \
-		printf "Unknown mode: %s\n" "$(MODE)"; \
+$(TARGETS):
+ifeq ($(MODE),install)
+	@if [ ! -e "${HOME}/.config" ]; then \
+		mkdir "${HOME}/.config"; \
 	fi
-endef
-
-
-define remove_link
-	if [ -L $(1) ]; then \
-		rm -f $(2) $(1); \
+	@if [ -L "$(strip $(subst $<,,$^))" ]; then \
+		rm -f "$(strip $(subst $<,,$^))"; \
 	fi
-endef
+	@ln -svf "$<" "$(strip $(subst $<,,$^))"
+endif # ifeq ($(MODE),install)
+ifeq ($(MODE),uninstall)
+	@if [ -L "$(strip $(subst $<,,$^))" ]; then \
+		rm -fv "$(strip $(subst $<,,$^))"; \
+	fi
+endif # ifeq ($(MODE),uninstall)
+ifneq ($(MODE),uninstall)
+ifneq ($(MODE),install)
+	@printf "%s: unknown mode: %s\\n" "$@" "$(MODE)"
+	@exit 1
+endif # ifneq ($(MODE),install)
+endif # ifneq ($(MODE),uninstall)
 
-# Submodule aliases
-submodule_init:
-	@git submodule update --init --recursive
+# format:
+# application-config: source-file destination-file
 
-submodule_update:
-	@git submodule update --remote --recursive
+# Bash configuration files is os dependant.
+# It also includes .bash_profile, .bashrc and .inputrc
+bash_linux: bash inputrc_linux
+bash_macos: bash inputrc_macos
+bash: bash_profile bashrc
 
-# Make links
-bashrc_linux: bashrc_common
-	$(call link,$(BASHRC_DIR)/inputrc_linux,$(BASHRC_DEST)/.inputrc)
+bash_profile: ${PWD}/bashrc/bash_profile ${HOME}/.bash_profile
+bashrc: ${PWD}/bashrc/bashrc ${HOME}/.bashrc
+inputrc_linux: ${PWD}/bashrc/inputrc_linux ${HOME}/.inputrc
+inputrc_macos: ${PWD}/bashrc/inputrc_macos ${HOME}/.inputrc
 
-bashrc_macos: bashrc_common
-	$(call link,$(BASHRC_DIR)/inputrc_macos,$(BASHRC_DEST)/.inputrc)
-
-bashrc_common:
-	$(call link,$(BASHRC_DIR)/bash_profile,$(BASHRC_DEST)/.bash_profile)
-	$(call link,$(BASHRC_DIR)/bashrc,$(BASHRC_DEST)/.bashrc)
-
-mpv:
-	$(call link,$(MPV_DIR),$(MPV_DEST))
-
-neofetch:
-	$(call link,$(NEOFETCH_DIR),$(NEOFETCH_DEST))
-
-qutebrowser:
-	$(call link,$(QUTEBROWSER_DIR),$(QUTEBROWSER_DEST))
-
-bspwm:
-	$(call link,$(BSPWM_DIR),$(BSPWM_DEST))
-
-sxhkd:
-	$(call link,$(SXHKD_DIR),$(SXHKD_DEST))
-
-polybar:
-	$(call link,$(POLYBAR_DIR),$(POLYBAR_DEST))
-
-yabai:
-	$(call link,$(YABAI_FILE),$(YABAI_DEST))
-
-skhd:
-	$(call link,$(SKHD_FILE),$(SKHD_DEST))
-
-ubersicht:
-	$(call link,$(UBERSICHT_DIR),$(UBERSICHT_DEST))
-
-tmux:
-	$(call link,$(TMUX_DIR),$(TMUX_DEST))
-
-vim:
-	$(call link,$(VIM_DIR),$(VIM_DEST))
-
-.PHONY: submodule_init submodule_update bashrc_linux bashrc_macos \
-        bashrc_common mpv neofetch qutebrowser bspwm sxhkd polybar yabai \
-        skhd ubersicht tmux vim
+mpv: ${PWD}/mpv ${HOME}/.config/mpv
+neofetch: ${PWD}/neofetch ${HOME}/.config/neofetch
+qutebrowser: ${PWD}/qutebrowser ${HOME}/.config/qutebrowser
+bspwm: ${PWD}/bspwm ${HOME}/.config/bspwm
+sxhkd: ${PWD}/sxhkd ${HOME}/.config/sxhkd
+polybar: ${PWD}/polybar ${HOME}/.config/polybar
+yabai: ${PWD}/yabai/yabairc ${HOME}/.yabairc
+skhd: ${PWD}/skhd/skhdrc ${HOME}/.skhdrc
+ubersicht: ${PWD}/ubersicht ${HOME}/Library/Application\ Support/Übersicht/widgets
+tmux: ${PWD}/tmux/tmux.conf ${HOME}/.tmux.conf
+vim: ${PWD}/vimrc ${HOME}/.vim
