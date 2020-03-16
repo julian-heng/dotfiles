@@ -3,11 +3,10 @@
 ########################
 # shellcheck disable=1090,1091,2148
 
-if [[ -f "${HOME}"/.bashrc ]]; then
+if [[ -f "${HOME}/.bashrc" ]]; then
     source "${HOME}/.bashrc"
-elif [[ -f "/etc/bash.bashrc" ]]; then
+elif [[ -f /etc/bash.bashrc ]]; then
     source /etc/bash.bashrc
 else
     source /etc/bashrc
 fi
-
