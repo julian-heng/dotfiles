@@ -53,61 +53,61 @@ bash_macos: bash inputrc_macos
 bash: bash_profile bashrc
 
 bash_profile: \
-    ${PWD}/bashrc/bash_profile \
-    ${HOME}/.bash_profile
+    $(DOTFILES_DIR)/bashrc/bash_profile \
+    $(HOME_DIR)/.bash_profile
 
 bashrc: \
-    ${PWD}/bashrc/bashrc \
-    ${HOME}/.bashrc
+    $(DOTFILES_DIR)/bashrc/bashrc \
+    $(HOME_DIR)/.bashrc
 
 inputrc_linux: \
-    ${PWD}/bashrc/inputrc_linux \
-    ${HOME}/.inputrc
+    $(DOTFILES_DIR)/bashrc/inputrc_linux \
+    $(HOME_DIR)/.inputrc
 
 inputrc_macos: \
-    ${PWD}/bashrc/inputrc_macos \
-    ${HOME}/.inputrc
+    $(DOTFILES_DIR)/bashrc/inputrc_macos \
+    $(HOME_DIR)/.inputrc
 
 mpv: \
-    ${PWD}/mpv \
-    ${HOME}/.config/mpv
+    $(DOTFILES_DIR)/mpv \
+    $(CONFIG_DIR)/mpv
 
 neofetch: \
-    ${PWD}/neofetch \
-    ${HOME}/.config/neofetch
+    $(DOTFILES_DIR)/neofetch \
+    $(CONFIG_DIR)/neofetch
 
 qutebrowser: \
-    ${PWD}/qutebrowser \
-    ${HOME}/.config/qutebrowser
+    $(DOTFILES_DIR)/qutebrowser \
+    $(CONFIG_DIR)/qutebrowser
 
 bspwm: \
-    ${PWD}/bspwm \
-    ${HOME}/.config/bspwm
+    $(DOTFILES_DIR)/bspwm \
+    $(CONFIG_DIR)/bspwm
 
 sxhkd: \
-    ${PWD}/sxhkd \
-    ${HOME}/.config/sxhkd
+    $(DOTFILES_DIR)/sxhkd \
+    $(CONFIG_DIR)/sxhkd
 
 polybar: \
-    ${PWD}/polybar \
-    ${HOME}/.config/polybar
+    $(DOTFILES_DIR)/polybar \
+    $(CONFIG_DIR)/polybar
 
 yabai: \
-    ${PWD}/yabai/yabairc \
-    ${HOME}/.yabairc
+    $(DOTFILES_DIR)/yabai/yabairc \
+    $(HOME_DIR)/.yabairc
 
 skhd: \
-    ${PWD}/skhd/skhdrc \
-    ${HOME}/.skhdrc
+    $(DOTFILES_DIR)/skhd/skhdrc \
+    $(HOME_DIR)/.skhdrc
 
 ubersicht: \
-    ${PWD}/ubersicht \
-    ${HOME}/Library/Application\ Support/Übersicht/widgets
+    $(DOTFILES_DIR)/ubersicht \
+    $(HOME_DIR)/Library/Application\ Support/Übersicht/widgets
 
 tmux: \
-    ${PWD}/tmux/tmux.conf \
-    ${HOME}/.tmux.conf
+    $(DOTFILES_DIR)/tmux/tmux.conf \
+    $(HOME_DIR)/.tmux.conf
 
 vim: \
-    ${PWD}/vimrc \
-    ${HOME}/.vim
+    $(DOTFILES_DIR)/vimrc \
+    $(HOME_DIR)/.vim
