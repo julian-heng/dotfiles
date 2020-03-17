@@ -1,24 +1,38 @@
 MODE ?= install
+DRY ?= no
 TARGETS = bash_profile bashrc inputrc_linux inputrc_macos mpv neofetch \
           qutebrowser bspwm sxhkd polybar yabai skhd ubersicht tmux vim
 .PHONY: $(TARGETS)
+
+DOTFILES_DIR ?= ${PWD}
+HOME_DIR ?= ${HOME}
+CONFIG_DIR ?= $(HOME_DIR)/.config
+
 .DEFAULT:;
 all:;
 
 $(TARGETS):
 ifeq ($(MODE),install)
-	@if [ ! -e "${HOME}/.config" ]; then \
-		mkdir "${HOME}/.config"; \
+ifeq ($(DRY),yes)
+	@printf "[dry] '%s' -> '%s'\\n" "$(strip $(subst $<,,$^))" "$<"
+else
+	@if [ ! -e "$(CONFIG_DIR)" ]; then \
+		mkdir "$(CONFIG_DIR)"; \
 	fi
 	@if [ -L "$(strip $(subst $<,,$^))" ]; then \
 		rm -f "$(strip $(subst $<,,$^))"; \
 	fi
 	@ln -svf "$<" "$(strip $(subst $<,,$^))"
+endif # ifeq ($(DRY),yes)
 endif # ifeq ($(MODE),install)
 ifeq ($(MODE),uninstall)
+ifeq ($(DRY),yes)
+	@printf "[dry] removed '%s'\\n" "$(strip $(subst $<,,$^))"
+else
 	@if [ -L "$(strip $(subst $<,,$^))" ]; then \
 		rm -fv "$(strip $(subst $<,,$^))"; \
 	fi
+endif # ifeq ($(DRY),yes)
 endif # ifeq ($(MODE),uninstall)
 ifneq ($(MODE),uninstall)
 ifneq ($(MODE),install)
