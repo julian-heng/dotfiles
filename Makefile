@@ -42,7 +42,9 @@ endif # ifneq ($(MODE),install)
 endif # ifneq ($(MODE),uninstall)
 
 # format:
-# application-config: source-file destination-file
+# application-config: \
+#     source-file \
+#     destination-file
 
 # Bash configuration files is os dependant.
 # It also includes .bash_profile, .bashrc and .inputrc
@@ -50,19 +52,62 @@ bash_linux: bash inputrc_linux
 bash_macos: bash inputrc_macos
 bash: bash_profile bashrc
 
-bash_profile: ${PWD}/bashrc/bash_profile ${HOME}/.bash_profile
-bashrc: ${PWD}/bashrc/bashrc ${HOME}/.bashrc
-inputrc_linux: ${PWD}/bashrc/inputrc_linux ${HOME}/.inputrc
-inputrc_macos: ${PWD}/bashrc/inputrc_macos ${HOME}/.inputrc
+bash_profile: \
+    ${PWD}/bashrc/bash_profile \
+    ${HOME}/.bash_profile
 
-mpv: ${PWD}/mpv ${HOME}/.config/mpv
-neofetch: ${PWD}/neofetch ${HOME}/.config/neofetch
-qutebrowser: ${PWD}/qutebrowser ${HOME}/.config/qutebrowser
-bspwm: ${PWD}/bspwm ${HOME}/.config/bspwm
-sxhkd: ${PWD}/sxhkd ${HOME}/.config/sxhkd
-polybar: ${PWD}/polybar ${HOME}/.config/polybar
-yabai: ${PWD}/yabai/yabairc ${HOME}/.yabairc
-skhd: ${PWD}/skhd/skhdrc ${HOME}/.skhdrc
-ubersicht: ${PWD}/ubersicht ${HOME}/Library/Application\ Support/Übersicht/widgets
-tmux: ${PWD}/tmux/tmux.conf ${HOME}/.tmux.conf
-vim: ${PWD}/vimrc ${HOME}/.vim
+bashrc: \
+    ${PWD}/bashrc/bashrc \
+    ${HOME}/.bashrc
+
+inputrc_linux: \
+    ${PWD}/bashrc/inputrc_linux \
+    ${HOME}/.inputrc
+
+inputrc_macos: \
+    ${PWD}/bashrc/inputrc_macos \
+    ${HOME}/.inputrc
+
+mpv: \
+    ${PWD}/mpv \
+    ${HOME}/.config/mpv
+
+neofetch: \
+    ${PWD}/neofetch \
+    ${HOME}/.config/neofetch
+
+qutebrowser: \
+    ${PWD}/qutebrowser \
+    ${HOME}/.config/qutebrowser
+
+bspwm: \
+    ${PWD}/bspwm \
+    ${HOME}/.config/bspwm
+
+sxhkd: \
+    ${PWD}/sxhkd \
+    ${HOME}/.config/sxhkd
+
+polybar: \
+    ${PWD}/polybar \
+    ${HOME}/.config/polybar
+
+yabai: \
+    ${PWD}/yabai/yabairc \
+    ${HOME}/.yabairc
+
+skhd: \
+    ${PWD}/skhd/skhdrc \
+    ${HOME}/.skhdrc
+
+ubersicht: \
+    ${PWD}/ubersicht \
+    ${HOME}/Library/Application\ Support/Übersicht/widgets
+
+tmux: \
+    ${PWD}/tmux/tmux.conf \
+    ${HOME}/.tmux.conf
+
+vim: \
+    ${PWD}/vimrc \
+    ${HOME}/.vim
