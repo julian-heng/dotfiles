@@ -1,8 +1,8 @@
 MODE ?= install
 DRY ?= no
-TARGETS = bash_profile bashrc inputrc_linux inputrc_macos mpv neofetch \
+CONFIGS = bash_profile bashrc inputrc_linux inputrc_macos mpv neofetch \
           qutebrowser bspwm sxhkd polybar yabai skhd ubersicht tmux vim
-.PHONY: $(TARGETS)
+.PHONY: $(CONFIGS)
 
 DOTFILES_DIR ?= ${PWD}
 HOME_DIR ?= ${HOME}
@@ -11,7 +11,7 @@ CONFIG_DIR ?= $(HOME_DIR)/.config
 .DEFAULT:;
 all:;
 
-$(TARGETS):
+$(CONFIGS):
 ifeq ($(MODE),install)
 ifeq ($(DRY),yes)
 	@printf "[dry] '%s' -> '%s'\\n" "$(strip $(subst $<,,$^))" "$<"
