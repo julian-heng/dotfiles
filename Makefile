@@ -1,7 +1,8 @@
 MODE ?= install
 DRY ?= no
-CONFIGS = bash_profile bashrc inputrc_linux inputrc_macos mpv neofetch \
-          qutebrowser bspwm sxhkd polybar yabai skhd ubersicht tmux vim
+CONFIGS = bash_profile bashrc inputrc_linux inputrc_macos fontconfig mpv \
+          neofetch qutebrowser bspwm sxhkd polybar yabai skhd ubersicht tmux \
+          vim
 .PHONY: $(CONFIGS)
 
 DOTFILES_DIR ?= ${PWD}
@@ -67,6 +68,10 @@ inputrc_linux: \
 inputrc_macos: \
     $(DOTFILES_DIR)/bashrc/inputrc_macos \
     $(HOME_DIR)/.inputrc
+
+fontconfig: \
+    $(DOTFILES_DIR)/fontconfig \
+    $(CONFIG_DIR)/fontconfig
 
 mpv: \
     $(DOTFILES_DIR)/mpv \
