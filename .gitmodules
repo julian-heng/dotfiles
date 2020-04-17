@@ -4,7 +4,7 @@
 [submodule "vimrc/bundle/lightline.vim"]
 	path = vimrc/bundle/lightline.vim
 	url = https://github.com/itchyny/lightline.vim
-[submodule "/home/julian/.dotfiles/vimrc/bundle/indentLine"]
+[submodule "vimrc/bundle/indentLine"]
 	path = vimrc/bundle/indentLine
 	url = https://github.com/Yggdroot/indentLine.git
 [submodule "vimrc/bundle/vim-markdown-preview"]
