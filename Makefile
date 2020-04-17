@@ -1,8 +1,8 @@
 MODE ?= install
 DRY ?= no
-CONFIGS = bash_profile bashrc inputrc_linux inputrc_macos fontconfig mpv \
-          neofetch qutebrowser bspwm sxhkd polybar yabai skhd ubersicht tmux \
-          vim
+CONFIGS = bash_profile bashrc inputrc_linux inputrc_macos fontconfig \
+          looking-glass-client mpv neofetch qutebrowser bspwm sxhkd polybar \
+          yabai skhd ubersicht tmux vim
 .PHONY: $(CONFIGS)
 
 DOTFILES_DIR ?= ${PWD}
@@ -72,6 +72,10 @@ inputrc_macos: \
 fontconfig: \
     $(DOTFILES_DIR)/fontconfig \
     $(CONFIG_DIR)/fontconfig
+
+looking-glass-client: \
+    $(DOTFILES_DIR)/looking-glass-client/looking-glass-client.ini \
+    $(HOME_DIR)/.looking-glass-client.ini
 
 mpv: \
     $(DOTFILES_DIR)/mpv \
