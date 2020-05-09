@@ -3,16 +3,16 @@
 ###################
 
 # Move through full words
-"\e[1;3D":   backward-word     # alt + left
-"\e[1;3C":   forward-word      # alt + right
+"\e[1;3D": backward-word    # alt + left
+"\e[1;3C": forward-word     # alt + right
 
 # Search through history using partial command
-"\e[A":     history-search-backward
-"\e[B":     history-search-forward
+"\e[A": history-search-backward
+"\e[B": history-search-forward
 
 # Fixing home and end keys for tmux
-"\e[1~":    beginning-of-line
-"\e[4~":    end-of-line
+"\e[1~": beginning-of-line
+"\e[4~": end-of-line
 
 set skip-completed-text on
 set completion-ignore-case on

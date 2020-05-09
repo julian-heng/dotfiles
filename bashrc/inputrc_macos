@@ -3,12 +3,12 @@
 ###################
 
 # Move through full words
-"\e\e[D":   backward-word     # alt + left
-"\e\e[C":   forward-word      # alt + right
+"\e\e[D": backward-word     # alt + left
+"\e\e[C": forward-word      # alt + right
 
 # Search through history using partial command
-"\e[A":     history-search-backward
-"\e[B":     history-search-forward
+"\e[A": history-search-backward
+"\e[B": history-search-forward
 
 set skip-completed-text on
 set completion-ignore-case on
