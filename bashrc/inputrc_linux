@@ -14,6 +14,10 @@
 "\e[1~": beginning-of-line
 "\e[4~": end-of-line
 
+# Cycle through completions
+TAB: menu-complete
+"\e[Z": menu-complete-backward
+
 set skip-completed-text on
 set completion-ignore-case on
 
