@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+main()
+{
+    node="$(bspc query --nodes -n)"
+    bspc_out="$(bspc query --tree -n "${node}")"
+    bspc_out="${bspc_out##*'state":"'}"
+    bspc_out="${bspc_out%%\"*}"
+
+    case "${bspc_out}" in
+        "tiled") bspc node "${node}" -t floating ;;
+        "floating") bspc node "${node}" -t tiled ;;
+    esac
+}
+
+main "$@"

@@ -25,6 +25,11 @@ alt + {_,shift + }{1-9,0}
 alt + control + e
     bspc node @/ --equalize
 
+# Toggle window mode on active window
+alt + shift + space
+    bash "${HOME}/.config/bspwm/float"
+
+
 # Rotate windows clockwise and anticlockwise
 alt + {_,shift + } + r
     bspc node @/ --circulate {backward,forward}
