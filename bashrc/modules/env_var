@@ -3,35 +3,34 @@
 #########################
 # shellcheck disable=2148,2154
 
-# helper function to add paths to the PATH variable
-add_to_path()
+# Helper function to add paths to the PATH variable
+add_to_path_var()
 {
     [[ -e "${2}" && -d "${2}" ]] && \
-        if [[ "${1}" == "append" ]]; then
-            PATH="${PATH}:${2}"
-        elif [[ "${1}" == "prepend" ]]; then
-            PATH="${2}:${PATH}"
-        fi
+        case "${1}" in
+            "append") PATH="${PATH}:${2}" ;;
+            "prepend") PATH="${2}:${PATH}" ;;
+        esac
 }
 
 # Custom scripts
 script_dir="${module_dir/'bashrc/modules'/'scripts'}"
-add_to_path "append" "${script_dir}/info"
-add_to_path "append" "${script_dir}/utils"
+add_to_path_var "append" "${script_dir}/info"
+add_to_path_var "append" "${script_dir}/utils"
 
 if [[ "${distro}" == "MacOS" ]]; then
     # Python binaries
     shopt -s nullglob
     for dir in "${HOME}/Library/Python/"*"/bin"; do
-        add_to_path "append" "${dir}"
+        add_to_path_var "append" "${dir}"
     done
     shopt -u nullglob
 
     # Qt binaries
-    add_to_path "prepend" "/usr/local/opt/qt/bin"
+    add_to_path_var "prepend" "/usr/local/opt/qt/bin"
 else
     # Local binaries
-    add_to_path "append" "${HOME}/.local/bin"
+    add_to_path_var "append" "${HOME}/.local/bin"
 fi
 
 RANGER_LOAD_DEFAULT_RC="FALSE"
