@@ -155,7 +155,7 @@ case "${distro}" in
         alias update="sudo apt update && sudo apt upgrade"
     ;;
 
-    "Antergos"*|"Arch"*)
+    "Arch"*)
         if type -p yay > /dev/null; then
             alias update="yay"
         else
