@@ -3,13 +3,19 @@
 ##########################
 # shellcheck disable=1090,2148,2154
 
+__secure_source()
+{
+    [[ ! -f "${1}" ]] && \
+        return 1
+    source "${1}"
+    return 0
+}
+
+
 secure_source()
 {
-    local file="$1"
-    if [[ -f "${file}" ]]; then
-        source "${file}"
-    else
-        printf "%s\\n" "${fb[1]}Error:${reset} \"${file}\" is missing"
+    if ! __secure_source "${1}"; then
+        printf "%s\\n" "${fb[1]}Error:${reset} \"${1}\" is missing"
     fi
 }
 
@@ -120,6 +126,7 @@ main()
 
 [[ "$-" == *"i"* ]] && main
 
+unset __secure_source
 unset secure_source
 unset get_distro
 unset get_full_path
