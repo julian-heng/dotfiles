@@ -122,6 +122,9 @@ main()
     for i in "${modules[@]}"; do
         secure_source "${i}"
     done
+
+    # Load custom bashrc
+    __secure_source "${HOME}/.bashrc_custom"
 }
 
 [[ "$-" == *"i"* ]] && main
