@@ -1,9 +1,9 @@
 MODE ?= install
 DRY ?= no
-CONFIGS = bash_profile bashrc inputrc_linux inputrc_macos fontconfig \
-          looking-glass-client mpv neofetch qutebrowser bspwm sxhkd polybar \
-          yabai skhd ubersicht tmux vim
-.PHONY: $(CONFIGS)
+LINK_CONFIGS = bash_profile bashrc inputrc_linux inputrc_macos fontconfig \
+               looking-glass-client mpv neofetch qutebrowser bspwm sxhkd \
+               polybar yabai skhd ubersicht tmux vim
+.PHONY: $(LINK_CONFIGS)
 
 DOTFILES_DIR ?= ${PWD}
 HOME_DIR ?= ${HOME}
@@ -12,7 +12,7 @@ CONFIG_DIR ?= $(HOME_DIR)/.config
 .DEFAULT:;
 all:;
 
-$(CONFIGS):
+$(LINK_CONFIGS):
 ifeq ($(MODE),install)
 ifeq ($(DRY),yes)
 	@printf "[dry] '%s' -> '%s'\\n" "$(strip $(subst $<,,$^))" "$<"
@@ -46,6 +46,9 @@ endif # ifneq ($(MODE),uninstall)
 # application-config: \
 #     source-file \
 #     destination-file
+
+
+### LINK_CONFIGS
 
 # Bash configuration files is os dependant.
 # It also includes .bash_profile, .bashrc and .inputrc
