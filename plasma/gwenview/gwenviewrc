@@ -1,0 +1,62 @@
+Height 1080=728
+State=AAAA/wAAAAD9AAAAAAAAA8kAAAKUAAAABAAAAAQAAAAIAAAACPwAAAABAAAAAgAAAAEAAAAWAG0AYQBpAG4AVABvAG8AbABCAGEAcgEAAAAA/////wAAAAAAAAAA
+Width 1920=969
+
+[$Version]
+update_info=gwenview.upd:SideBar_StatusBar_Rename,gwenview.upd:ImageView_AlphaBackgroundMode_Update,gwenview.upd:DeleteThumbnailSetting_Rename
+
+[Crop]
+CropAdvancedSettingsEnabled=true
+CropRatioHeight=1
+CropRatioWidth=1
+
+[General]
+ThumbnailBarRowCount=5
+
+[ImageView]
+AlphaBackgroundColor=100,100,100
+AlphaBackgroundMode=AbstractImageView::AlphaBackgroundSolid
+AnimationMethod=DocumentView::NoAnimation
+ThumbnailSplitterSizes=114,543
+
+[KFileDialog Settings]
+Recent Files[$e]=file:$HOME/Desktop/a.png,file:$HOME/Desktop/a.png
+Recent URLs[$e]=file:///mnt/Data/Desktop/
+
+[MainWindow]
+Height 1080=645
+Height 1920=645
+MenuBar=Disabled
+State=AAAA/wAAAAD9AAAAAAAAA/4AAAKFAAAABAAAAAQAAAAIAAAACPwAAAABAAAAAgAAAAEAAAAWAG0AYQBpAG4AVABvAG8AbABCAGEAcgAAAAAA/////wAAAAAAAAAA
+ToolBarsMovable=Disabled
+Width 1080=1022
+Width 1920=1022
+
+[Notification Messages]
+HideMenuBarWarning=false
+
+[Recent Files]
+File1[$e]=/run/media/julian/HDD/BACKUPS/USB Stuff/peter's shit/42899075_p0.jpg
+File2[$e]=/run/media/julian/HDD/BACKUPS/USB Stuff/peter's shit/41730594_p0.jpg
+File3[$e]=/run/media/julian/HDD/BACKUPS/USB Stuff/peter's shit/29532157_p0.jpg
+File4[$e]=/run/media/julian/HDD/BACKUPS/USB Stuff/peter's shit/19350375_p0.jpg
+File5[$e]=/run/media/julian/HDD/BACKUPS/USB Stuff/peter's shit/3223549_p0_waifu2x_photo_noise3_scale_tta_1.png
+File6[$e]=/run/media/julian/HDD/ARCH_LINUX_BACKUP/home/julian/Plasma_Settings/Screenshot_20200511_211344.png
+Name1[$e]=42899075_p0.jpg
+Name2[$e]=41730594_p0.jpg
+Name3[$e]=29532157_p0.jpg
+Name4[$e]=19350375_p0.jpg
+Name5[$e]=3223549_p0_waifu2x_photo_noise3_scale_tta_1.png
+Name6[$e]=Screenshot_20200511_211344.png
+
+[SideBar]
+IsVisible BrowseMode=false
+IsVisible ViewMode=false
+SideBarSplitterSizes=242,761
+
+[StatusBar]
+IsVisible ViewMode=false
+
+[ThumbnailView]
+ListVideos=false
+ThumbnailDetails=25
