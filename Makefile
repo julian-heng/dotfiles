@@ -3,7 +3,7 @@ DRY ?= no
 LINK_CONFIGS = bash_profile bashrc inputrc_linux inputrc_macos fontconfig \
                looking-glass-client mpv neofetch qutebrowser bspwm sxhkd \
                polybar yabai skhd ubersicht tmux vim
-COPY_CONFIGS =
+COPY_CONFIGS = dolphin
 
 .PHONY: $(LINK_CONFIGS) $(COPY_CONFIGS)
 
@@ -156,3 +156,10 @@ tmux: \
 vim: \
     $(DOTFILES_DIR)/vimrc \
     $(HOME_DIR)/.vim
+
+
+### COPY_CONFIGS
+
+dolphin: \
+    $(DOTFILES_DIR)/plasma/dolphin/dolphinrc \
+    $(CONFIG_DIR)/dolphinrc

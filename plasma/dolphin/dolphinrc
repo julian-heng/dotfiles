@@ -1,0 +1,81 @@
+Height 1080=513
+MenuBar=Disabled
+State=AAAA/wAAAAD9AAAAAwAAAAAAAACTAAAB3/wCAAAAAvsAAAAUAHAAbABhAGMAZQBzAEQAbwBjAGsBAAAAIgAAAd8AAABaAQAAA/sAAAAWAGYAbwBsAGQAZQByAHMARABvAGMAawAAAAFiAAAAkgAAAAoBAAADAAAAAQAAALgAAAHO/AIAAAAB+wAAABAAaQBuAGYAbwBEAG8AYwBrAAAAACYAAAHOAAAACgEAAAMAAAADAAAHSAAAAjL8AQAAAAH7AAAAGAB0AGUAcgBtAGkAbgBhAGwARABvAGMAawAAAAAAAAAHSAAAAAoBAAADAAADNgAAAd8AAAAEAAAABAAAAAgAAAAI/AAAAAEAAAACAAAAAQAAABYAbQBhAGkAbgBUAG8AbwBsAEIAYQByAQAAAAD/////AAAAAAAAAAA=
+Width 1920=970
+
+[AdditionalInfoDialog]
+Height 1080=293
+Width 1920=276
+
+[CompactMode]
+FontWeight=50
+PreviewSize=22
+
+[Desktop Entry]
+DefaultProfile=Profile.profile
+
+[DetailsMode]
+ExpandableFolders=false
+FontWeight=50
+PreviewSize=16
+
+[Favorite Profiles]
+Favorites=
+
+[General]
+GlobalViewProps=true
+OpenExternallyCalledFolderInNewTab=false
+ShowZoomSlider=false
+Version=200
+ViewPropsTimestamp=2018,7,26,22,29,46
+
+[IconsMode]
+FontWeight=50
+IconSize=48
+MaximumTextLines=3
+PreviewSize=128
+
+[KPropertiesDialog]
+Height 1080=542
+Height 1920=542
+Width 1080=424
+Width 1920=420
+
+[MainWindow]
+Height 1050=545
+Height 1080=488
+Height 1920=495
+Height 2160=557
+MenuBar=Disabled
+State=AAAA/wAAAAD9AAAAAwAAAAAAAACMAAABxvwCAAAAAvsAAAAUAHAAbABhAGMAZQBzAEQAbwBjAGsBAAAAIgAAAcYAAABdAQAAA/sAAAAWAGYAbwBsAGQAZQByAHMARABvAGMAawAAAAFiAAAAkgAAAAoBAAADAAAAAQAAALgAAAHO/AIAAAAB+wAAABAAaQBuAGYAbwBEAG8AYwBrAAAAACYAAAHOAAAACgEAAAMAAAADAAAHSAAAAjL8AQAAAAH7AAAAGAB0AGUAcgBtAGkAbgBhAGwARABvAGMAawAAAAAAAAAHSAAAAAoBAAADAAADdQAAAcYAAAAEAAAABAAAAAgAAAAI/AAAAAEAAAACAAAAAQAAABYAbQBhAGkAbgBUAG8AbwBsAEIAYQByAQAAAAD/////AAAAAAAAAAA=
+ToolBarsMovable=Disabled
+Width 1080=1026
+Width 1680=910
+Width 1920=1026
+Width 4096=1259
+
+[MainWindow][Toolbar mainToolBar]
+IconSize=16
+
+[Notification Messages]
+ConfirmEmptyTrash=true
+
+[Open-with settings]
+CompletionMode=1
+
+[PreviewSettings]
+Plugins=audiothumbnail,comicbookthumbnail,djvuthumbnail,exrthumbnail,directorythumbnail,fontthumbnail,imagethumbnail,jpegthumbnail,kraorathumbnail,windowsexethumbnail,windowsimagethumbnail,svgthumbnail
+
+[Search]
+Location=Everywhere
+
+[SettingsDialog]
+Height 1080=460
+Width 1920=541
+
+[Toolbar mainToolBar]
+IconSize=16
+
+[ViewPropertiesDialog]
+Height 1080=318
+Width 1920=357
