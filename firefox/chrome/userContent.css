@@ -1,0 +1,25 @@
+@-moz-document url("about:newtab") {
+    main {
+        max-width: 786px !important;
+    }
+    .hide-for-narrow {
+        display : none !important;
+    }
+}
+
+@-moz-document domain(twitter.com) {
+    * {
+        font-family: roboto, "Helvetica Neue", Helvetica, Arial, sans serif !important;
+    }
+}
+
+@-moz-document domain(twitch.tv) {
+    * {
+        font-family: roboto, "Helvetica Neue", Helvetica, Arial, sans serif !important;
+    }
+}
+
+html > body > img:only-child {
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+}
