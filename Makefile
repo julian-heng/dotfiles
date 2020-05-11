@@ -3,7 +3,9 @@ DRY ?= no
 LINK_CONFIGS = bash_profile bashrc inputrc_linux inputrc_macos fontconfig \
                looking-glass-client mpv neofetch qutebrowser bspwm sxhkd \
                polybar yabai skhd ubersicht tmux vim
-.PHONY: $(LINK_CONFIGS)
+COPY_CONFIGS =
+
+.PHONY: $(LINK_CONFIGS) $(COPY_CONFIGS)
 
 DOTFILES_DIR ?= ${PWD}
 HOME_DIR ?= ${HOME}
@@ -31,6 +33,37 @@ ifeq ($(DRY),yes)
 	@printf "[dry] removed '%s'\\n" "$(strip $(subst $<,,$^))"
 else
 	@if [ -L "$(strip $(subst $<,,$^))" ]; then \
+		rm -fv "$(strip $(subst $<,,$^))"; \
+	fi
+endif # ifeq ($(DRY),yes)
+endif # ifeq ($(MODE),uninstall)
+ifneq ($(MODE),uninstall)
+ifneq ($(MODE),install)
+	@printf "%s: unknown mode: %s\\n" "$@" "$(MODE)"
+	@exit 1
+endif # ifneq ($(MODE),install)
+endif # ifneq ($(MODE),uninstall)
+
+
+$(COPY_CONFIGS):
+ifeq ($(MODE),install)
+ifeq ($(DRY),yes)
+	@printf "[dry] '%s' -> '%s'\\n" "$(strip $(subst $<,,$^))" "$<"
+else
+	@if [ ! -e "$(CONFIG_DIR)" ]; then \
+		mkdir "$(CONFIG_DIR)"; \
+	fi
+	@if [ -e "$(strip $(subst $<,,$^))" ]; then \
+		rm -f "$(strip $(subst $<,,$^))"; \
+	fi
+	@cp -v "$<" "$(strip $(subst $<,,$^))"
+endif # ifeq ($(DRY),yes)
+endif # ifeq ($(MODE),install)
+ifeq ($(MODE),uninstall)
+ifeq ($(DRY),yes)
+	@printf "[dry] removed '%s'\\n" "$(strip $(subst $<,,$^))"
+else
+	@if [ -e "$(strip $(subst $<,,$^))" ]; then \
 		rm -fv "$(strip $(subst $<,,$^))"; \
 	fi
 endif # ifeq ($(DRY),yes)
