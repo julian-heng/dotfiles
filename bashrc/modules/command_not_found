@@ -16,7 +16,7 @@ command_not_found_handle()
                 mapfile -t pkgs < <(apt-file --package-only search -- "bin/${cmd}")
         ;;
 
-        "Antergos"*|"Arch"*)
+        "Arch"*)
             package_manager="sudo pacman -S"
             if type -p pkgfile > /dev/null 2>&1; then
                 mapfile -t pkgs < <(pkgfile --binaries -- "${cmd}")
