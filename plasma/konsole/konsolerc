@@ -1,0 +1,24 @@
+[Desktop Entry]
+DefaultProfile=Profile.profile
+
+[Favorite Profiles]
+Favorites=Profile.profile
+
+[KonsoleWindow]
+AllowMenuAccelerators=true
+SaveGeometryOnExit=false
+ShowMenuBarByDefault=false
+ShowWindowTitleOnTitleBar=true
+
+[MainWindow]
+MenuBar=Disabled
+State=AAAA/wAAAAD9AAAAAAAAArkAAAGIAAAABAAAAAQAAAAIAAAACPwAAAAA
+ToolBarsMovable=Disabled
+Window-Maximized 1920x1080=true
+
+[Notification Messages]
+CloseAllEmptyTabs=true
+CloseAllTabs=true
+
+[TabBar]
+TabBarPosition=Top
