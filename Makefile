@@ -164,11 +164,9 @@ dolphin: \
     $(DOTFILES_DIR)/plasma/dolphin/dolphinrc \
     $(CONFIG_DIR)/dolphinrc
 
-
 gwenview: \
     $(DOTFILES_DIR)/plasma/gwenview/gwenviewrc \
     $(CONFIG_DIR)/gwenviewrc
-
 
 konsole: \
     $(DOTFILES_DIR)/plasma/konsole/konsolerc \
