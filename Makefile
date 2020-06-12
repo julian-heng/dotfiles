@@ -1,9 +1,9 @@
 MODE ?= install
 DRY ?= no
-LINK_CONFIGS = bash_profile bashrc inputrc_linux inputrc_macos fontconfig \
+LINK_CONFIGS = bash_profile bashrc inputrc_linux inputrc_macos \
                looking-glass-client mpv neofetch qutebrowser bspwm sxhkd \
                polybar yabai skhd ubersicht tmux vim
-COPY_CONFIGS = dolphin gwenview konsole
+COPY_CONFIGS = dolphin fontconfig gwenview konsole
 
 .PHONY: $(LINK_CONFIGS) $(COPY_CONFIGS)
 
@@ -105,10 +105,6 @@ inputrc_macos: \
     $(DOTFILES_DIR)/bashrc/inputrc_macos \
     $(HOME_DIR)/.inputrc
 
-fontconfig: \
-    $(DOTFILES_DIR)/fontconfig \
-    $(CONFIG_DIR)/fontconfig
-
 looking-glass-client: \
     $(DOTFILES_DIR)/looking-glass-client/looking-glass-client.ini \
     $(HOME_DIR)/.looking-glass-client.ini
@@ -163,6 +159,10 @@ vim: \
 dolphin: \
     $(DOTFILES_DIR)/plasma/dolphin/dolphinrc \
     $(CONFIG_DIR)/dolphinrc
+
+fontconfig: \
+    $(DOTFILES_DIR)/fontconfig \
+    $(CONFIG_DIR)/fontconfig
 
 gwenview: \
     $(DOTFILES_DIR)/plasma/gwenview/gwenviewrc \
