@@ -56,7 +56,7 @@ else
 	@if [ -e "$(strip $(subst $<,,$^))" ]; then \
 		rm -f "$(strip $(subst $<,,$^))"; \
 	fi
-	@cp -v "$<" "$(strip $(subst $<,,$^))"
+	@cp -r -v "$<" "$(strip $(subst $<,,$^))"
 endif # ifeq ($(DRY),yes)
 endif # ifeq ($(MODE),install)
 ifeq ($(MODE),uninstall)
