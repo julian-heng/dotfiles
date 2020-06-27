@@ -2,3 +2,4 @@
 *.swp
 st/st*
 qutebrowser/*[!.py]
+vimrc/.netrwhist
