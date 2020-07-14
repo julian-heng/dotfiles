@@ -1,4 +1,4 @@
-command: "${HOME}/Library/Python/3.8/bin/sys-line '[ {cpu.load_avg}{cpu.temp? | {}°C}{cpu.fan? | {} RPM} ]{mem.used? [ Mem: {} ]}{disk.used? [ {disk.dev}: {} ]}{bat.is_present? [ Bat: {bat.percent}%{bat.time? | {}} ]}{net.ssid? [ {} ]} [ {misc.vol?vol: {}%}{misc.scr? | scr: {}%} ] [ {date.date} | {date.time} ]' --disk-short-dev --mount /System/Volumes/Data --{cpu-temp,bat-percent}-round=1 --{mem,disk}-used-{round=2,prefix=GiB}"
+command: "${HOME}/Library/Python/3.8/bin/sys-line '[ {cpu.load_avg}{cpu.temp[round=1]? | {}°C}{cpu.fan? | {} RPM} ]{mem.used[round=2,prefix=GiB]? [ Mem: {} ]}{disk.used[round=2,prefix=GiB]? [ {disk.dev[short_dev]}: {} ]}{bat.is_present? [ Bat: {bat.percent[round=1]}%{bat.time? | {}} ]}{net.ssid? [ {} ]} [ {misc.vol?vol: {}%}{misc.scr? | scr: {}%} ] [ {date.date} | {date.time} ]' --mount /System/Volumes/Data"
 
 refreshFrequency: 5000 # ms
 
