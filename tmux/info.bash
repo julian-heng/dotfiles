@@ -16,8 +16,8 @@ get_status_length()
 use_sys_line()
 {
     out_fmt=(
-        $'| {cpu.load_avg}{cpu.temp? | {}°C}{mem[round=0].percent? | Mem: {mem[prefix=GiB,round=0].used} ({}%)}{disk[round=0].percent? | {disk[short_dev].dev}: {disk[prefix=GiB,round=0].used} ({}%)} | {date.date} | {date.time} |'
-        $'| {cpu[load_short].load_avg}{cpu.temp? | {}°C}{mem[round=0].percent? | Mem: {}%}{disk[round=0].percent? | Disk: {}%} | {date.date} | {date.time} |'
+        $'| {cpu.load_avg}{cpu.temp? | {}°C}{mem.percent[round=0]? | Mem: {mem.used[prefix=GiB,round=2]} ({}%)}{disk.percent[round=0]? | {disk.dev[short_dev]}: {disk.used[prefix=GiB,round=2]} ({}%)} | {date.date} | {date.time} |'
+        $'| {cpu.load_avg[load_short]}{cpu.temp? | {}°C}{mem.percent[round=0]? | Mem: {}%}{disk.percent[round=0]? | Disk: {}%} | {date.date} | {date.time} |'
     )
 
     mapfile -t out < <(sys-line "${out_fmt[@]}")
