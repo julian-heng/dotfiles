@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+
+
+check_root()
+{
+    ((EUID != 0)) && {
+        printf "Not running as root\\n" >&2
+        printf "Exitting...\\n" >&2
+        exit 1
+    }
+}
+
+
+get_gpu_id()
+{
+    while read -r line; do
+        [[ "${line}" =~ (VGA).*(NVIDIA) ]] && {
+            read -r slot _ <<< "${line}"
+            break
+        }
+    done < <(lspci -mm)
+
+    [[ "$(lspci -nns "${slot}")" =~ \[([a-z0-9]{4}:[a-z0-9]{4})\] ]]
+    printf "%s" "${BASH_REMATCH[1]}"
+}
+
+
+get_gpu_driver()
+{
+    while read -r line; do
+        [[ "${line}" == *"driver"* ]] && {
+            driver="${line}"
+            driver="${driver##*: }"
+            driver="${driver//-/_}"
+            break
+        }
+    done < <(lspci -kd "$1")
+
+    printf "%s" "${driver}"
+}
+
+
+main()
+{
+    check_root
+    target="$1"
+    id="$(get_gpu_id)"
+    driver="$(get_gpu_driver "${id}")"
+
+    [[ "${target}" ]] && \
+        [[ "${target}" == "${driver}" ]] && {
+            printf "Already using \"%s\"\\n" "${driver}"
+            exit 0
+        }
+
+    case "${driver}" in
+        "vfio"*)
+            printf "vfio_pci => nvidia\\n"
+            rmmod vfio_pci && modprobe nvidia
+        ;;
+
+        "nvidia")
+            printf "nvidia => vfio_pci\\n"
+            modules=("nvidia")
+            grep -E "nvidia_uvm" /proc/modules &&\
+                modules=("nvidia_uvm" "${modules[@]}")
+            rmmod "${modules[@]}" && modprobe vfio_pci
+        ;;
+    esac
+}
+
+main "$@"
