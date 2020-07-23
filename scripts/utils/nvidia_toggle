@@ -62,7 +62,7 @@ main()
         "nvidia")
             printf "nvidia => vfio_pci\\n"
             modules=("nvidia")
-            grep -E "nvidia_uvm" /proc/modules &&\
+            grep --quiet --no-messages -E "nvidia_uvm" /proc/modules && \
                 modules=("nvidia_uvm" "${modules[@]}")
             rmmod "${modules[@]}" && modprobe vfio_pci
         ;;
