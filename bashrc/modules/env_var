@@ -33,6 +33,7 @@ else
     add_to_path_var "append" "${HOME}/.local/bin"
 fi
 
+HISTTIMEFORMAT="%m/%d - %H:%M:%S: "
 HISTCONTROL="ignoreboth"
 EDITOR="vim"
 PS4='+${BASH_SOURCE:+${BASH_SOURCE}:}${LINENO:+${LINENO}:}${FUNCNAME:+${FUNCNAME}:} '
@@ -96,6 +97,7 @@ LESS_TERMCAP_us="${fb[6]}" # enter underline mode - cyan
 
 export PATH
 export HISTCONTROL
+export HISTTIMEFORMAT
 export EDITOR
 export PS4
 
