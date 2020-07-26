@@ -1,6 +1,23 @@
 #!/usr/bin/env bash
 
 
+check_app()
+{
+    check()
+    {
+        ! type -p "$1" > /dev/null 2>&1 && {
+            printf "'%s' is not installed\\n" "$1"
+            printf "Exitting...\\n"
+            exit 2
+        }
+    }
+
+    check lspci
+    check rmmod
+    check modprobe
+}
+
+
 check_root()
 {
     ((EUID != 0)) && {
@@ -42,6 +59,7 @@ get_gpu_driver()
 
 main()
 {
+    check_app
     check_root
     target="$1"
     id="$(get_gpu_id)"
