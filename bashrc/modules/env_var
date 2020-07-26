@@ -89,7 +89,7 @@ LESS_TERMCAP_se="${reset}" # leave standout mode
 LESS_TERMCAP_so="${fb[3]}" # enter standout mode - yellow
 LESS_TERMCAP_ue="${reset}" # leave underline mode
 LESS_TERMCAP_us="${fb[6]}" # enter underline mode - cyan
-: "${reset}"
+: "${reset}"               # reset colours for debugging
 
 ###################
 ##### Exports #####
