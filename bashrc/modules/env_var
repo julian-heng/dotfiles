@@ -105,7 +105,7 @@ export PS4
     export MAKEFLAGS
 
 [[ "${distro}" == "MacOS" && "${DISPLAY}" ]] && \
-        export DISPLAY
+    export DISPLAY
 
 export GIT_LOG_FORMAT
 
