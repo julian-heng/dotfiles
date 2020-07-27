@@ -1,3 +1,7 @@
+#############################
+##### command not found #####
+#############################
+
 command_not_found_handle()
 {
     local package_manager
