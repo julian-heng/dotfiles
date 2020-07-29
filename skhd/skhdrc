@@ -57,7 +57,9 @@ shift + lctrl + alt - k : yabai -m window --insert north
 shift + lctrl + alt - l : yabai -m window --insert east
 
 # Float / Unfloat window
-shift + alt - space : yabai -m window --toggle float
+shift + alt - space : \
+    yabai -m window --toggle float; \
+    yabai -m window --toggle border
 
 # Restart Chunkwm
 shift + lctrl + alt - r : \
