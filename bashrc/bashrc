@@ -2,6 +2,7 @@
 ##### Sourcing files #####
 ##########################
 # shellcheck disable=1090,2148,2154
+# vim: syntax=bash
 
 __secure_source()
 {

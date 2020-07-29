@@ -2,6 +2,7 @@
 ##### Env Variables #####
 #########################
 # shellcheck disable=2148,2154
+# vim: syntax=bash
 
 # Helper function to add paths to the PATH variable
 add_to_path_var()

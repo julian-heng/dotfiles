@@ -1,6 +1,7 @@
 #############################
 ##### command not found #####
 #############################
+# vim: syntax=bash
 
 command_not_found_handle()
 {

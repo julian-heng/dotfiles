@@ -2,6 +2,7 @@
 ##### Prompt #####
 ##################
 # shellcheck disable=2148,2154
+# vim: syntax=bash
 
 prompter()
 {

@@ -2,6 +2,7 @@
 ##### Aliases/Functions #####
 #############################
 # shellcheck disable=2139,2148,2154
+# vim: syntax=bash
 
 gcll()
 {

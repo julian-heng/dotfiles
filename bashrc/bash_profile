@@ -2,6 +2,7 @@
 ##### Bash Profile #####
 ########################
 # shellcheck disable=1090,1091,2148
+# vim: syntax=bash
 
 if [[ -f "${HOME}/.bashrc" ]]; then
     source "${HOME}/.bashrc"

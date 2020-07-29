@@ -2,6 +2,7 @@
 ##### colors #####
 ##################
 # shellcheck disable=2034,2148
+# vim: syntax=bash
 
 bold=$'\e[1m'
 reset=$'\e[0m'
