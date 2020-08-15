@@ -29,7 +29,6 @@ alt + control + e
 alt + shift + space
     bash "${HOME}/.config/bspwm/float"
 
-
 # Rotate windows clockwise and anticlockwise
 alt + {_,shift + } + r
     bspc node @/ --circulate {backward,forward}
