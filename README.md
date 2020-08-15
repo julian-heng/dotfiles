@@ -1,10 +1,10 @@
 # Dotfiles
 This repository contains all of the dotfiles that I use across multiple
 machines. It is platform agnostic and works on Linux, macOS and FreeBSD. The
-repo resides in the ~/.dotfiles folder because some scripts and configurations
-have this path hard coded in them. However, if you're like me and like to keep
-all of your git repositories in one folder, then you can symlink ~/.dotfiles to
-where ever you clone this repository.
+repo resides in the `~/.dotfiles` folder because some scripts and
+configurations have this path hard coded in them. However, if you're like me
+and like to keep all of your git repositories in one folder, then you can
+symlink `~/.dotfiles` to where ever you clone this repository.
 
 ## Table of Contents
 [[_TOC_]]
@@ -105,17 +105,17 @@ as a fallback if `sys-line` is not installed.
 written just for fun, while some are written because I needed to automate a
 task.
 
-##### `iommu`
+##### iommu
 Prints the IOMMU groups and the PCI devices under that group. Used to determine
 if it is possible to pass through PCI devices into a QEMU/KVM virtual machine.
 
-##### `nvidia_toggle`
+##### nvidia_toggle
 Toggles between the `vfio_pci` and the `nvidia` kernel module.
 
-##### `update-git-repos`
+##### update-git-repos
 Performs a `git pull` in a directory containing multiple git repositories.
 
-##### `feh-wal`, `xfce-wal` and `wal`
+##### feh-wal, xfce-wal and wal
 These scripts changes the wallpaper, with `wal` and `feh-wal` using feh, while
 `xfce-wal` uses `xfconf-query`. `wal` was written first before being rewritten
 to `feh-wal`.
