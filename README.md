@@ -1,7 +1,4 @@
 # Dotfiles
-
-[[_TOC_]]
-
 This repository contains all of the dotfiles that I use across multiple
 machines. It is platform agnostic and works on Linux, macOS and FreeBSD. The
 repo resides in the ~/.dotfiles folder because some scripts and configurations
@@ -9,8 +6,8 @@ have this path hard coded in them. However, if you're like me and like to keep
 all of your git repositories in one folder, then you can symlink ~/.dotfiles to
 where ever you clone this repository.
 
-Note: For FreeBSD, you need to install `gmake` as a dependency because the
-Makefile uses the GNU extensions
+## Table of Contents
+[[_TOC_]]
 
 ## Usage
 ### Install
@@ -20,6 +17,9 @@ $ cd ~/.dotfiles
 $ make DRY=yes [targets] # Dry run
 $ make [targets]
 ```
+
+Note: For FreeBSD, you need to install `gmake` as a dependency because the
+Makefile uses the GNU extensions
 
 ### Uninstall
 ```sh
