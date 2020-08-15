@@ -7,9 +7,6 @@
 [submodule "vimrc/bundle/indentLine"]
 	path = vimrc/bundle/indentLine
 	url = https://github.com/Yggdroot/indentLine.git
-[submodule "vimrc/bundle/vim-markdown-preview"]
-	path = vimrc/bundle/vim-markdown-preview
-	url = https://github.com/JamshedVesuna/vim-markdown-preview.git
 [submodule "vimrc/bundle/vim-surround"]
 	path = vimrc/bundle/vim-surround
 	url = https://github.com/tpope/vim-surround
