@@ -6,9 +6,6 @@ configurations have this path hard coded in them. However, if you're like me
 and like to keep all of your git repositories in one folder, then you can
 symlink `~/.dotfiles` to where ever you clone this repository.
 
-## Table of Contents
-[[_TOC_]]
-
 ## Usage
 ### Install
 ```sh
