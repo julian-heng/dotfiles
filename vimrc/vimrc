@@ -124,6 +124,3 @@ function! LightlineFilename()
     let modified = &modified ? ' +' : ''
     return filename . modified
 endfunction
-
-" vim-markdown-preview
-let vim_markdown_preview_github=1
