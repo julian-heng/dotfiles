@@ -141,5 +141,5 @@ unset __secure_source
 unset secure_source
 unset get_distro
 unset get_full_path
-unset get_module_path
+unset get_module_dir
 unset main
