@@ -10,7 +10,7 @@ stages:
   - lint
 
 shellcheck:
-  image: debian:stable-slim
+  image: ubuntu:latest
   stage: lint
   before_script:
     - apt --yes update && apt --yes install shellcheck
