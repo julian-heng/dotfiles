@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2048,SC2086
 
 trim()
 {
@@ -60,5 +61,5 @@ main()
     printf "%s" "${out}"
 }
 
-[[ "${BASH_SOURCE}" == "$0" ]] && \
+[[ "${BASH_SOURCE[0]}" == "$0" ]] && \
     main

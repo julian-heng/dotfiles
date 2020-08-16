@@ -1,7 +1,8 @@
+#!/usr/bin/env bash
+
 #############################
 ##### Aliases/Functions #####
 #############################
-# shellcheck disable=2139,2148,2154
 # vim: syntax=bash
 
 gcll()
@@ -26,7 +27,7 @@ gcll()
 glog()
 {
     [[ ! ${GIT_LOG_FORMAT} ]] && {
-        GIT_LOG_FORMAT=(
+        _GIT_LOG_FORMAT=(
             "┌[%C(bold blue)%H%C(reset)]%C(auto)%d%C(reset)%n"
             "└──[%C(bold cyan)%aD%C(reset)]: %C(bold green)%ar%C(reset)%n%n"
             "%w(0,4,4)Author:  %an %C(dim white)<%ae>%C(reset)%n"
@@ -34,7 +35,7 @@ glog()
             "%w(0,4,4)%+b%n"
         )
 
-        IFS="" GIT_LOG_FORMAT="${GIT_LOG_FORMAT[*]}"
+        IFS="" GIT_LOG_FORMAT="${_GIT_LOG_FORMAT[*]}"
         export GIT_LOG_FORMAT
     }
 
@@ -96,7 +97,7 @@ mpv-speed()
 }
 
 alias cb="cd - > /dev/null 2>&1"
-alias dl="aria2c --dir=${HOME}/Downloads/"
+alias dl="aria2c --dir=\${HOME}/Downloads/"
 
 alias gp="git pull"
 alias gpp="git push"
@@ -107,34 +108,35 @@ alias gdiff="git diff --color=always"
 
 alias grep="grep --color=always"
 
-alias 7zcomp="
-    7z a -t7z \
-         -m0=lzma2 \
-         -mx=9 \
-         -aoa \
-         -mfb=64 \
-         -md=32m \
-         -ms=on \
-         -mhe"
+alias 7zcomp="7z a -t7z \
+                   -m0=lzma2 \
+                   -mx=9 \
+                   -aoa \
+                   -mfb=64 \
+                   -md=32m \
+                   -ms=on \
+                   -mhe"
 
-alias yt2mp3="
-    youtube-dl  --output ${HOME}/Downloads/ \
-                -x \
-                --audio-format mp3 \
-                --audio-quality 0 \
-                -o '%(playlist_index)s %(title)s.%(ext)s' \
-                -v"
+alias yt2mp3="youtube-dl --output \${HOME}/Downloads/ \
+                         -x \
+                         --audio-format mp3 \
+                         --audio-quality 0 \
+                         -o '%(playlist_index)s %(title)s.%(ext)s' \
+                         -v"
 
 alias longfetch="neofetch -L; neofetch --off"
 
 alias l="ls"
 
-case "${distro}" in
+case "${distro:-}" in
     "MacOS"|"FreeBSD")
         alias ls="ls -G"
         alias ll="ls -G -l"
         alias la="ls -G -a"
         alias lal="ls -G -a -l"
+    ;;
+
+    "")
     ;;
 
     *)
@@ -146,7 +148,7 @@ case "${distro}" in
     ;;
 esac
 
-case "${distro}" in
+case "${distro:-}" in
     "MacOS") alias update="brew -v update && brew -v upgrade" ;;
     "Ubuntu"*|"Debian"*|"Raspbian"*|"LinuxMint"*)
         alias update="sudo apt update && sudo apt upgrade"
@@ -166,7 +168,7 @@ case "${distro}" in
         elif type -p yum > /dev/null; then
             alias update="sudo yum update"
         else
-            printf "%s\\n" "${fb[1]}Error:${reset} Cannot find dnf or yum, 'update' alias not set" >&2
+            printf "%sError%s: Cannot find dnf or yum, 'update' alias not set\\n" "${fb[1]:-}" "${reset:-}" >&2
         fi
     ;;
 
@@ -183,6 +185,6 @@ case "${distro}" in
 
     "FreeBSD") alias update="sudo pkg update && sudo pkg upgrade" ;;
     "Windows") alias update="choco upgrade all" ;;
-    "") printf "%s\\n" "${fb[1]}Error:${reset} Cannot detect distro, 'update' alias not set" >&2 ;;
-    *) printf "%s\\n" "${fb[1]}Error:${reset} Unknown distro, 'update' alias not set" >&2 ;;
+    "") printf "%sError%s: Cannot detect distro, 'update' alias not set\\n" "${fb[1]:-}" "${reset:-}" >&2 ;;
+    *) printf "%sError%s: Unknown distro, 'update' alias not set\\n" "${fb[1]:-}" "${reset:-}" >&2 ;;
 esac

@@ -10,7 +10,7 @@ get_status_length()
 {
     printf -v tmp "%s" "${*}"
     length="$((${#tmp} + (2 * (${#*} + 1))))"
-    printf "%d" "${#tmp}"
+    printf "%d" "${length}"
 }
 
 use_sys_line()
@@ -58,12 +58,12 @@ main()
     get_window_size
 
     if type -p sys-line > /dev/null 2>&1; then
-        out="$(use_sys_line)"
+        output="$(use_sys_line)"
     else
-        out="$(use_show_scripts)"
+        output="$(use_show_scripts)"
     fi
 
-    printf "%s" "${out}"
+    printf "%s" "${output}"
 }
 
 main

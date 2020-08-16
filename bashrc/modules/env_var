@@ -1,7 +1,8 @@
+#!/usr/bin/env bash
+
 #########################
 ##### Env Variables #####
 #########################
-# shellcheck disable=2148,2154
 # vim: syntax=bash
 
 # Helper function to add paths to the PATH variable
@@ -10,11 +11,11 @@ append_path()      { exist_and_is_dir "${1}" && PATH="${PATH}:${1}"; }
 prepend_path()     { exist_and_is_dir "${1}" && PATH="${1}:${PATH}"; }
 
 # Custom scripts
-script_dir="${module_dir/'bashrc/modules'/'scripts'}"
+script_dir="${module_dir:?/'bashrc/modules'/'scripts'}"
 append_path "${script_dir}/info"
 append_path "${script_dir}/utils"
 
-if [[ "${distro}" == "MacOS" ]]; then
+if [[ "${distro:-}" == "MacOS" ]]; then
     # Python binaries
     shopt -s nullglob
     for dir in "${HOME}/Library/Python/"*"/bin"; do
@@ -64,7 +65,7 @@ PS4='+${BASH_SOURCE:+${BASH_SOURCE}:}${LINENO:+${LINENO}:}${FUNCNAME:+${FUNCNAME
     shopt -u nullglob
 }
 
-GIT_LOG_FORMAT=(
+_GIT_LOG_FORMAT=(
     "┌[%C(bold blue)%H%C(reset)]%C(auto)%d%C(reset)%n"
     "└──[%C(bold cyan)%aD%C(reset)]: %C(bold green)%ar%C(reset)%n%n"
     "%w(0,4,4)Author:  %an %C(dim white)<%ae>%C(reset)%n"
@@ -72,19 +73,19 @@ GIT_LOG_FORMAT=(
     "%w(0,4,4)%+b%n"
 )
 
-IFS="" GIT_LOG_FORMAT="${GIT_LOG_FORMAT[*]}"
+IFS="" GIT_LOG_FORMAT="${_GIT_LOG_FORMAT[*]}"
 
 #####################
 ##### Man Pages #####
 #####################
 
-LESS_TERMCAP_mb="${fb[1]}" # enter blinking mode - red
-LESS_TERMCAP_md="${fb[5]}" # enter double-bright mode - bold, magenta
-LESS_TERMCAP_me="${reset}" # turn off all appearance modes (mb, md, so, us)
-LESS_TERMCAP_se="${reset}" # leave standout mode
-LESS_TERMCAP_so="${fb[3]}" # enter standout mode - yellow
-LESS_TERMCAP_ue="${reset}" # leave underline mode
-LESS_TERMCAP_us="${fb[6]}" # enter underline mode - cyan
+LESS_TERMCAP_mb="${fb[1]:-}" # enter blinking mode - red
+LESS_TERMCAP_md="${fb[5]:-}" # enter double-bright mode - bold, magenta
+LESS_TERMCAP_me="${reset:-}" # turn off all appearance modes (mb, md, so, us)
+LESS_TERMCAP_se="${reset:-}" # leave standout mode
+LESS_TERMCAP_so="${fb[3]:-}" # enter standout mode - yellow
+LESS_TERMCAP_ue="${reset:-}" # leave underline mode
+LESS_TERMCAP_us="${fb[6]:-}" # enter underline mode - cyan
 : "${reset}"               # reset colours for debugging
 
 ###################

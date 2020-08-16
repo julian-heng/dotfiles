@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2048,SC2086,SC2016,SC2154
 
 check_apps()
 {
@@ -67,7 +68,7 @@ replace_symbols()
                     replace="${match/'&#'}"
                     replace="${replace/';'}"
                     replace="${replace#"${replace%%[!0]*}"}"
-                    str="${str//${match}/$(printf "\x$(printf "%x" "${replace}")")}"
+                    str="${str//${match}/$(printf "\x%x" "${replace}")}"
                 done < <(return_match "&#[0-9][0-9][0-9];" "${str}")
             ;;
         esac
@@ -120,7 +121,6 @@ display_deal()
                     ;;
 
                     *"<link>"*) page_link="$(strip_tag "${xml[$i]}")" ;;
-                    *"<description>"*) desc="${xml[$i]}" ;;
 
                     *"<ozb:meta"*)
                         read -ra vars <<< "${xml[$i]}"

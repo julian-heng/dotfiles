@@ -1,7 +1,9 @@
+#!/usr/bin/env bash
+
 ##################
 ##### colors #####
 ##################
-# shellcheck disable=2034,2148
+# shellcheck disable=SC2034
 # vim: syntax=bash
 
 bold=$'\e[1m'

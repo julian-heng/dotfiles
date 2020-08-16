@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2030,SC2031,SC2194
 
 get_full_path()
 (
@@ -45,24 +46,18 @@ _count_lines()
         mapfile -t line < "${file_path}"
     fi
 
-    case "true" in
-        "${character}")
-            raw_file="$(< "${file_path}")"
-            char_count="${#raw_file}"
-            out="${char_count}"
-        ;;
-
-        "${word}")
-            words=(${line[@]})
-            word_count="${#words[@]}"
-            out="${word_count}"
-        ;;
-
-        *)
-            line_count="${#line[@]}"
-            out="${line_count}"
-        ;;
-    esac
+    if [[ "${character}" == "true" ]]; then
+        raw_file="$(< "${file_path}")"
+        char_count="${#raw_file}"
+        out="${char_count}"
+    elif [[ "${word}" == "true" ]]; then
+        IFS=" " read -ra words <<< "${line[@]}"
+        word_count="${#words[@]}"
+        out="${word_count}"
+    else
+        line_count="${#line[@]}"
+        out="${line_count}"
+    fi
 
     [[ "${display_full}" == "true" ]] && \
         file_path="$(get_full_path "${file_path}")"
@@ -140,7 +135,7 @@ print_padding()
             max_filename="${name}"
         }
 
-        ((padding = ${#count} >= ${padding:=0} ? ${#count} : ${padding}))
+        ((padding = ${#count} >= ${padding:=0} ? ${#count} : padding))
 
         count_arr+=("${count}")
         name_arr+=("${name}")

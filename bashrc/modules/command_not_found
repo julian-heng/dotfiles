@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 #############################
 ##### command not found #####
 #############################
@@ -14,7 +16,7 @@ command_not_found_handle()
 
     printf "bash: %s: command not found\\n" "${cmd}" 1>&2
 
-    case "${distro}" in
+    case "${distro:-}" in
         "Ubuntu"*|"Debian"*|"Raspbian"*)
             package_manager="sudo apt install"
             type -p apt-file > /dev/null 2>&1 && \

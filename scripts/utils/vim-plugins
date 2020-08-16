@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2048,SC2086
 
 trim_string()
 {
@@ -223,9 +224,9 @@ print_plugins()
     for i in "${plugins[@]}"; do
         IFS=$'\n' read -d "" -r name author manager <<< "${i//,/$'\n'}"
 
-        ((name_padding = ${#name} >= ${name_padding:=0} ? ${#name} : ${name_padding}))
-        ((manager_padding = ${#manager} >= ${manager_padding:=0} ? ${#manager} : ${manager_padding}))
-        ((author_padding = ${#author} >= ${author_padding:=0} ? ${#author} : ${author_padding}))
+        ((name_padding = ${#name} >= ${name_padding:=0} ? ${#name} : name_padding))
+        ((manager_padding = ${#manager} >= ${manager_padding:=0} ? ${#manager} : manager_padding))
+        ((author_padding = ${#author} >= ${author_padding:=0} ? ${#author} : author_padding))
 
         name_arr+=("${name}")
         manager_arr+=("${manager}")

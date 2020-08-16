@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2030,SC2031
 
 : "${wal_path:=/usr/share/wal}"
 : "${all_monitors:=true}"
@@ -181,8 +182,8 @@ main()
 
     _change_wal()
     (
-        [[ -f "${HOME}/.last_wal/monitor$i" ]] && \
-            last_wal="$(< "${HOME}/.last_wal/monitor$i")"
+        [[ -f "${HOME}/.last_wal/monitor${i}" ]] && \
+            last_wal="$(< "${HOME}/.last_wal/monitor${i}")"
 
         [[ "${same}" != "true" ]] && \
             unset img
@@ -193,7 +194,7 @@ main()
         done
 
         if [[ "${dry}" != "dry" ]]; then
-            printf "%s" "${img}" > "${HOME}/.last_wal/monitor$i"
+            printf "%s" "${img}" > "${HOME}/.last_wal/monitor${i}"
             change_wal "${img}" "$i"
         else
             printf "Changing monitor%s to %s\\n" "$i" "${img}" >&2

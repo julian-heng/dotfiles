@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2154
 
 init_colors()
 {
@@ -15,13 +16,13 @@ print_box()
     local end_x="$3"
     local end_y="$4"
 
-    if [[ "${end_x}" =~ '+' ]]; then
+    if [[ "${end_x}" == *"+"* ]]; then
         local length_x="${end_x//'+'}"
     else
         local length_x="$((end_x - start_x))"
     fi
 
-    if [[ "${end_y}" =~ '+' ]]; then
+    if [[ "${end_y}" == *"+"* ]]; then
         local length_y="${end_y//'+'}"
     else
         local length_y="$((end_y - start_y))"
