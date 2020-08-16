@@ -71,7 +71,7 @@ The script directory `scripts/info` and `scripts/utils` is appended to the
 exists. Otherwise, `~/.local/bin` will be added instead.
 
 ##### DISPLAY
-On macOS, if Xquartz is installed, the DISPLAY environment variable will be set
+On macOS, if Xquartz is installed, the `DISPLAY` environment variable will be set
 and exported.
 
 #### ~/.inputrc
