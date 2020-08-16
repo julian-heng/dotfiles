@@ -12,6 +12,8 @@ stages:
 shellcheck:
   image: koalaman/shellcheck-alpine
   stage: lint
+  before_script:
+    - apt add bash
   script:
     - shopt -s globstar
     - shopt -s extglob
