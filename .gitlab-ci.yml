@@ -10,8 +10,10 @@ stages:
   - lint
 
 shellcheck:
-  image: koalaman/shellcheck
+  image: debian:stable-slim
   stage: lint
+  before_script:
+    - apt update -yes && apt install --yes shellcheck
   script:
     - shopt -s globstar
     - shopt -s extglob
