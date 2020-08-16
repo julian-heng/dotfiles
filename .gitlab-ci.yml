@@ -29,6 +29,7 @@ shellcheck:
 
 python-lint:
   image: python:slim
+  stage: lint
   before_script:
     - python -V
     - type -p python
