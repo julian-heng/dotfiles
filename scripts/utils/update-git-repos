@@ -1,5 +1,8 @@
 #!/usr/bin/env -S python3 -B
 # vim: syntax=python
+# pylint: disable=invalid-name
+
+""" Performs a git pull on a folder of git repositories """
 
 from abc import ABC, abstractmethod
 from os import chdir, devnull
@@ -7,40 +10,49 @@ from pathlib import Path
 from re import findall
 from shutil import get_terminal_size
 from subprocess import call, PIPE, run
-from sys import argv, stdout
+from sys import argv
 from typing import List, Tuple, Callable
 
 
 class Git(ABC):
+    """ Abstract Git class """
 
     @staticmethod
     def get_runner():
+        """
+        Constructs an instance depending on the version of git installed
+        """
+        def check(i):
+            return i["major"] == 1 and i["minor"] == 8 and i["patch"] < 5
+
         cmd = ["git", "--version"]
         keys = ["major", "minor", "patch"]
         vals = [int(i) for i in findall(r"\d+", run_cmd(cmd)[1])]
         version = dict(zip(keys, vals))
-        check = lambda i: i["major"] == 1 and i["minor"] == 8 and i["patch"] < 5
         return GitRunnerOld() if check(version) else GitRunnerNew()
 
     def is_repo(self, path: Path) -> bool:
-        check = lambda p: p.exists() and p.is_dir()
+        """ Checks if path is a git repository """
+        def check(p):
+            return p.exists() and p.is_dir()
         return (check(Path("{}/.git".format(path))) or
                 len(self.rev_parse(path, ["--git-dir"]).split("\n")) > 0)
 
     @abstractmethod
     def fetch(self, path: Path) -> int:
-        pass
+        """ Abstract fetch method """
 
     @abstractmethod
     def pull(self, path: Path) -> int:
-        pass
+        """ Abstract pull method """
 
     @abstractmethod
     def rev_parse(self, path: Path, args: List[str]) -> str:
-        pass
+        """ Abstract rev_parse method """
 
 
 class GitRunnerNew(Git):
+    """ Git class that uses a newer version of git """
 
     def fetch(self, path: Path) -> int:
         return call(["git", "-C", path, "fetch", "--quiet"])
@@ -53,8 +65,10 @@ class GitRunnerNew(Git):
 
 
 class GitRunnerOld(Git):
+    """ Git class that uses an older version of git """
 
-    def _execute_in_dir(self, path: Path, func: Callable, *args, **kwargs):
+    @staticmethod
+    def _execute_in_dir(path: Path, func: Callable, *args, **kwargs):
         prev_cwd = Path.cwd()
         try:
             chdir(str(path))
@@ -66,26 +80,29 @@ class GitRunnerOld(Git):
 
     def fetch(self, path: Path) -> int:
         cmd = ["git", "fetch", "--quiet"]
-        return self._execute_in_dir(path, call, cmd)
+        return GitRunnerOld._execute_in_dir(path, call, cmd)
 
     def pull(self, path: Path) -> int:
         cmd = ["git", "pull"]
-        return self._execute_in_dir(path, call, cmd)
+        return GitRunnerOld._execute_in_dir(path, call, cmd)
 
     def rev_parse(self, path: Path, args: List[str]) -> str:
         cmd = ["git", "rev-parse"] + args
-        ret = self._execute_in_dir(path, run_cmd, cmd)
+        ret = GitRunnerOld._execute_in_dir(path, run_cmd, cmd)
         return ret[1] if ret else None
 
 
 def run_cmd(cmd: List[str]) -> Tuple[int, str]:
-    out = PIPE
-    err = open(devnull, "w")
-    proc = run(cmd, stdout=out, stderr=err)
-    return proc.returncode, proc.stdout.decode("utf-8").strip()
+    """ Executes a command """
+    with open(devnull, "w") as err:
+        out = PIPE
+        process = run(cmd, stdout=out, stderr=err,
+                      check=False)
+        return process.returncode, process.stdout.decode("utf-8").strip()
 
 
 def main():
+    """ Main function """
     repos = dict()
     git = Git.get_runner()
 
@@ -97,7 +114,7 @@ def main():
             if repo_path:
                 if repo_path in repos:
                     break
-                elif git.is_repo(j):
+                if git.is_repo(j):
                     repos[repo_path] = "1"
 
     repos = sorted(repos.keys())
