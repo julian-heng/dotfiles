@@ -1,0 +1,45 @@
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  paths:
+    - .cache/pip
+    - venv/
+
+stages:
+  - lint
+
+shellcheck:
+  image: koalaman/shellcheck-alpine
+  stage: lint
+  script:
+    - shopt -s globstar
+    - shopt -s extglob
+    - |
+        shellcheck ./bashrc/bash* \
+                   ./bashrc/modules/* \
+                   ./bspwm/* \
+                   ./polybar/!(config*) \
+                   ./scripts/color/*.bash \
+                   ./scripts/info/* \
+                   ./scripts/utils/!(update-git-repo*) \
+                   ./tmux/info.bash \
+                   ./ubersicht/wm.bash \
+                   ./yabai/yabairc
+
+python-lint:
+  image: python:slim
+  before_script:
+    - python -V
+    - type -p python
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install pylint flake8
+  script:
+    - |
+        python -m pylint ./scripts/color/coins.py \
+                         ./scripts/utils/update-git-repos
+    - |
+        python -m flake8 ./scripts/color/coins.py \
+                         ./scripts/utils/update-git-repos
