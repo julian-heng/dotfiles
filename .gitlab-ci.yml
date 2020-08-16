@@ -13,7 +13,7 @@ shellcheck:
   image: debian:stable-slim
   stage: lint
   before_script:
-    - apt -yes update && apt --yes install shellcheck
+    - apt --yes update && apt --yes install shellcheck
   script:
     - shopt -s globstar
     - shopt -s extglob
