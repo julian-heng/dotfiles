@@ -19,32 +19,47 @@ shellcheck:
     - shopt -s globstar
     - shopt -s extglob
     - |
-        shellcheck ./bashrc/bash* \
-                   ./bashrc/modules/* \
-                   ./bspwm/* \
-                   ./polybar/!(config*) \
-                   ./scripts/color/*.bash \
-                   ./scripts/info/* \
-                   ./scripts/utils/!(update-git-repo*) \
-                   ./tmux/info.bash \
-                   ./ubersicht/wm.bash \
-                   ./yabai/yabairc
+        shellcheck \
+          bashrc/bash* \
+          bashrc/modules/* \
+          bspwm/* \
+          polybar/polybar_bspwm \
+          polybar/reload \
+          scripts/color/*.bash \
+          scripts/info/* \
+          scripts/utils/count_lines \
+          scripts/utils/feh-wal \
+          scripts/utils/iommu \
+          scripts/utils/nvidia_toggle \
+          scripts/utils/open_iterm2 \
+          scripts/utils/ozbargain-cli \
+          scripts/utils/vim-plugins \
+          scripts/utils/wal \
+          scripts/utils/xfce-wal \
+          tmux/info.bash \
+          ubersicht/wm.bash \
+          yabai/yabairc
   rules:
     - changes:
       - bashrc/bash*
       - bashrc/modules/*
       - bspwm/*
-      - polybar/*
+      - polybar/polybar_bspwm
+      - polybar/reload
       - scripts/color/*.bash
       - scripts/info/*
-      - scripts/utils/*
+      - scripts/utils/count_lines
+      - scripts/utils/feh-wal
+      - scripts/utils/iommu
+      - scripts/utils/nvidia_toggle
+      - scripts/utils/open_iterm2
+      - scripts/utils/ozbargain-cli
+      - scripts/utils/vim-plugins
+      - scripts/utils/wal
+      - scripts/utils/xfce-wal
       - tmux/info.bash
       - ubersicht/wm.bash
       - yabai/yabairc
-  except:
-    - changes:
-      - polybar/config
-      - scripts/utils/update-git-repo
 
 python-lint:
   image: python:slim
