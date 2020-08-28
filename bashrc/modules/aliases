@@ -67,7 +67,7 @@ catm()
         printf "%s\\n" "$i"
         printf "%s\\n" "${line}"
         cat "$i"
-        printf "%s\\n" "${line}"
+        printf "\\n%s\\n" "${line}"
     done
 }
 
