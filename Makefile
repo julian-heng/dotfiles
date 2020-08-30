@@ -23,7 +23,7 @@ else
 		mkdir "$(CONFIG_DIR)"; \
 	fi
 	@if [ -L "$(strip $(subst $<,,$^))" ]; then \
-		rm -f "$(strip $(subst $<,,$^))"; \
+		rm -rf "$(strip $(subst $<,,$^))"; \
 	fi
 	@ln -svf "$<" "$(strip $(subst $<,,$^))"
 endif # ifeq ($(DRY),yes)
@@ -33,7 +33,7 @@ ifeq ($(DRY),yes)
 	@printf "[dry] removed '%s'\\n" "$(strip $(subst $<,,$^))"
 else
 	@if [ -L "$(strip $(subst $<,,$^))" ]; then \
-		rm -fv "$(strip $(subst $<,,$^))"; \
+		rm -rfv "$(strip $(subst $<,,$^))"; \
 	fi
 endif # ifeq ($(DRY),yes)
 endif # ifeq ($(MODE),uninstall)
@@ -54,7 +54,7 @@ else
 		mkdir "$(CONFIG_DIR)"; \
 	fi
 	@if [ -e "$(strip $(subst $<,,$^))" ]; then \
-		rm -f "$(strip $(subst $<,,$^))"; \
+		rm -rf "$(strip $(subst $<,,$^))"; \
 	fi
 	@cp -r -v "$<" "$(strip $(subst $<,,$^))"
 endif # ifeq ($(DRY),yes)
@@ -64,7 +64,7 @@ ifeq ($(DRY),yes)
 	@printf "[dry] removed '%s'\\n" "$(strip $(subst $<,,$^))"
 else
 	@if [ -e "$(strip $(subst $<,,$^))" ]; then \
-		rm -fv "$(strip $(subst $<,,$^))"; \
+		rm -rfv "$(strip $(subst $<,,$^))"; \
 	fi
 endif # ifeq ($(DRY),yes)
 endif # ifeq ($(MODE),uninstall)
