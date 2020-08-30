@@ -3,7 +3,7 @@ DRY ?= no
 LINK_CONFIGS = bash_profile bashrc inputrc_linux inputrc_macos \
                looking-glass-client mpv neofetch qutebrowser bspwm sxhkd \
                polybar yabai skhd ubersicht tmux vim
-COPY_CONFIGS = bashrc_custom dolphin fontconfig gwenview konsole
+COPY_CONFIGS = bashrc_custom dolphin fontconfig gwenview htop konsole
 
 .PHONY: $(LINK_CONFIGS) $(COPY_CONFIGS)
 
@@ -171,6 +171,10 @@ fontconfig: \
 gwenview: \
     $(DOTFILES_DIR)/plasma/gwenview/gwenviewrc \
     $(CONFIG_DIR)/gwenviewrc
+
+htop: \
+    $(DOTFILES_DIR)/htop \
+	$(CONFIG_DIR)/htop
 
 konsole: \
     $(DOTFILES_DIR)/plasma/konsole/konsolerc \
