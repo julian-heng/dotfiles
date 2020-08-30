@@ -1,9 +1,9 @@
 MODE ?= install
 DRY ?= no
-LINK_CONFIGS = bash_profile bashrc bashrc_custom inputrc_linux inputrc_macos \
+LINK_CONFIGS = bash_profile bashrc inputrc_linux inputrc_macos \
                looking-glass-client mpv neofetch qutebrowser bspwm sxhkd \
                polybar yabai skhd ubersicht tmux vim
-COPY_CONFIGS = dolphin fontconfig gwenview konsole
+COPY_CONFIGS = bashrc_custom dolphin fontconfig gwenview konsole
 
 .PHONY: $(LINK_CONFIGS) $(COPY_CONFIGS)
 
@@ -97,10 +97,6 @@ bashrc: \
     $(DOTFILES_DIR)/bashrc/bashrc \
     $(HOME_DIR)/.bashrc
 
-bashrc_custom:\
-	$(DOTFILES_DIR)/bashrc/bashrc_custom \
-	$(HOME_DIR)/.bashrc_custom
-
 inputrc_linux: \
     $(DOTFILES_DIR)/bashrc/inputrc_linux \
     $(HOME_DIR)/.inputrc
@@ -159,6 +155,10 @@ vim: \
 
 
 ### COPY_CONFIGS
+
+bashrc_custom:\
+    $(DOTFILES_DIR)/bashrc/bashrc_custom \
+    $(HOME_DIR)/.bashrc_custom
 
 dolphin: \
     $(DOTFILES_DIR)/plasma/dolphin/dolphinrc \
