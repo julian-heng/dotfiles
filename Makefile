@@ -186,7 +186,7 @@ gwenview: \
 
 htop: \
     $(DOTFILES_DIR)/htop \
-	$(CONFIG_DIR)/htop
+    $(CONFIG_DIR)/htop
 
 konsole: \
     $(DOTFILES_DIR)/plasma/konsole/konsolerc \
