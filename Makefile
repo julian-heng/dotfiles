@@ -22,10 +22,15 @@ ifeq ($(MODE),install)
 ifeq ($(DRY),yes)
 	@printf "[dry] '%s' -> '%s'\\n" "$($@_DEST)" "$<"
 else
+	@# Remove previous link if it exists
 	@if [ -L "$($@_DEST)" ]; then \
-		rm -rf "$($@_DEST)"; \
+		rm -f "$($@_DEST)"; \
 	fi
+
+	@# Create parent directory if it does not exist
 	@mkdir -p "$($@_BASEDIR)"
+
+	@# Link the source to the destination
 	@ln -svf "$<" "$($@_DEST)"
 endif # ifeq ($(DRY),yes)
 endif # ifeq ($(MODE),install)
@@ -53,12 +58,26 @@ ifeq ($(MODE),install)
 ifeq ($(DRY),yes)
 	@printf "[dry] '%s' -> '%s'\\n" "$<" "$($@_DEST)"
 else
-	@if [ -e "$($@_DEST)" ] && [ -d "$($@_DEST)" ]; then \
-		printf "'%s' is a directory. Linking to this folder breaks the path." "$($@_DEST)"; \
-		printf "Exiting..."; \
+	@# If source is a file, destination should also be a file
+	@# If destination is a directory, the source file will be copied into the
+	@# destination directory. Exit if that's the case
+	@if [ -e "$($@_DEST)" ] && [ -d "$($@_DEST)" ] && [ -f "$<" ]; then \
+		printf "Source '%s' is a file. " "$<"; \
+		printf "Target '%s' is a directory. " "$($@_DEST)"; \
+		printf "Copying to this directory breaks the path.\\n" "$($@_DEST)"; \
+		printf "Exiting...\\n"; \
 		exit 1; \
 	fi
+
+	@# Overwrite the destination directory if the source is a directory
+	@if [ -e "$($@_DEST)" ] && [ -d "$<" ]; then \
+		rm -rf "$($@_DEST)"; \
+	fi
+
+	@# Create parent directory if it does not exist
 	@mkdir -p "$($@_BASEDIR)"
+
+	@# Copy the source to the destination
 	@cp -r -v "$<" "$($@_DEST)"
 endif # ifeq ($(DRY),yes)
 endif # ifeq ($(MODE),install)
