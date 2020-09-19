@@ -2,7 +2,8 @@ MODE ?= install
 DRY ?= no
 LINK_CONFIGS = bash_profile bashrc inputrc_linux inputrc_macos \
                looking-glass-client mpv neofetch qutebrowser bspwm sxhkd \
-               polybar yabai skhd ubersicht tmux vim
+               systemd-wallpaper-service systemd-wallpaper-timer polybar \
+               yabai skhd ubersicht tmux vim
 COPY_CONFIGS = bashrc_custom dolphin fontconfig gwenview htop konsole
 
 .PHONY: $(LINK_CONFIGS) $(COPY_CONFIGS)
@@ -89,6 +90,9 @@ bash_linux: bash inputrc_linux
 bash_macos: bash inputrc_macos
 bash: bash_profile bashrc
 
+# Systemd services and timers requires linking multiple files
+systemd-wallpaper: systemd-wallpaper-service systemd-wallpaper-timer
+
 bash_profile: \
     $(DOTFILES_DIR)/bashrc/bash_profile \
     $(HOME_DIR)/.bash_profile
@@ -128,6 +132,14 @@ bspwm: \
 sxhkd: \
     $(DOTFILES_DIR)/sxhkd \
     $(CONFIG_DIR)/sxhkd
+
+systemd-wallpaper-service: \
+    $(DOTFILES_DIR)/systemd/wallpaper.service \
+    $(CONFIG_DIR)/systemd/user/wallpaper.service
+
+systemd-wallpaper-timer: \
+    $(DOTFILES_DIR)/systemd/wallpaper.timer \
+    $(CONFIG_DIR)/systemd/user/wallpaper.timer
 
 polybar: \
     $(DOTFILES_DIR)/polybar \

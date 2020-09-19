@@ -1,0 +1,10 @@
+[Unit]
+Description=Changes wallpaper periodically using feh
+
+[Service]
+Type=oneshot
+Environment="DISPLAY=:0"
+ExecStart=feh -r -z --bg-fill %h/.local/share/wallpaper
+
+[Install]
+WantedBy=default.target

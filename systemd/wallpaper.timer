@@ -1,0 +1,10 @@
+[Unit]
+Description=Changes wallpaper periodically using feh
+
+[Timer]
+Persistent=true
+OnCalendar=*-*-* *:00:00
+Unit=wallpaper.service
+
+[Install]
+WantedBy=timers.target
