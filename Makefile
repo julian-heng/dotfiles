@@ -16,25 +16,25 @@ CONFIG_DIR ?= $(HOME_DIR)/.config
 all:;
 
 $(LINK_CONFIGS):
+	$(eval $@_DEST := $(strip $(subst $<,,$^)))
+	$(eval $@_BASEDIR := $(shell dirname "$($@_DEST)"))
 ifeq ($(MODE),install)
 ifeq ($(DRY),yes)
-	@printf "[dry] '%s' -> '%s'\\n" "$(strip $(subst $<,,$^))" "$<"
+	@printf "[dry] '%s' -> '%s'\\n" "$($@_DEST)" "$<"
 else
-	@if [ ! -e "$(CONFIG_DIR)" ]; then \
-		mkdir "$(CONFIG_DIR)"; \
+	@if [ -L "$($@_DEST)" ]; then \
+		rm -rf "$($@_DEST)"; \
 	fi
-	@if [ -L "$(strip $(subst $<,,$^))" ]; then \
-		rm -rf "$(strip $(subst $<,,$^))"; \
-	fi
-	@ln -svf "$<" "$(strip $(subst $<,,$^))"
+	@mkdir -p "$($@_BASEDIR)"
+	@ln -svf "$<" "$($@_DEST)"
 endif # ifeq ($(DRY),yes)
 endif # ifeq ($(MODE),install)
 ifeq ($(MODE),uninstall)
 ifeq ($(DRY),yes)
-	@printf "[dry] removed '%s'\\n" "$(strip $(subst $<,,$^))"
+	@printf "[dry] removed '%s'\\n" "$($@_DEST)"
 else
-	@if [ -L "$(strip $(subst $<,,$^))" ]; then \
-		rm -rfv "$(strip $(subst $<,,$^))"; \
+	@if [ -L "$($@_DEST)" ]; then \
+		rm -rfv "$($@_DEST)"; \
 	fi
 endif # ifeq ($(DRY),yes)
 endif # ifeq ($(MODE),uninstall)
@@ -47,25 +47,27 @@ endif # ifneq ($(MODE),uninstall)
 
 
 $(COPY_CONFIGS):
+	$(eval $@_DEST := $(strip $(subst $<,,$^)))
+	$(eval $@_BASEDIR := $(shell dirname "$($@_DEST)"))
 ifeq ($(MODE),install)
 ifeq ($(DRY),yes)
-	@printf "[dry] '%s' -> '%s'\\n" "$(strip $(subst $<,,$^))" "$<"
+	@printf "[dry] '%s' -> '%s'\\n" "$<" "$($@_DEST)"
 else
-	@if [ ! -e "$(CONFIG_DIR)" ]; then \
-		mkdir "$(CONFIG_DIR)"; \
+	@if [ -e "$($@_DEST)" ] && [ -d "$($@_DEST)" ]; then \
+		printf "'%s' is a directory. Linking to this folder breaks the path." "$($@_DEST)"; \
+		printf "Exiting..."; \
+		exit 1; \
 	fi
-	@if [ -e "$(strip $(subst $<,,$^))" ]; then \
-		rm -rf "$(strip $(subst $<,,$^))"; \
-	fi
-	@cp -r -v "$<" "$(strip $(subst $<,,$^))"
+	@mkdir -p "$($@_BASEDIR)"
+	@cp -r -v "$<" "$($@_DEST)"
 endif # ifeq ($(DRY),yes)
 endif # ifeq ($(MODE),install)
 ifeq ($(MODE),uninstall)
 ifeq ($(DRY),yes)
-	@printf "[dry] removed '%s'\\n" "$(strip $(subst $<,,$^))"
+	@printf "[dry] removed '%s'\\n" "$($@_DEST)"
 else
-	@if [ -e "$(strip $(subst $<,,$^))" ]; then \
-		rm -rfv "$(strip $(subst $<,,$^))"; \
+	@if [ -e "$($@_DEST)" ]; then \
+		rm -rfv "$($@_DEST)"; \
 	fi
 endif # ifeq ($(DRY),yes)
 endif # ifeq ($(MODE),uninstall)
