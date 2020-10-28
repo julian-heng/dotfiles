@@ -33,6 +33,15 @@ if has('linebreak')
   set cpo+=n
 end
 
+" Cursorline
+set cursorline
+set cursorcolumn
+
+highlight CursorLine cterm=bold ctermbg=None
+highlight CursorColumn cterm=bold ctermbg=None
+highlight CursorLineNr cterm=bold ctermfg=None
+
+" Highlight
 highlight LineNr ctermfg=DarkGrey
 highlight ColorColumn ctermbg=DarkGrey
 
