@@ -62,6 +62,7 @@ yabai -m rule --add label="KeePassXC" app="^KeePassXC$" manage=off
 yabai -m rule --add label="Calculator" app="^Calculator$" manage=off
 yabai -m rule --add label="Dictionary" app="^Dictionary$" manage=off
 yabai -m rule --add label="mpv" app="^mpv$" manage=off
+yabai -m rule --add label="Software Update" title="Software Update" manage=off
 
 set +x
 printf "yabai: configuration loaded...\\n"
