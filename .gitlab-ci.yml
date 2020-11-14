@@ -37,7 +37,6 @@ shellcheck:
           scripts/utils/wal \
           scripts/utils/xfce-wal \
           tmux/info.bash \
-          ubersicht/wm.bash \
           yabai/yabairc
   rules:
     - changes:
@@ -58,7 +57,6 @@ shellcheck:
       - scripts/utils/wal
       - scripts/utils/xfce-wal
       - tmux/info.bash
-      - ubersicht/wm.bash
       - yabai/yabairc
 
 python-lint:
