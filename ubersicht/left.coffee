@@ -1,4 +1,4 @@
-command: "${HOME}/Library/Python/3.9/bin/sys-line '[{wm.desktop_index? {}{wm.app_name? | {}{wm.window_name?: {}}} }]'"
+command: "${HOME}/Library/Python/3.9/bin/sys-line '[{wm.desktop_index? {}{wm.app_name[max_length=53]? | {}{wm.window_name?: {}}} }]'"
 
 refreshFrequency: 750 # ms
 
