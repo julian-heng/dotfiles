@@ -31,6 +31,9 @@ else
     append_path "${HOME}/.local/bin"
 fi
 
+# Go environment
+GOPATH="${HOME}/.go"
+
 HISTTIMEFORMAT="%m/%d - %H:%M:%S: "
 HISTCONTROL="ignoreboth"
 EDITOR="vim"
@@ -94,6 +97,7 @@ LESS_TERMCAP_us="${fb[6]:-}" # enter underline mode - cyan
 ###################
 
 export PATH
+export GOPATH
 export HISTCONTROL
 export HISTTIMEFORMAT
 export EDITOR
