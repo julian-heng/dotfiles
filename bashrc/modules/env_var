@@ -31,6 +31,9 @@ else
     append_path "${HOME}/.local/bin"
 fi
 
+# Go binaries
+append_path "${HOME}/.go/bin"
+
 # Go environment
 GOPATH="${HOME}/.go"
 
