@@ -125,7 +125,7 @@ main()
         [[ -f "${module_dir}/command_not_found" ]] && \
             modules+=("${module_dir}/command_not_found")
 
-    # if source .venv/bin/activate if it exists
+    # Source .venv/bin/activate if it exists
     [[ -e "./.venv/bin/activate" ]] && \
         modules+=("./.venv/bin/activate")
 
