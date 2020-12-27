@@ -165,7 +165,10 @@ prompter()
     dir="${c2}$(dir_prompt)${reset}"
     git="$(_git_prompt)"
 
-    prompt_line+=("┌[${userhost}]: (${dir})${git}")
+    [[ "${VIRTUAL_ENV}" ]] && \
+        other=" (${c2}venv${reset})"
+
+    prompt_line+=("┌[${userhost}]: (${dir})${git}${other}")
     prompt_line+=("└${head} ")
     IFS=$'\n' PS1="${prompt_line[*]}"
     export PS1
