@@ -127,5 +127,5 @@ The plugins used are as follows.
 | lightline            | itchyny        | [link](https://github.com/itchyny/lightline.vim)       |
 | tabular              | Matt Wozniski  | [link](https://github.com/godlygeek/tabular)           |
 | vim-pathogen         | Tim Pope       | [link](https://github.com/tpope/vim-pathogen)          |
-| vim-repeat           | Time Pope      | [link](https://github.com/tpope/vim-repeat)            |
+| vim-repeat           | Tim Pope       | [link](https://github.com/tpope/vim-repeat)            |
 | vim-surround         | Tim Pope       | [link](https://github.com/tpope/vim-surround)          |
