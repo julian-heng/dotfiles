@@ -176,7 +176,7 @@ skhd: \
 
 ubersicht: \
     $(DOTFILES_DIR)/ubersicht \
-    $(HOME_DIR)/Library/Application\ Support/Übersicht/widgets
+    $(HOME_DIR)/Library/Application\ Support/Übersicht/widgets/dotfiles-bar
 
 tmux: \
     $(DOTFILES_DIR)/tmux/tmux.conf \
