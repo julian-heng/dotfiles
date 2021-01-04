@@ -2,7 +2,7 @@ import * as config from "./config.json"
 
 const style = {
     background: config.style.color.backgroundPrimary,
-    height: 20,
+    height: 19,
     width: "100%",
     bottom: 0,
     right: 0,
