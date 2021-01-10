@@ -8,6 +8,7 @@ LINK_CONFIGS = \
     looking-glass-client \
     mpv \
     neofetch \
+    picom \
     qutebrowser \
     bspwm \
     sxhkd \
@@ -163,6 +164,10 @@ mpv: \
 neofetch: \
     $(DOTFILES_DIR)/neofetch \
     $(CONFIG_DIR)/neofetch
+
+picom: \
+    $(DOTFILES_DIR)/picom \
+    $(CONFIG_DIR)/picom
 
 qutebrowser: \
     $(DOTFILES_DIR)/qutebrowser \
