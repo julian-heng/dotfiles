@@ -1,10 +1,32 @@
 MODE ?= install
 DRY ?= no
-LINK_CONFIGS = bash_profile bashrc inputrc_linux inputrc_macos \
-               looking-glass-client mpv neofetch qutebrowser bspwm sxhkd \
-               systemd-wallpaper-service systemd-wallpaper-timer polybar \
-               yabai skhd ubersicht tmux vim
-COPY_CONFIGS = bashrc_custom dolphin fontconfig gwenview htop konsole
+LINK_CONFIGS = \
+    bash_profile \
+    bashrc \
+    inputrc_linux \
+    inputrc_macos \
+    looking-glass-client \
+    mpv \
+    neofetch \
+    qutebrowser \
+    bspwm \
+    sxhkd \
+    systemd-wallpaper-service \
+    systemd-wallpaper-timer \
+    polybar \
+    yabai \
+    skhd \
+    ubersicht \
+    tmux \
+    vim
+
+COPY_CONFIGS = \
+    bashrc_custom \
+    dolphin \
+    fontconfig \
+    gwenview \
+    htop \
+    konsole
 
 .PHONY: $(LINK_CONFIGS) $(COPY_CONFIGS)
 
