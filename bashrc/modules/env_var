@@ -3,12 +3,15 @@
 #########################
 ##### Env Variables #####
 #########################
+# shellcheck disable=2034,2163
 # vim: syntax=bash
 
-# Helper function to add paths to the PATH variable
+# Helper function
 exist_and_is_dir() { [[ -e "${1}" && -d "${1}" ]]; }
 append_path()      { exist_and_is_dir "${1}" && PATH="${PATH}:${1}"; }
 prepend_path()     { exist_and_is_dir "${1}" && PATH="${1}:${PATH}"; }
+is_installed()     { type -p "${1}" > /dev/null 2>&1; }
+export_if_set()    { [[ "${!1}" ]] && export "${1}"; }
 
 # Custom scripts
 mod_dir="${module_dir:?}"
@@ -31,11 +34,13 @@ else
     append_path "${HOME}/.local/bin"
 fi
 
-# Go binaries
-append_path "${HOME}/.go/bin"
+is_installed "go" && {
+    # Go binaries
+    append_path "${HOME}/.go/bin"
 
-# Go environment
-GOPATH="${HOME}/.go"
+    # Go environment
+    GOPATH="${HOME}/.go"
+}
 
 HISTTIMEFORMAT="%m/%d - %H:%M:%S: "
 HISTCONTROL="ignoreboth"
@@ -64,7 +69,7 @@ PS4='+${BASH_SOURCE:+${BASH_SOURCE}:}${LINENO:+${LINENO}:}${FUNCNAME:+${FUNCNAME
     MAKEFLAGS="-j${cores:-1}"
 }
 
-[[ "${distro}" == "MacOS" ]] && type -p Xquartz > /dev/null 2>&1 && {
+[[ "${distro}" == "MacOS" ]] && is_installed "Xquartz" && {
     shopt -s nullglob
     while [[ ! "${DISPLAY}" ]] && read -r line; do
         [[ -e "${line}" ]] && DISPLAY="${line}"
@@ -93,35 +98,36 @@ LESS_TERMCAP_se="${reset:-}" # leave standout mode
 LESS_TERMCAP_so="${fb[3]:-}" # enter standout mode - yellow
 LESS_TERMCAP_ue="${reset:-}" # leave underline mode
 LESS_TERMCAP_us="${fb[6]:-}" # enter underline mode - cyan
-: "${reset}"               # reset colours for debugging
+: "${reset}"                 # reset colours for debugging
 
 ###################
 ##### Exports #####
 ###################
 
-export PATH
-export GOPATH
-export HISTCONTROL
-export HISTTIMEFORMAT
-export EDITOR
-export PS4
+export_if_set "PATH"
+export_if_set "HISTCONTROL"
+export_if_set "HISTTIMEFORMAT"
+export_if_set "EDITOR"
+export_if_set "PS4"
 
-[[ "${MAKEFLAGS}" ]] && \
-    export MAKEFLAGS
+export_if_set "GOPATH"
+export_if_set "MAKEFLAGS"
 
-[[ "${distro}" == "MacOS" && "${DISPLAY}" ]] && \
-    export DISPLAY
+[[ "${distro}" == "MacOS" ]] && \
+    export_if_set "DISPLAY"
 
-export GIT_LOG_FORMAT
+export_if_set "GIT_LOG_FORMAT"
 
-export LESS_TERMCAP_mb
-export LESS_TERMCAP_md
-export LESS_TERMCAP_me
-export LESS_TERMCAP_se
-export LESS_TERMCAP_so
-export LESS_TERMCAP_ue
-export LESS_TERMCAP_us
+export_if_set "LESS_TERMCAP_mb"
+export_if_set "LESS_TERMCAP_md"
+export_if_set "LESS_TERMCAP_me"
+export_if_set "LESS_TERMCAP_se"
+export_if_set "LESS_TERMCAP_so"
+export_if_set "LESS_TERMCAP_ue"
+export_if_set "LESS_TERMCAP_us"
 
 unset exist_and_is_dir
 unset append_path
 unset prepend_path
+unset is_installed
+unset export_if_set
