@@ -117,6 +117,12 @@ vnoremap < <gv
 
 set pastetoggle=<F3>
 
+" Disable json conceal
+let g:vim_json_conceal=0
+
+" Disable tex conceal
+let g:tex_conceal=""
+
 " Lightline status line
 let g:lightline = {
       \ 'active': {
