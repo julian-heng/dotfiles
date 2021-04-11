@@ -1,4 +1,7 @@
 # Dotfiles
+
+![macOS Screenshot](screenshots/macos.png)
+
 This repository contains all of the dotfiles that I use across multiple
 machines. It is platform agnostic and works on Linux, macOS and FreeBSD. The
 repo resides in the `~/.dotfiles` folder because some scripts and
