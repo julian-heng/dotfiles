@@ -42,6 +42,13 @@ is_installed "go" && {
     GOPATH="${HOME}/.go"
 }
 
+
+is_installed "npm" && {
+    # Npm binaries
+    append_path "${HOME}/.npm/bin"
+}
+
+
 HISTTIMEFORMAT="%m/%d - %H:%M:%S: "
 HISTCONTROL="ignoreboth"
 EDITOR="vim"

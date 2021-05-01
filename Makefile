@@ -8,6 +8,7 @@ LINK_CONFIGS = \
     looking-glass-client \
     mpv \
     neofetch \
+    npm \
     picom \
     qutebrowser \
     bspwm \
@@ -164,6 +165,11 @@ mpv: \
 neofetch: \
     $(DOTFILES_DIR)/neofetch \
     $(CONFIG_DIR)/neofetch
+
+
+npm: \
+    $(DOTFILES_DIR)/npm/npmrc \
+    $(HOME_DIR)/.npmrc
 
 picom: \
     $(DOTFILES_DIR)/picom \
