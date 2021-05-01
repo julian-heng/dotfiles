@@ -123,6 +123,9 @@ let g:vim_json_conceal=0
 " Disable tex conceal
 let g:tex_conceal=""
 
+" Disable indentLine for these filetypes
+autocmd FileType markdown let g:indentLine_enabled=0
+
 " Lightline status line
 let g:lightline = {
       \ 'active': {
