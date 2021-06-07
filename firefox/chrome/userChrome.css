@@ -1,0 +1,22 @@
+#titlebar > toolbar {
+    background-color: -moz-accent-color !important;
+    color: #fff !important;
+}
+
+#titlebar > toolbar:-moz-window-inactive {
+    background-color: #c9c9c9 !important;
+    color: #000 !important;
+}
+
+#tabs-newtab-button > .toolbarbutton-icon {
+    fill: #fff !important;
+}
+
+#tabs-newtab-button:-moz-window-inactive > .toolbarbutton-icon {
+    fill: inherit !important;
+}
+
+#tabs-newtab-button:hover > .toolbarbutton-icon {
+    background-image: none !important;
+    background-color: color-mix(in srgb, currentColor 11%, transparent) !important;
+}
