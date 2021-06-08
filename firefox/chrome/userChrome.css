@@ -1,22 +1,44 @@
-#titlebar > toolbar {
-    background-color: -moz-accent-color !important;
-    color: #fff !important;
-}
+/*
+ * From Lepton
+ * https://github.com/black7375/Firefox-UI-Fix
+ **/
 
-#titlebar > toolbar:-moz-window-inactive {
-    background-color: #c9c9c9 !important;
-    color: #000 !important;
-}
+@media (-moz-windows-accent-color-in-titlebar) {
+    /* Tab Bar */
+    :root[tabsintitlebar]:not(:-moz-window-inactive, :-moz-lwtheme) .titlebar-color,
+    :root[tabsintitlebar][lwt-default-theme-in-dark-mode]:not(:-moz-window-inactive) .titlebar-color {
+        color: -moz-accent-color-foreground;
+        background-color: -moz-accent-color;
+    }
 
-#tabs-newtab-button > .toolbarbutton-icon {
-    fill: #fff !important;
-}
+    :root[tabsintitlebar]:not(:-moz-window-inactive, :-moz-lwtheme) .toolbar-items,
+    :root[tabsintitlebar][lwt-default-theme-in-dark-mode]:not(:-moz-window-inactive) .toolbar-items {
+        --toolbarbutton-icon-fill: -moz-accent-color-foreground;
+        --toolbarbutton-hover-background: color-mix(in srgb, -moz-accent-color-foreground 10%, transparent);
+        --toolbarbutton-active-background: color-mix(in srgb, -moz-accent-color-foreground 15%, transparent);
+    }
 
-#tabs-newtab-button:-moz-window-inactive > .toolbarbutton-icon {
-    fill: inherit !important;
-}
+    :root[tabsintitlebar]:-moz-window-inactive .titlebar-color,
+    :root[tabsintitlebar][lwt-default-theme-in-dark-mode]:-moz-window-inactive .titlebar-color {
+        color: #000;
+        background-color: #c9c9c9;
+    }
 
-#tabs-newtab-button:hover > .toolbarbutton-icon {
-    background-image: none !important;
-    background-color: color-mix(in srgb, currentColor 11%, transparent) !important;
+    :root[tabsintitlebar]:not(:-moz-window-inactive, :-moz-lwtheme) .toolbar-items,
+    :root[tabsintitlebar][lwt-default-theme-in-dark-mode]:not(:-moz-window-inactive) .toolbar-items {
+        --toolbarbutton-icon-fill: -moz-accent-color-foreground;
+        --toolbarbutton-hover-background: color-mix(in srgb, -moz-accent-color-foreground 10%, transparent);
+        --toolbarbutton-active-background: color-mix(in srgb, -moz-accent-color-foreground 15%, transparent);
+    }
+
+    /* URL Bar */
+    :root[tabsintitlebar]:not(:-moz-window-inactive, :-moz-lwtheme),
+    :root[tabsintitlebar][lwt-default-theme-in-dark-mode]:not(:-moz-window-inactive) {
+        --focus-outline-color: -moz-accent-color !important;
+    }
+
+    :root[tabsintitlebar]:not(:-moz-window-inactive, :-moz-lwtheme) #urlbar[open] > #urlbar-background,
+    :root[tabsintitlebar][lwt-default-theme-in-dark-mode]:not(:-moz-window-inactive) #urlbar[open] > #urlbar-background {
+        border-color: color-mix(in srgb, -moz-accent-color 50%, transparent) !important; /* Like: --toolbar-field-focus-border-color */
+    }
 }
