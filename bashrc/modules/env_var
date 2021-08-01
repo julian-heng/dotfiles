@@ -7,11 +7,10 @@
 # vim: syntax=bash
 
 # Helper function
-exist_and_is_dir() { [[ -e "${1}" && -d "${1}" ]]; }
-append_path()      { exist_and_is_dir "${1}" && PATH="${PATH}:${1}"; }
-prepend_path()     { exist_and_is_dir "${1}" && PATH="${1}:${PATH}"; }
-is_installed()     { type -p "${1}" > /dev/null 2>&1; }
-export_if_set()    { [[ "${!1}" ]] && export "${1}"; }
+append_path()   { [[ -d "${1}" ]] && PATH="${PATH}:${1}"; }
+prepend_path()  { [[ -d "${1}" ]] && PATH="${1}:${PATH}"; }
+is_installed()  { type -p "${1}" > /dev/null 2>&1; }
+export_if_set() { [[ "${!1}" ]] && export "${1}"; }
 
 # Custom scripts
 mod_dir="${module_dir:?}"
