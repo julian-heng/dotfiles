@@ -107,25 +107,7 @@ alias gstat="git status --branch"
 alias gdiff="git diff --color=always"
 
 alias grep="grep --color=always"
-
-alias 7zcomp="7z a -t7z \
-                   -m0=lzma2 \
-                   -mx=9 \
-                   -aoa \
-                   -mfb=64 \
-                   -md=32m \
-                   -ms=on \
-                   -mhe"
-
-alias yt2mp3="youtube-dl --output \${HOME}/Downloads/ \
-                         -x \
-                         --audio-format mp3 \
-                         --audio-quality 0 \
-                         -o '%(playlist_index)s %(title)s.%(ext)s' \
-                         -v"
-
-alias longfetch="neofetch -L; neofetch --off"
-
+alias yt2mp3="youtube-dl --extract-audio --audio-format=mp3 --audio-quality=0"
 alias l="ls"
 
 case "${distro:-}" in
@@ -136,17 +118,17 @@ case "${distro:-}" in
         alias lal="ls -G -a -l"
     ;;
 
-    "")
-    ;;
-
     *)
         alias ls="ls --color --classify"
         alias ll="ls --color --classify -l"
         alias la="ls --color --classify -a"
         alias lal="ls --color --classify -a -l"
-        alias open="xdg-open"
     ;;
 esac
+
+
+[[ "${OSTYPE:-$(uname -s)}" =~ (L|l)inux ]] && \
+    alias open="xdg-open"
 
 case "${distro:-}" in
     "MacOS") alias update="brew -v update && brew -v upgrade && brew -v upgrade --casks" ;;
