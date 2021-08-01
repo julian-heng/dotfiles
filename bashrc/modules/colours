@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ##################
-##### colors #####
+##### colours #####
 ##################
 # shellcheck disable=SC2034
 # vim: syntax=bash
