@@ -121,14 +121,14 @@ These scripts changes the wallpaper, with `wal` and `feh-wal` using feh, while
 to `feh-wal`.
 
 ### Vim
-The plugin manager used is [Pathogen](https://github.com/tpope/vim-pathogen).
-The plugins used are as follows.
+The plugin manager is Vim's builtin plugin manager.
 
-| Plugin               | Author         | Repository                                             |
-|----------------------|----------------|--------------------------------------------------------|
-| indentLine           | Yggdroot       | [link](https://github.com/Yggdroot/indentLine)         |
-| lightline            | itchyny        | [link](https://github.com/itchyny/lightline.vim)       |
-| tabular              | Matt Wozniski  | [link](https://github.com/godlygeek/tabular)           |
-| vim-pathogen         | Tim Pope       | [link](https://github.com/tpope/vim-pathogen)          |
-| vim-repeat           | Tim Pope       | [link](https://github.com/tpope/vim-repeat)            |
-| vim-surround         | Tim Pope       | [link](https://github.com/tpope/vim-surround)          |
+The list of plugins used are as follows:
+
+| Plugin               | Author         | Repository                                       |
+|----------------------|----------------|--------------------------------------------------|
+| indentLine           | Yggdroot       | [link](https://github.com/Yggdroot/indentLine)   |
+| lightline            | itchyny        | [link](https://github.com/itchyny/lightline.vim) |
+| tabular              | Matt Wozniski  | [link](https://github.com/godlygeek/tabular)     |
+| vim-repeat           | Tim Pope       | [link](https://github.com/tpope/vim-repeat)      |
+| vim-surround         | Tim Pope       | [link](https://github.com/tpope/vim-surround)    |
