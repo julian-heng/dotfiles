@@ -1,11 +1,27 @@
 #!/usr/bin/env bash
 
-shopt -s nullglob
-for i in /sys/kernel/iommu_groups/*/devices/*; do
-    (
-        IFS='/' read -r _ _ _ _ group _ pci_id <<< "$i"
-        printf "IOMMU Group %02d: %s\\n" "${group}" "$(lspci -nns "${pci_id}")"
-    ) &
-done | sort --numeric-sort
-shopt -u nullglob
-wait
+
+main()
+{
+    curr_group=""
+    while read -r group line; do
+        [[ "${curr_group}" != "${group}" ]] && {
+            curr_group="${group}"
+            printf "IOMMU Group %02d:\\n" "${curr_group}"
+        }
+        printf "\t%s\\n" "${line}"
+    done < <(
+        shopt -s nullglob
+        for i in /sys/kernel/iommu_groups/*/devices/*; do
+            (
+                IFS='/' read -r _ _ _ _ group _ pci_id <<< "$i"
+                printf "%d %s\\n" "${group}" "$(lspci -nns "${pci_id}")"
+            ) &
+        done | sort --numeric-sort
+        shopt -u nullglob
+        wait
+    )
+}
+
+
+main
