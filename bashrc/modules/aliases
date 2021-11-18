@@ -144,7 +144,7 @@ case "${distro:-}" in
         fi
     ;;
 
-    "Fedora"|"CentOS"*)
+    "Fedora"*|"CentOS"*)
         if type -p dnf > /dev/null; then
             alias update="sudo dnf update"
         elif type -p yum > /dev/null; then
