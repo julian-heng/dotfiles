@@ -1,8 +1,7 @@
 MenuBar=Disabled
-State=AAAA/wAAAAD9AAAAAwAAAAAAAACTAAAB3/wCAAAAAvsAAAAUAHAAbABhAGMAZQBzAEQAbwBjAGsBAAAAIgAAAd8AAABaAQAAA/sAAAAWAGYAbwBsAGQAZQByAHMARABvAGMAawAAAAFiAAAAkgAAAAoBAAADAAAAAQAAALgAAAHO/AIAAAAB+wAAABAAaQBuAGYAbwBEAG8AYwBrAAAAACYAAAHOAAAACgEAAAMAAAADAAAHSAAAAjL8AQAAAAH7AAAAGAB0AGUAcgBtAGkAbgBhAGwARABvAGMAawAAAAAAAAAHSAAAAAoBAAADAAADNgAAAd8AAAAEAAAABAAAAAgAAAAI/AAAAAEAAAACAAAAAQAAABYAbQBhAGkAbgBUAG8AbwBsAEIAYQByAQAAAAD/////AAAAAAAAAAA=
 
 [CompactMode]
-FontWeight=50
+FontWeight=57
 PreviewSize=22
 
 [Desktop Entry]
@@ -10,7 +9,7 @@ DefaultProfile=Profile.profile
 
 [DetailsMode]
 ExpandableFolders=false
-FontWeight=50
+FontWeight=57
 PreviewSize=16
 
 [Favorite Profiles]
@@ -19,18 +18,18 @@ Favorites=
 [General]
 GlobalViewProps=true
 OpenExternallyCalledFolderInNewTab=false
+RememberOpenedTabs=false
 ShowZoomSlider=false
-Version=200
+Version=201
 
 [IconsMode]
-FontWeight=50
+FontWeight=57
 IconSize=48
 MaximumTextLines=3
 PreviewSize=128
 
 [MainWindow]
 MenuBar=Disabled
-State=AAAA/wAAAAD9AAAAAwAAAAAAAACZAAABy/wCAAAAAvsAAAAUAHAAbABhAGMAZQBzAEQAbwBjAGsBAAAAIgAAAcsAAABdAQAAA/sAAAAWAGYAbwBsAGQAZQByAHMARABvAGMAawAAAAFiAAAAkgAAAAoBAAADAAAAAQAAALgAAAHO/AIAAAAB+wAAABAAaQBuAGYAbwBEAG8AYwBrAAAAACYAAAHOAAAACgEAAAMAAAADAAAHSAAAAjL8AQAAAAH7AAAAGAB0AGUAcgBtAGkAbgBhAGwARABvAGMAawAAAAAAAAAHSAAAAAoBAAADAAADLgAAAcsAAAAEAAAABAAAAAgAAAAI/AAAAAEAAAACAAAAAQAAABYAbQBhAGkAbgBUAG8AbwBsAEIAYQByAQAAAAD/////AAAAAAAAAAA=
 ToolBarsMovable=Disabled
 
 [MainWindow][Toolbar mainToolBar]
@@ -41,6 +40,9 @@ ConfirmEmptyTrash=true
 
 [Open-with settings]
 CompletionMode=1
+
+[PlacesPanel]
+IconSize=16
 
 [PreviewSettings]
 Plugins=audiothumbnail,comicbookthumbnail,djvuthumbnail,exrthumbnail,directorythumbnail,fontthumbnail,imagethumbnail,jpegthumbnail,kraorathumbnail,windowsexethumbnail,windowsimagethumbnail,svgthumbnail
