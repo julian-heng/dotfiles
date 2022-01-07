@@ -13,3 +13,6 @@
 [submodule "vimrc/bundle/tabular"]
 	path = vimrc/pack/plugin/start/tabular
 	url = https://github.com/godlygeek/tabular.git
+[submodule "vimrc/pack/plugin/start/vim-lsc"]
+	path = vimrc/pack/plugin/start/vim-lsc
+	url = https://github.com/natebosch/vim-lsc
