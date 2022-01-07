@@ -50,6 +50,8 @@ is_installed "npm" && {
 
 HISTTIMEFORMAT="%m/%d - %H:%M:%S: "
 HISTCONTROL="ignoreboth"
+HISTSIZE="-1"
+HISTFILESIZE="-1"
 EDITOR="vim"
 PS4='+${BASH_SOURCE:+${BASH_SOURCE}:}${LINENO:+${LINENO}:}${FUNCNAME:+${FUNCNAME}:} '
 
@@ -113,6 +115,8 @@ LESS_TERMCAP_us="${fb[6]:-}" # enter underline mode - cyan
 export_if_set "PATH"
 export_if_set "HISTCONTROL"
 export_if_set "HISTTIMEFORMAT"
+export_if_set "HISTSIZE"
+export_if_set "HISTFILESIZE"
 export_if_set "EDITOR"
 export_if_set "PS4"
 
