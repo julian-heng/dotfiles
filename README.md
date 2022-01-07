@@ -132,3 +132,4 @@ The list of plugins used are as follows:
 | tabular              | Matt Wozniski  | [link](https://github.com/godlygeek/tabular)     |
 | vim-repeat           | Tim Pope       | [link](https://github.com/tpope/vim-repeat)      |
 | vim-surround         | Tim Pope       | [link](https://github.com/tpope/vim-surround)    |
+| vim-lsc              | natebosch      | [link](https://github.com/natebosch/vim-lsc)     |
