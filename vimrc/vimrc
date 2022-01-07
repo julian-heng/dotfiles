@@ -140,3 +140,12 @@ function! LightlineFilename()
     let modified = &modified ? ' +' : ''
     return filename . modified
 endfunction
+
+" vim-lsc
+let g:lsc_server_commands = {
+      \ 'cs': 'omnisharp --languageserver'
+      \ }
+
+let g:lsc_auto_map = {
+      \ 'defaults': v:true,
+      \ }
