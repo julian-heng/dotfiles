@@ -96,6 +96,11 @@ mpv-speed()
                  "${@:2}"
 }
 
+pdfmerge()
+{
+    gs -dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE="$1" -dBATCH "${@:2}"
+}
+
 alias cb="cd - > /dev/null 2>&1"
 alias dl="aria2c --dir=\${HOME}/Downloads/"
 
