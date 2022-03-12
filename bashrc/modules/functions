@@ -100,3 +100,28 @@ pdfmerge()
 {
     gs -dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE="$1" -dBATCH "${@:2}"
 }
+
+mp42gif()
+{
+    palette="$(mktemp).png"
+    infile="$1"
+    outfile="$2"
+    height="${3:-$(ffprobe \
+        -i "${infile}" \
+        -v error \
+        -select_streams v \
+        -show_entries stream=height \
+        -of csv=p=0:s=x)}"
+    common_filters="fps=24,scale=-1:${height}"
+    ffmpeg \
+        -i "${infile}" \
+        -vf "${common_filters}:flags=lanczos,palettegen" \
+        -y "${palette}"
+    ffmpeg \
+        -i "${infile}" \
+        -i "${palette}" \
+        -lavfi "${common_filters}:flags=lanczos [x]; [x][1:v] paletteuse" \
+        -y "${outfile}"
+    [[ -f "${palette}" ]] && \
+        rm "${palette}"
+}
