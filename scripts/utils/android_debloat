@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+
+main()
+{
+    infile="$1"
+    pkgs=()
+
+    while read -r package; do
+        pkgs+=("${package}")
+    done < "${infile}"
+
+    for pkg in "${pkgs[@]}"; do
+        adb shell pm uninstall -k --user 0 "${pkg}" > /dev/null 2>&1 && \
+            printf "%s\\n" "${pkg}"
+    done
+}
+
+
+main "$@"

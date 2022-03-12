@@ -47,6 +47,7 @@ shellcheck:
       - polybar/reload
       - scripts/color/*.bash
       - scripts/info/*
+      - scripts/utils/android_debloat
       - scripts/utils/count_lines
       - scripts/utils/feh-wal
       - scripts/utils/iommu
