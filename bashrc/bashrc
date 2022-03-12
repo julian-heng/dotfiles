@@ -109,6 +109,7 @@ main()
         "${module_dir}/colours"
         "${module_dir}/aliases"
         "${module_dir}/env_var"
+        "${module_dir}/functions"
         "${module_dir}/prompt"
     )
 
