@@ -37,10 +37,8 @@ get_distro()
                 done < /etc/lsb-release
             elif [[ -f "/etc/os-release" ]]; then
                 while read -r line && [[ ! "${distro}" ]]; do
-                    [[ "${line}" =~ ^'NAME' ]] && {
+                    [[ "${line}" =~ ^'NAME' ]] && \
                         distro="${line/'NAME='}"
-                        distro="${distro//\"}"
-                    }
                 done < /etc/os-release
             fi
         ;;
@@ -57,6 +55,8 @@ get_distro()
             printf "%s\\n" "Error: Cannot detect os" >&2
         ;;
     esac
+
+    distro="${distro//\"}"
     printf "%s" "${distro}"
 }
 
