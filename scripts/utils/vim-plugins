@@ -83,7 +83,7 @@ get_plugins()
 
                 if [[ -d "${pathogen_dir}" ]]; then
                     for plugin_path in "${pathogen_dir}"/*; do
-                        plugin_name="${plugin_path##${pathogen_dir}/}"
+                        plugin_name="${plugin_path##"${pathogen_dir}/"}"
                         plugin_name="${plugin_name/.vim}"
                         plugin_author="$(get_repo_author "${plugin_path}")"
                         [[ "${plugin_name}" ]] && {

@@ -12,7 +12,7 @@ prompter()
     __get_git_branch_status()
     {
         [[ "$1" == *"$2 "[[:digit:]]* ]] && {
-            status="${1##*$2}"
+            status="${1##*"$2"}"
             status="${status%%,*}"
             status="${status/]}"
             status="${status//[[:space:]]}"
