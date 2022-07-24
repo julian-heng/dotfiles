@@ -47,6 +47,11 @@ is_installed "npm" && {
     append_path "${HOME}/.npm/bin"
 }
 
+is_installed "cargo" && {
+    # Cargo binaries
+    append_path "${HOME}/.cargo/bin"
+}
+
 
 HISTTIMEFORMAT="%m/%d - %H:%M:%S: "
 HISTCONTROL="ignoreboth"
