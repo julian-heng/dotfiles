@@ -18,31 +18,33 @@
     }
 }
 
-@media (-moz-windows-accent-color-in-titlebar) {
-    /* Tab Bar */
-    :root[tabsintitlebar]:not(:-moz-window-inactive, :-moz-lwtheme) .titlebar-color,
-    :root[tabsintitlebar][lwt-default-theme-in-dark-mode]:not(:-moz-window-inactive) .titlebar-color {
-        color: var(--uc-accent-text-color);
-        background-color: var(--uc-accent-color);
+@media (-moz-os-version: windows-win10), (-moz-platform: windows-win10) {
+    :root[sizemode="normal"][tabsintitlebar]:-moz-window-inactive #navigator-toolbox {
+        border-top-color: #aaaaaa !important;
     }
 
-    :root[tabsintitlebar]:not(:-moz-window-inactive, :-moz-lwtheme) .toolbar-items,
-    :root[tabsintitlebar][lwt-default-theme-in-dark-mode]:not(:-moz-window-inactive) .toolbar-items {
-        --toolbarbutton-icon-fill: currentColor;
-        --toolbarbutton-hover-background: color-mix(in srgb, var(--uc-accent-text-color) 10%, transparent);
-        --toolbarbutton-active-background: color-mix(in srgb, var(var(--uc-accent-text-color)) 15%, transparent);
-    }
+    @media (-moz-windows-accent-color-in-titlebar) {
+        /* Tab Bar */
+        :root[tabsintitlebar]:not(:-moz-window-inactive, :-moz-lwtheme) .titlebar-color, :root[tabsintitlebar][lwt-default-theme-in-dark-mode]:not(:-moz-window-inactive) .titlebar-color {
+            color: var(--uc-accent-text-color);
+            background-color: var(--uc-accent-color);
+        }
 
-    :root[tabsintitlebar]:-moz-window-inactive .titlebar-color,
-    :root[tabsintitlebar][lwt-default-theme-in-dark-mode]:-moz-window-inactive .titlebar-color {
-        color: #000;
-        background-color: #c9c9c9;
-    }
+        :root[tabsintitlebar]:not(:-moz-window-inactive, :-moz-lwtheme) .toolbar-items, :root[tabsintitlebar][lwt-default-theme-in-dark-mode]:not(:-moz-window-inactive) .toolbar-items {
+            --toolbarbutton-icon-fill: currentColor;
+            --toolbarbutton-hover-background: color-mix(in srgb, var(--uc-accent-text-color) 10%, transparent);
+            --toolbarbutton-active-background: color-mix(in srgb, var(var(--uc-accent-text-color)) 15%, transparent);
+        }
 
-    :root[tabsintitlebar]:not(:-moz-window-inactive, :-moz-lwtheme) .toolbar-items,
-    :root[tabsintitlebar][lwt-default-theme-in-dark-mode]:not(:-moz-window-inactive) .toolbar-items {
-        --toolbarbutton-icon-fill: currentColor;
-        --toolbarbutton-hover-background: color-mix(in srgb, var(--uc-accent-text-color) 10%, transparent);
-        --toolbarbutton-active-background: color-mix(in srgb, var(var(--uc-accent-text-color)) 15%, transparent);
+        :root[tabsintitlebar]:-moz-window-inactive .titlebar-color, :root[tabsintitlebar][lwt-default-theme-in-dark-mode]:-moz-window-inactive .titlebar-color {
+            color: #000;
+            background-color: #c9c9c9;
+        }
+
+        :root[tabsintitlebar]:not(:-moz-window-inactive, :-moz-lwtheme) .toolbar-items, :root[tabsintitlebar][lwt-default-theme-in-dark-mode]:not(:-moz-window-inactive) .toolbar-items {
+            --toolbarbutton-icon-fill: currentColor;
+            --toolbarbutton-hover-background: color-mix(in srgb, var(--uc-accent-text-color) 10%, transparent);
+            --toolbarbutton-active-background: color-mix(in srgb, var(var(--uc-accent-text-color)) 15%, transparent);
+        }
     }
 }
