@@ -42,6 +42,18 @@ prompter()
 
     _git_prompt()
     {
+        # Skip if in .git directory
+        local cwd
+        local -a parts
+
+        cwd="\\w"
+        cwd="${cwd@P}"
+        cwd="${cwd#/}"
+
+        IFS='/' read -ra parts <<< "${cwd:-/}"
+        [[ "${parts[-1]}" == ".git" ]] && \
+            return
+
         local _git_branch
         local _git_prompt
         local num_staged
@@ -101,9 +113,12 @@ prompter()
         printf "%s" "${git_prompt}"
     }
 
-    dir_prompt()
+    _dir_prompt()
     {
         local _PWD
+        local cwd
+        local -a parts
+
         cwd="\\w"
         cwd="${cwd@P}"
         cwd="${cwd#/}"
@@ -162,7 +177,7 @@ prompter()
         export userhost
     }
 
-    dir="${c2}$(dir_prompt)${reset}"
+    dir="${c2}$(_dir_prompt)${reset}"
     git="$(_git_prompt)"
 
     [[ "${VIRTUAL_ENV}" ]] && \
@@ -176,7 +191,7 @@ prompter()
     unset -f __get_git_branch_status
     unset -f __get_git_branch
     unset -f _git_prompt
-    unset -f dir_prompt
+    unset -f _dir_prompt
 }
 
 PROMPT_COMMAND="prompter; history -a"
