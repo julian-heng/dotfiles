@@ -52,13 +52,13 @@ is_installed "cargo" && {
     append_path "${HOME}/.cargo/bin"
 }
 
-
 HISTTIMEFORMAT="%m/%d - %H:%M:%S: "
 HISTCONTROL="ignoreboth"
 HISTSIZE="-1"
 HISTFILESIZE="-1"
 EDITOR="vim"
 PS4='+${BASH_SOURCE:+${BASH_SOURCE}:}${LINENO:+${LINENO}:}${FUNCNAME:+${FUNCNAME}:} '
+GPG_TTY="$(tty)"
 
 [[ ! "${MAKEFLAGS}" ]] && {
     case "${OSTYPE:-$(uname -s)}" in
@@ -124,6 +124,7 @@ export_if_set "HISTSIZE"
 export_if_set "HISTFILESIZE"
 export_if_set "EDITOR"
 export_if_set "PS4"
+export_if_set "GPG_TTY"
 
 export_if_set "GOPATH"
 export_if_set "MAKEFLAGS"
