@@ -63,6 +63,12 @@ yabai -m config mouse_action2               resize
 yabai -m rule --add label="Finder" app="^Finder$" title="(Co(py|nnect)|Move|Info|Pref)" manage=off
 yabai -m rule --add label="Safari" app="^Safari$" title="^(General|(Tab|Password|Website|Extension)s|AutoFill|Se(arch|curity)|Privacy|Advance)$" manage=off
 yabai -m rule --add label="macfeh" app="^macfeh$" manage=off
+yabai -m rule --add label="Krita" app="Krita" manage=off
+yabai -m rule --add label="Blender" app="Blender" manage=off
+yabai -m rule --add label="Steam" app="Steam" manage=off
+yabai -m rule --add label="Aseprite" app="Aseprite" manage=off
+yabai -m rule --add label="qemu" app="qemu-system-x86_64" manage=off
+yabai -m rule --add label="QuickTime Player" app="QuickTime Player" manage=off
 yabai -m rule --add label="System Preferences" app="^System Preferences$" title=".*" manage=off
 yabai -m rule --add label="App Store" app="^App Store$" manage=off
 yabai -m rule --add label="Activity Monitor" app="^Activity Monitor$" manage=off
