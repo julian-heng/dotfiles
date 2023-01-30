@@ -6,7 +6,6 @@
 # vim: syntax=bash
 
 alias cb="cd - > /dev/null 2>&1"
-alias dl="aria2c --dir=\${HOME}/Downloads/"
 
 alias gp="git pull"
 alias gpp="git push"
@@ -40,11 +39,6 @@ esac
     alias open="xdg-open"
 
 case "${distro:-}" in
-    "MacOS") alias update="brew -v update && brew -v upgrade && brew -v upgrade --casks" ;;
-    "Ubuntu"*|"Debian"*|"Raspbian"*|"LinuxMint"*)
-        alias update="sudo apt update && sudo apt upgrade"
-    ;;
-
     "Arch"*)
         if type -p yay > /dev/null; then
             alias update="yay"
@@ -63,7 +57,6 @@ case "${distro:-}" in
         fi
     ;;
 
-    "VoidLinux") alias update="sudo xbps-install -Su" ;;
     "Gentoo")
         alias update='
             printf "%s\\n" "Do it yourself"
@@ -74,6 +67,9 @@ case "${distro:-}" in
             printf "%s\\n" "# emerge --ask --verbose --depclean"'
     ;;
 
+    "Ubuntu"*|"Debian"*|"Raspbian"*|"LinuxMint"*) alias update="sudo apt update && sudo apt upgrade" ;;
+    "MacOS") alias update="brew update && brew upgrade && brew upgrade --casks" ;;
+    "VoidLinux") alias update="sudo xbps-install -Su" ;;
     "FreeBSD") alias update="sudo pkg update && sudo pkg upgrade" ;;
     "Windows") alias update="choco upgrade all" ;;
     "") printf "%sError%s: Cannot detect distro, 'update' alias not set\\n" "${fb[1]:-}" "${reset:-}" >&2 ;;
