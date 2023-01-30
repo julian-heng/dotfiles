@@ -160,7 +160,7 @@ looking-glass-client: \
 
 mpv: \
     $(DOTFILES_DIR)/mpv \
-    $(HOME_DIR)/.mpv
+    $(CONFIG_DIR)/.mpv
 
 neofetch: \
     $(DOTFILES_DIR)/neofetch \
