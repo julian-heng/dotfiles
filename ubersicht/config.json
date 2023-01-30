@@ -1,5 +1,5 @@
 {
-    "binary": "${HOME}/Library/Python/3.9/bin/sys-line",
+    "binary": "${HOME}/Library/Python/3.10/bin/sys-line",
     "style": {
         "font": {
             "style": "inconsolata",
