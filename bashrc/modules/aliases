@@ -9,6 +9,7 @@ alias cb="cd - > /dev/null 2>&1"
 
 alias gp="git pull"
 alias gpp="git push"
+alias gc="git checkout"
 alias grm="git rm"
 alias gcl="git clone"
 alias gstat="git status --branch"
