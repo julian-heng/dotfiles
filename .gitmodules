@@ -16,3 +16,6 @@
 [submodule "vimrc/pack/plugin/start/vim-lsc"]
 	path = vimrc/pack/plugin/start/vim-lsc
 	url = https://github.com/natebosch/vim-lsc
+[submodule "vimrc/pack/plugin/start/vim-nix"]
+	path = vimrc/pack/plugin/start/vim-nix
+	url = https://github.com/LnL7/vim-nix
