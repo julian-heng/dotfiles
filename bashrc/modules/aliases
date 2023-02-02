@@ -69,6 +69,7 @@ case "${distro:-}" in
     ;;
 
     "Ubuntu"*|"Debian"*|"Raspbian"*|"LinuxMint"*) alias update="sudo apt update && sudo apt upgrade" ;;
+    "nixos") alias update="sudo nixos-rebuild switch --upgrade" ;;
     "MacOS") alias update="brew update && brew upgrade && brew upgrade --casks" ;;
     "VoidLinux") alias update="sudo xbps-install -Su" ;;
     "FreeBSD") alias update="sudo pkg update && sudo pkg upgrade" ;;
