@@ -52,6 +52,10 @@ is_installed "cargo" && {
     append_path "${HOME}/.cargo/bin"
 }
 
+is_installed "docker" && [[ -S "${XDG_RUNTIME_DIR}/docker.sock" ]] && {
+    DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/docker.sock"
+}
+
 HISTTIMEFORMAT="%m/%d - %H:%M:%S: "
 HISTCONTROL="ignoreboth"
 HISTSIZE="-1"
@@ -127,6 +131,7 @@ export_if_set "PS4"
 export_if_set "GPG_TTY"
 
 export_if_set "GOPATH"
+export_if_set "DOCKER_HOST"
 export_if_set "MAKEFLAGS"
 
 [[ "${distro}" == "MacOS" ]] && \
