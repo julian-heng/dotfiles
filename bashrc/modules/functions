@@ -42,6 +42,11 @@ glog()
     git log --color=always --graph --format=format:"${GIT_LOG_FORMAT}" "$@"
 }
 
+gppo()
+{
+    git push -u origin "$(git rev-parse --abbrev-ref HEAD)"
+}
+
 man()
 {
     MANWIDTH="$((${COLUMNS:-100} > 100 ? 100 : COLUMNS))" command man "$@"
