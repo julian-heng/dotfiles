@@ -3,3 +3,4 @@
 st/st*
 qutebrowser/*[!.py]
 vimrc/.netrwhist
+mpv/watch_later
