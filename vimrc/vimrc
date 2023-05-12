@@ -1,6 +1,7 @@
 filetype plugin indent on
 
 " Vim Settings
+set tabpagemax=99
 set nocompatible
 set backspace=2
 set hidden
