@@ -76,8 +76,8 @@ with pkgs; rec {
   ];
 
   security = [
-    keepassxc
     gnupg
+    keepassxc
   ];
 
   systemAdmin = [
