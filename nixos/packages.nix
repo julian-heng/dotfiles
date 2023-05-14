@@ -103,6 +103,7 @@ with pkgs; rec {
     ++ graphics
     ++ multimedia
     ++ office
+    ++ security
     ++ terminals
     ++ themes
   ;
