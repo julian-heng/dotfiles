@@ -20,7 +20,8 @@ LINK_CONFIGS = \
     skhd \
     ubersicht \
     tmux \
-    vim
+    vim \
+    nixos
 
 COPY_CONFIGS = \
     bashrc_custom \
@@ -218,6 +219,10 @@ tmux: \
 vim: \
     $(DOTFILES_DIR)/vimrc \
     $(HOME_DIR)/.vim
+
+nixos: \
+    $(DOTFILES_DIR)/nixos \
+    /etc/nixos
 
 
 ### COPY_CONFIGS
