@@ -84,9 +84,18 @@ with pkgs; rec {
     curl
     htop
     inxi
+    ncdu
     neofetch
+    parted
+    pciutils
     tmux
+    tree
+    usbutils
     wget
+  ];
+
+  guiSystemAdmin = [
+    partition-manager
   ];
 
   # Package Groups
@@ -112,6 +121,7 @@ with pkgs; rec {
     dev
     ++ desktop
     ++ systemAdmin
+    ++ guiSystemAdmin
   ;
 
   system =
