@@ -13,10 +13,11 @@ is_installed()  { type -p "${1}" > /dev/null 2>&1; }
 export_if_set() { [[ "${!1}" ]] && export "${1}"; }
 
 # Custom scripts
-mod_dir="${module_dir:?}"
-script_dir="${mod_dir/'bashrc/modules'/'scripts'}"
-append_path "${script_dir}/info"
-append_path "${script_dir}/utils"
+[[ "${module_dir}" ]] && {
+    script_dir="${module_dir/'bashrc/modules'/'scripts'}"
+    append_path "${script_dir}/info"
+    append_path "${script_dir}/utils"
+}
 
 if [[ "${distro:-}" == "MacOS" ]]; then
     # Python binaries

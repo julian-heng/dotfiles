@@ -16,4 +16,5 @@ in
     khelpcenter
   ];
   fonts.fonts = packages.fonts;
+  programs.dconf.enable = true;
 }
