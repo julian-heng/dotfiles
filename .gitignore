@@ -5,5 +5,7 @@ qutebrowser/*[!.py]
 vimrc/.netrwhist
 mpv/watch_later
 nixos/*.password.nix
+nixos/*.qcow2
 nixos/configuration.nix
 nixos/hardware-configuration.nix
+nixos/result
